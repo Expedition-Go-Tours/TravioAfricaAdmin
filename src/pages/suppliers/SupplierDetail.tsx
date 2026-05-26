@@ -34,6 +34,7 @@ interface SupplierData {
   };
   representativeInfo?: {
     fullName?: string; email?: string; phone?: string; phoneNumber?: string; dateOfBirth?: string;
+    dob?: string; birthDate?: string;
     idType?: string; idNumber?: string; idDocumentUrl?: string;
     position?: string;
     address?: string | { line1?: string; city?: string; state?: string; postalCode?: string };

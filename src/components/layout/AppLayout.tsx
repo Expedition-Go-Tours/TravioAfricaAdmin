@@ -10,23 +10,28 @@ export function AppLayout() {
   const location = useLocation();
 
   return (
-    <div className="flex h-screen overflow-hidden bg-surface-base">
-      <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <Header />
-        <main className="flex-1 overflow-y-auto bg-surface-muted p-6">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={location.pathname}
-              variants={pageTransition}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-            >
-              <Outlet />
-            </motion.div>
-          </AnimatePresence>
-        </main>
+    <div className="flex h-screen flex-col overflow-hidden bg-surface-base">
+      <div className="flex h-20 shrink-0 items-center justify-center border-b border-border-muted bg-surface-base">
+        <span className="text-4xl font-extrabold tracking-tight text-text-primary">TravioAfrica</span>
+      </div>
+      <div className="flex flex-1 overflow-hidden">
+        <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <Header />
+          <main className="flex-1 overflow-y-auto bg-surface-muted p-6">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={location.pathname}
+                variants={pageTransition}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                <Outlet />
+              </motion.div>
+            </AnimatePresence>
+          </main>
+        </div>
       </div>
     </div>
   );

@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { auth } from "@/lib/firebase";
+import type { User as FirebaseUser } from "firebase/auth";
 import {
   LayoutDashboard,
   TrendingUp,
@@ -80,8 +82,14 @@ interface SidebarProps {
 }
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
+  const [user, setUser] = useState<FirebaseUser | null>(null);
   const location = useLocation();
   const [expandedMenus, setExpandedMenus] = useState<string[]>(["Revenue", "Users"]);
+
+  useEffect(() => {
+    const unsub = auth.onAuthStateChanged((u) => setUser(u));
+    return unsub;
+  }, []);
 
   const toggleMenu = (label: string) => {
     setExpandedMenus((prev) =>
@@ -109,7 +117,12 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       <div className="flex h-14 items-center justify-between border-b border-border-muted px-4">
         {!collapsed && (
           <div className="flex items-center gap-2 truncate">
-            <img src="/src/assets/new_logo.png" alt="TravioAfrica" className="h-8 w-auto" />
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-muted text-xs font-semibold text-text-secondary">
+              {user?.displayName?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "A"}
+            </div>
+            <span className="truncate text-sm font-semibold text-text-primary">
+              {user?.displayName || user?.email?.split("@")[0] || "Admin"}
+            </span>
           </div>
         )}
         <button
