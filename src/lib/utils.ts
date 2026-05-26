@@ -1,0 +1,94 @@
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+export function formatCurrency(value: number | string | null | undefined): string {
+  if (value == null) return "$0.00";
+  const num = typeof value === "string" ? Number.parseFloat(value) : value;
+  if (Number.isNaN(num)) return "$0.00";
+  return `$${num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+export function formatNumber(value: number | string | null | undefined): string {
+  if (value == null) return "0";
+  const num = typeof value === "string" ? Number.parseFloat(value) : value;
+  if (Number.isNaN(num)) return "0";
+  return num.toLocaleString("en-US");
+}
+
+export function formatDate(value: string | null | undefined): string {
+  if (!value) return "—";
+  try {
+    return new Date(value).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  } catch {
+    return "—";
+  }
+}
+
+export function formatDateTime(value: string | null | undefined): string {
+  if (!value) return "—";
+  try {
+    return new Date(value).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return "—";
+  }
+}
+
+export function timeAgo(value: string | null | undefined): string {
+  if (!value) return "";
+  const now = new Date();
+  const date = new Date(value);
+  const diffMs = now.getTime() - date.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  if (diffSec < 60) return `${diffSec}s ago`;
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHour = Math.floor(diffMin / 60);
+  if (diffHour < 24) return `${diffHour}h ago`;
+  const diffDay = Math.floor(diffHour / 24);
+  if (diffDay < 30) return `${diffDay}d ago`;
+  const diffMonth = Math.floor(diffDay / 30);
+  if (diffMonth < 12) return `${diffMonth}mo ago`;
+  return `${Math.floor(diffMonth / 12)}y ago`;
+}
+
+export function truncateId(id: string, chars = 8): string {
+  return id.length > chars ? id.slice(0, chars) + "..." : id;
+}
+
+export function getStatusColor(status: string): string {
+  const map: Record<string, string> = {
+    PENDING: "bg-status-pending/10 text-status-pending border-status-pending/30",
+    APPROVED: "bg-status-approved/10 text-status-approved border-status-approved/30",
+    ACTIVE: "bg-status-active/10 text-status-active border-status-active/30",
+    REJECTED: "bg-status-rejected/10 text-status-rejected border-status-rejected/30",
+    SUSPENDED: "bg-status-suspended/10 text-status-suspended border-status-suspended/30",
+    FLAGGED: "bg-status-flagged/10 text-status-flagged border-status-flagged/30",
+    PROCESSING: "bg-status-processing/10 text-status-processing border-status-processing/30",
+    UNDER_REVIEW: "bg-status-approved/10 text-status-approved border-status-approved/30",
+    CONFIRMED: "bg-status-active/10 text-status-active border-status-active/30",
+    CANCELLED: "bg-status-rejected/10 text-status-rejected border-status-rejected/30",
+    REFUNDED: "bg-status-flagged/10 text-status-flagged border-status-flagged/30",
+    COMPLETED: "bg-status-approved/10 text-status-approved border-status-approved/30",
+    NO_SHOW: "bg-status-suspended/10 text-status-suspended border-status-suspended/30",
+    PAID: "bg-status-active/10 text-status-active border-status-active/30",
+    FAILED: "bg-status-rejected/10 text-status-rejected border-status-rejected/30",
+    DRAFT: "bg-status-suspended/10 text-status-suspended border-status-suspended/30",
+    ARCHIVED: "bg-status-suspended/10 text-status-suspended border-status-suspended/30",
+    PAUSED: "bg-status-flagged/10 text-status-flagged border-status-flagged/30",
+  };
+  return map[status] || "bg-gray-100 text-gray-600 border-gray-300";
+}
