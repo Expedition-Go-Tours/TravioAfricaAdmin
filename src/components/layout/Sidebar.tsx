@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { auth } from "@/lib/firebase";
 import type { User as FirebaseUser } from "firebase/auth";
 import {
@@ -176,31 +176,22 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                         </>
                       )}
                     </motion.button>
-                    <AnimatePresence initial={false}>
-                      {isOpen && !collapsed && (
-                        <motion.div
-                          className="ml-6 mt-1 space-y-1 overflow-hidden"
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.2, ease: "easeInOut" }}
-                        >
-                          {item.children.map((child) => (
-                            <motion.div key={child.path} variants={listItem}>
-                              <Link
-                                to={child.path}
-                                className={cn(
-                                  "block rounded-sm px-3 py-1.5 text-sm text-text-secondary hover:bg-surface-muted hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
-                                  location.pathname === child.path && "bg-text-primary/[0.06] text-text-primary font-semibold",
-                                )}
-                              >
-                                {child.label}
-                              </Link>
-                            </motion.div>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                    {isOpen && !collapsed && (
+                      <div className="ml-6 mt-1 space-y-1 overflow-hidden">
+                        {item.children.map((child) => (
+                          <Link
+                            key={child.path}
+                            to={child.path}
+                            className={cn(
+                              "block rounded-sm px-3 py-1.5 text-sm text-text-secondary hover:bg-surface-muted hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
+                              location.pathname === child.path && "bg-text-primary/[0.06] text-text-primary font-semibold",
+                            )}
+                          >
+                            {child.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 );
               }
