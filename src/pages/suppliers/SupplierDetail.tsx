@@ -2,19 +2,17 @@ import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, ExternalLink, Trash2 } from "lucide-react";
+import { ArrowLeft, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { SectionError } from "@/components/shared/SectionError";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import api from "@/lib/axios";
-import { formatDate } from "@/lib/utils";
 
 interface SupplierData {
   id?: string;
@@ -22,26 +20,25 @@ interface SupplierData {
   businessInfo?: {
     legalBusinessName?: string; businessName?: string; displayName?: string; businessType?: string;
     country?: string; city?: string; state?: string; address?: string | { line1?: string; city?: string; state?: string; postalCode?: string };
-    registrationNumber?: string; taxId?: string; phone?: string; phoneNumber?: string;
+    phoneNumber?: string; phone?: string;
     website?: string;
   };
   operatingInfo?: {
     tourCategories?: string[]; destinations?: string[]; languages?: string[];
-    cancellationPolicy?: string; meetingStyle?: string; operatingSince?: string;
+    cancellationPolicy?: string; meetingStyle?: string; yearsInBusiness?: string;
     regions?: string[]; serviceArea?: string;
     hours?: Record<string, string>;
     capacity?: { maxGroupSize?: number; monthlyBookings?: number };
   };
   representativeInfo?: {
-    fullName?: string; email?: string; phone?: string; phoneNumber?: string; dateOfBirth?: string;
+    fullName?: string; email?: string; phoneNumber?: string; phone?: string; dateOfBirth?: string;
     dob?: string; birthDate?: string;
     idType?: string; idNumber?: string; idDocumentUrl?: string;
-    position?: string;
     address?: string | { line1?: string; city?: string; state?: string; postalCode?: string };
   };
   businessDocuments?: {
-    certificateOfRegistration?: string; taxCertificate?: string; proofOfAddress?: string;
-    identification?: string; insurance?: string; licenses?: string[];
+    registrationDocumentUrl?: string; taxDocumentUrl?: string; proofOfAddressUrl?: string;
+    licenses?: string[];
   };
   documents?: {
     registrationDocument?: string; taxDocument?: string; proofOfAddress?: string;
@@ -81,11 +78,19 @@ export default function SupplierDetailPage() {
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin", "supplier", id],
-    queryFn: () => api.get<{ data: { applications?: SupplierData[] } }>(`/suppliers/admin/applications`).then((r) => {
-      const app = r.data?.data?.applications?.find((a: SupplierData) => a.id === id);
-      if (app) return app;
+    queryFn: async () => {
+      try {
+        const direct = await api.get(`/suppliers/admin/applications/${id}`);
+        if (direct.data?.data || direct.data) return direct.data?.data || direct.data;
+      } catch {
+        // try applications list fallback
+      }
+      const res = await api.get<{ data: { applications?: SupplierData[] } }>(`/suppliers/admin/applications?limit=500`);
+      const byId = (a: SupplierData) => a.id === id || a.user?.id === id;
+      const found = res.data?.data?.applications?.find(byId);
+      if (found) return found;
       throw new Error("Supplier not found");
-    }),
+    },
     enabled: !!id,
   });
 
@@ -170,12 +175,6 @@ export default function SupplierDetailPage() {
     return [];
   };
 
-  const isValidReason = () => {
-    const modal = modalAction ? actionModals[modalAction] : null;
-    if (!modal?.reasonRequired) return true;
-    return reason.length >= (modal.reasonMin || 1);
-  };
-
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -245,18 +244,16 @@ export default function SupplierDetailPage() {
           <Card>
             <CardHeader><CardTitle>Business Information</CardTitle></CardHeader>
             <CardContent>
-              <DetailGrid
-                fields={[
+              <DetailTable
+                rows={[
                   { label: "Legal Business Name", value: supplier.businessInfo?.legalBusinessName || supplier.businessInfo?.businessName || supplier.businessInfo?.displayName },
                   { label: "Display Name", value: supplier.businessInfo?.displayName || supplier.businessInfo?.legalBusinessName || supplier.businessInfo?.businessName },
                   { label: "Business Type", value: supplier.businessInfo?.businessType },
-                  { label: "Phone", value: supplier.businessInfo?.phone || supplier.businessInfo?.phoneNumber },
+                  { label: "Phone", value: supplier.businessInfo?.phoneNumber || supplier.businessInfo?.phone },
                   { label: "Country", value: supplier.businessInfo?.country },
                   { label: "City", value: supplier.businessInfo?.city || (typeof supplier.businessInfo?.address === "object" ? supplier.businessInfo?.address?.city : undefined) },
                   { label: "State", value: supplier.businessInfo?.state || (typeof supplier.businessInfo?.address === "object" ? supplier.businessInfo?.address?.state : undefined) },
                   { label: "Address", value: typeof supplier.businessInfo?.address === "string" ? supplier.businessInfo.address : supplier.businessInfo?.address?.line1 },
-                  { label: "Registration Number", value: supplier.businessInfo?.registrationNumber },
-                  { label: "Tax ID", value: supplier.businessInfo?.taxId },
                   { label: "Website", value: supplier.businessInfo?.website },
                 ]}
               />
@@ -268,44 +265,18 @@ export default function SupplierDetailPage() {
           <Card>
             <CardHeader><CardTitle>Operating Information</CardTitle></CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium text-text-secondary">Tour Categories</p>
-                  <div className="mt-1 flex flex-wrap gap-2">
-                    {supplier.operatingInfo?.tourCategories?.length ? supplier.operatingInfo.tourCategories.map((c, i) => <Badge key={i} variant="secondary">{c}</Badge>) : <span className="text-sm text-text-tertiary">None</span>}
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-text-secondary">Destinations</p>
-                  <div className="mt-1 flex flex-wrap gap-2">
-                    {supplier.operatingInfo?.destinations?.length ? supplier.operatingInfo.destinations.map((d, i) => <Badge key={i} variant="secondary">{d}</Badge>) : <span className="text-sm text-text-tertiary">None</span>}
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-text-secondary">Languages</p>
-                  <div className="mt-1 flex flex-wrap gap-2">
-                    {supplier.operatingInfo?.languages?.length ? supplier.operatingInfo.languages.map((l, i) => <Badge key={i} variant="secondary">{l}</Badge>) : <span className="text-sm text-text-tertiary">None</span>}
-                  </div>
-                </div>
-                {supplier.operatingInfo?.regions?.length ? (
-                  <div>
-                    <p className="text-sm font-medium text-text-secondary">Regions</p>
-                    <div className="mt-1 flex flex-wrap gap-2">
-                      {supplier.operatingInfo.regions.map((r, i) => <Badge key={i} variant="secondary">{r}</Badge>)}
-                    </div>
-                  </div>
-                ) : null}
-                {supplier.operatingInfo?.serviceArea ? (
-                  <DetailGrid fields={[{ label: "Service Area", value: supplier.operatingInfo.serviceArea }]} />
-                ) : null}
-                <DetailGrid
-                  fields={[
-                    { label: "Cancellation Policy", value: supplier.operatingInfo?.cancellationPolicy },
-                    { label: "Meeting Style", value: supplier.operatingInfo?.meetingStyle },
-                    { label: "Operating Since", value: supplier.operatingInfo?.operatingSince },
-                  ]}
-                />
-              </div>
+              <DetailTable
+                rows={[
+                  { label: "Tour Categories", value: supplier.operatingInfo?.tourCategories?.length ? supplier.operatingInfo.tourCategories.join(", ") : "—" },
+                  { label: "Destinations", value: supplier.operatingInfo?.destinations?.length ? supplier.operatingInfo.destinations.join(", ") : "—" },
+                  { label: "Languages", value: supplier.operatingInfo?.languages?.length ? supplier.operatingInfo.languages.join(", ") : "—" },
+                  { label: "Regions", value: supplier.operatingInfo?.regions?.length ? supplier.operatingInfo.regions.join(", ") : "—" },
+                  { label: "Service Area", value: supplier.operatingInfo?.serviceArea },
+                  { label: "Cancellation Policy", value: supplier.operatingInfo?.cancellationPolicy },
+                  { label: "Meeting Style", value: supplier.operatingInfo?.meetingStyle },
+                  { label: "Years in Business", value: supplier.operatingInfo?.yearsInBusiness },
+                ]}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -314,18 +285,23 @@ export default function SupplierDetailPage() {
           <Card>
             <CardHeader><CardTitle>Representative Information</CardTitle></CardHeader>
             <CardContent>
-              <DetailGrid
-                fields={[
+              <DetailTable
+                rows={[
                   { label: "Full Name", value: supplier.representativeInfo?.fullName },
-                  { label: "Position", value: supplier.representativeInfo?.position },
                   { label: "Email", value: supplier.representativeInfo?.email },
-                  { label: "Phone", value: supplier.representativeInfo?.phone || supplier.representativeInfo?.phoneNumber },
+                  { label: "Phone", value: supplier.representativeInfo?.phoneNumber || supplier.representativeInfo?.phone },
                   { label: "Date of Birth", value: supplier.representativeInfo?.dateOfBirth || supplier.representativeInfo?.dob || supplier.representativeInfo?.birthDate },
                   { label: "ID Type", value: supplier.representativeInfo?.idType },
-                  { label: "ID Number", value: supplier.representativeInfo?.idNumber || supplier.representativeInfo?.idDocumentUrl },
                   { label: "Address", value: typeof supplier.representativeInfo?.address === "string" ? supplier.representativeInfo.address : supplier.representativeInfo?.address?.line1 },
                 ]}
               />
+              <div className="mt-4">
+                <DetailTable
+                  rows={[
+                    { label: "ID Document", value: supplier.representativeInfo?.idDocumentUrl, type: "image" },
+                  ]}
+                />
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -334,15 +310,24 @@ export default function SupplierDetailPage() {
           <Card>
             <CardHeader><CardTitle>Documents</CardTitle></CardHeader>
             <CardContent>
-              <DetailGrid
-                fields={[
-                  { label: "Registration Document", value: supplier.businessDocuments?.certificateOfRegistration || supplier.documents?.registrationDocument, isLink: true },
-                  { label: "Tax Document", value: supplier.businessDocuments?.taxCertificate || supplier.documents?.taxDocument, isLink: true },
-                  { label: "Insurance", value: supplier.businessDocuments?.insurance, isLink: true },
-                  { label: "ID Document", value: supplier.businessDocuments?.identification || supplier.documents?.idDocument, isLink: true },
-                  { label: "Proof of Address", value: supplier.businessDocuments?.proofOfAddress || supplier.documents?.proofOfAddress, isLink: true },
+              <DetailTable
+                rows={[
+                  { label: "Registration Document", value: supplier.businessDocuments?.registrationDocumentUrl, type: "image" },
+                  { label: "Tax Document", value: supplier.businessDocuments?.taxDocumentUrl, type: "image" },
+                  { label: "Proof of Address", value: supplier.businessDocuments?.proofOfAddressUrl, type: "image" },
                 ]}
               />
+              <div className="mt-4">
+                <p className="mb-2 text-xs font-medium text-text-secondary">Licenses</p>
+                <div className="flex flex-wrap gap-3">
+                  {supplier.businessDocuments?.licenses?.length ? supplier.businessDocuments.licenses.map((l, i) => (
+                    <a key={i} href={l} target="_blank" rel="noopener noreferrer" className="group relative">
+                      <img src={l} alt={`License ${i + 1}`} className="h-24 w-32 rounded-lg border border-border-muted object-cover shadow-sm transition-shadow hover:shadow-md" />
+                      <span className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/0 text-xs text-white transition-colors group-hover:bg-black/40">View</span>
+                    </a>
+                  )) : <span className="text-sm text-text-tertiary">None</span>}
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -351,8 +336,8 @@ export default function SupplierDetailPage() {
           <Card>
             <CardHeader><CardTitle>Payout Information</CardTitle></CardHeader>
             <CardContent>
-              <DetailGrid
-                fields={[
+              <DetailTable
+                rows={[
                   { label: "Bank Account Name", value: supplier.payoutInfo?.bankAccountName || supplier.payoutInfo?.accountName },
                   { label: "Account Number", value: supplier.payoutInfo?.accountNumber },
                   { label: "Bank Name", value: supplier.payoutInfo?.bankName },
@@ -369,12 +354,12 @@ export default function SupplierDetailPage() {
           <Card>
             <CardHeader><CardTitle>Compliance</CardTitle></CardHeader>
             <CardContent>
-              <DetailGrid
-                fields={[
-                  { label: "Accepted Terms", value: (supplier.compliance?.acceptedTerms ?? supplier.compliance?.termsAccepted) ? "Yes" : "No", isBadge: true, badgeColor: (supplier.compliance?.acceptedTerms ?? supplier.compliance?.termsAccepted) ? "bg-status-active/10 text-status-active" : "bg-status-rejected/10 text-status-rejected" },
-                  { label: "Privacy Accepted", value: supplier.compliance?.privacyAccepted ? "Yes" : "No", isBadge: true, badgeColor: supplier.compliance?.privacyAccepted ? "bg-status-active/10 text-status-active" : "bg-status-rejected/10 text-status-rejected" },
-                  { label: "Agreed to Payout Terms", value: supplier.compliance?.agreedToPayoutTerms ? "Yes" : "No", isBadge: true, badgeColor: supplier.compliance?.agreedToPayoutTerms ? "bg-status-active/10 text-status-active" : "bg-status-rejected/10 text-status-rejected" },
-                  { label: "Verified", value: supplier.compliance?.verified ? "Yes" : "No", isBadge: true, badgeColor: supplier.compliance?.verified ? "bg-status-active/10 text-status-active" : "bg-status-rejected/10 text-status-rejected" },
+              <DetailTable
+                rows={[
+                  { label: "Accepted Terms", value: (supplier.compliance?.acceptedTerms ?? supplier.compliance?.termsAccepted) ? "Yes" : "No", type: "badge", badgeColor: (supplier.compliance?.acceptedTerms ?? supplier.compliance?.termsAccepted) ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700" },
+                  { label: "Privacy Accepted", value: supplier.compliance?.privacyAccepted ? "Yes" : "No", type: "badge", badgeColor: supplier.compliance?.privacyAccepted ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700" },
+                  { label: "Agreed to Payout Terms", value: supplier.compliance?.agreedToPayoutTerms ? "Yes" : "No", type: "badge", badgeColor: supplier.compliance?.agreedToPayoutTerms ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700" },
+                  { label: "Verified", value: supplier.compliance?.verified ? "Yes" : "No", type: "badge", badgeColor: supplier.compliance?.verified ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700" },
                   { label: "Review Status", value: supplier.compliance?.reviewStatus || supplier.status },
                 ]}
               />
@@ -449,23 +434,28 @@ export default function SupplierDetailPage() {
   );
 }
 
-function DetailGrid({ fields }: { fields: Array<{ label: string; value?: string | null; isLink?: boolean; isBadge?: boolean; badgeColor?: string }> }) {
+function DetailTable({ rows }: { rows: Array<{ label: string; value?: string | null | undefined; type?: "text" | "badge" | "image"; badgeColor?: string }> }) {
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {fields.map((f) => (
-        <div key={f.label}>
-          <p className="text-xs font-medium text-text-secondary">{f.label}</p>
-          {f.isBadge ? (
-            <span className={`inline-block mt-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${f.badgeColor || "bg-surface-muted text-text-secondary"}`}>{f.value || "—"}</span>
-          ) : f.isLink && f.value ? (
-            <a href={f.value} target="_blank" rel="noopener noreferrer" className="mt-1 flex items-center gap-1 text-sm text-status-approved hover:underline">
-              <ExternalLink className="h-3 w-3" /> View Document
-            </a>
-          ) : (
-            <p className="mt-1 text-sm text-text-primary">{f.value || "—"}</p>
-          )}
-        </div>
-      ))}
-    </div>
+    <table className="w-full text-sm border-collapse border border-border-muted">
+      <tbody>
+        {rows.map((r) => (
+          <tr key={r.label} className="border-b border-border-muted">
+            <td className="w-1/3 py-2.5 px-4 text-xs font-medium text-text-secondary uppercase tracking-wider border-r border-border-muted align-middle">{r.label}</td>
+            <td className="py-2.5 px-4 text-text-primary align-middle">
+              {r.type === "badge" ? (
+                <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${r.badgeColor || "bg-surface-muted text-text-secondary"}`}>{r.value || "—"}</span>
+              ) : r.type === "image" && r.value ? (
+                <a href={r.value} target="_blank" rel="noopener noreferrer" className="group relative inline-block">
+                  <img src={r.value} alt={r.label} className="h-24 w-32 rounded-lg border border-border-muted object-cover shadow-sm transition-shadow hover:shadow-md" />
+                  <span className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/0 text-xs text-white transition-colors group-hover:bg-black/40">View</span>
+                </a>
+              ) : (
+                <span>{r.value || "—"}</span>
+              )}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }

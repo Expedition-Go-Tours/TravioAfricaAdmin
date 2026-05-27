@@ -36,7 +36,6 @@ export default function TourPerformancePage() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("");
-  const [category, setCategory] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("totalRevenue");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
@@ -50,11 +49,10 @@ export default function TourPerformancePage() {
     sortOrder,
   });
   if (status && status !== "all") queryParams.set("status", status);
-  if (category) queryParams.set("category", category);
   if (searchQuery) queryParams.set("search", searchQuery);
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["admin", "tours", { page, limit, status, category, searchQuery, sortBy, sortOrder }],
+    queryKey: ["admin", "tours", { page, limit, status, searchQuery, sortBy, sortOrder }],
     queryFn: () => api.get(`/admin/analytics/tour-performance?${queryParams.toString()}`).then((r) => r.data),
   });
 
@@ -105,8 +103,8 @@ export default function TourPerformancePage() {
                 ))}
               </SelectContent>
             </Select>
-            {(status !== "all" || category || searchQuery) && (
-              <Button variant="ghost" size="sm" onClick={() => { setStatus("all"); setCategory(""); setSearchQuery(""); setPage(1); }}>
+            {(status !== "all" || searchQuery) && (
+              <Button variant="ghost" size="sm" onClick={() => { setStatus("all"); setSearchQuery(""); setPage(1); }}>
                 Clear Filters
               </Button>
             )}
@@ -119,7 +117,7 @@ export default function TourPerformancePage() {
             loading={isLoading}
             error={isError ? "Failed to load tours" : null}
             emptyMessage="No tours found matching your filters"
-            onRowClick={(row) => navigate(`/admin/tours?highlight=${row.id}`)}
+            onRowClick={(row) => navigate(`/admin/tours/${row.id}`)}
             pagination={pagination ? { page: pagination.page || page, totalPages: pagination.totalPages || 1, totalCount: pagination.totalCount || 0, onPageChange: setPage } : undefined}
             sortBy={sortBy}
             sortOrder={sortOrder}

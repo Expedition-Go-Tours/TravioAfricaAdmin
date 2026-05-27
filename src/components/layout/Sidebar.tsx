@@ -22,15 +22,26 @@ import {
   PanelLeftOpen,
   ChevronDown,
   ChevronRight,
+  BarChart3,
+  LineChart,
+  Activity,
+  UserCog,
+  Target,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fadeInLeft, listItem } from "@/lib/animations";
+
+interface ChildItem {
+  label: string;
+  path: string;
+  icon: React.ReactNode;
+}
 
 interface NavItem {
   label: string;
   path?: string;
   icon: React.ReactNode;
-  children?: { label: string; path: string }[];
+  children?: ChildItem[];
 }
 
 const navGroups: { group: string; items: NavItem[] }[] = [
@@ -42,18 +53,18 @@ const navGroups: { group: string; items: NavItem[] }[] = [
         label: "Revenue",
         icon: <TrendingUp className="h-4 w-4" />,
         children: [
-          { label: "Revenue Trend", path: "/admin/revenue-trend" },
-          { label: "Search Analytics", path: "/admin/search-analytics" },
-          { label: "Cart Abandonment", path: "/admin/cart-abandonment" },
+          { label: "Revenue Trend", path: "/admin/revenue-trend", icon: <BarChart3 className="h-4 w-4" /> },
+          { label: "Search Analytics", path: "/admin/search-analytics", icon: <Search className="h-4 w-4" /> },
+          { label: "Cart Abandonment", path: "/admin/cart-abandonment", icon: <ShoppingCart className="h-4 w-4" /> },
         ],
       },
       {
         label: "Users",
         icon: <Users className="h-4 w-4" />,
         children: [
-          { label: "User Growth", path: "/admin/user-growth" },
-          { label: "CLV", path: "/admin/clv" },
-          { label: "Conversion Funnel", path: "/admin/funnel" },
+          { label: "User Growth", path: "/admin/user-growth", icon: <UserCog className="h-4 w-4" /> },
+          { label: "CLV", path: "/admin/clv", icon: <DollarSign className="h-4 w-4" /> },
+          { label: "Conversion Funnel", path: "/admin/funnel", icon: <Target className="h-4 w-4" /> },
         ],
       },
       { label: "Tours", path: "/admin/tours", icon: <Map className="h-4 w-4" /> },
@@ -114,7 +125,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       )}
       aria-label="Sidebar navigation"
     >
-      <div className="flex h-14 items-center justify-between border-b border-border-muted px-4">
+      <div className="flex h-[72px] items-center justify-between border-b border-border-muted px-4">
         {!collapsed && (
           <div className="flex items-center gap-2 truncate">
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-muted text-xs font-semibold text-text-secondary">
@@ -177,17 +188,18 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                       )}
                     </motion.button>
                     {isOpen && !collapsed && (
-                      <div className="ml-6 mt-1 space-y-1 overflow-hidden">
+                      <div className="ml-3 border-l border-border-muted pl-2 mt-1 space-y-0.5 overflow-hidden">
                         {item.children.map((child) => (
                           <Link
                             key={child.path}
                             to={child.path}
                             className={cn(
-                              "block rounded-sm px-3 py-1.5 text-sm text-text-secondary hover:bg-surface-muted hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
+                              "flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-text-secondary hover:bg-surface-muted hover:text-text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
                               location.pathname === child.path && "bg-text-primary/[0.06] text-text-primary font-semibold",
                             )}
                           >
-                            {child.label}
+                            <span className="text-text-tertiary">{child.icon}</span>
+                            <span>{child.label}</span>
                           </Link>
                         ))}
                       </div>

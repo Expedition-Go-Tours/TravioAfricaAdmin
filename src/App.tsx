@@ -15,6 +15,7 @@ import UserGrowthPage from "@/pages/users/UserGrowth";
 import CustomerLifetimeValuePage from "@/pages/users/CustomerLifetimeValue";
 import ConversionFunnelPage from "@/pages/users/ConversionFunnel";
 import TourPerformancePage from "@/pages/tours/TourPerformance";
+import TourDetailPage from "@/pages/tours/TourDetail";
 import SupplierApplicationsPage from "@/pages/suppliers/SupplierApplications";
 import SupplierDetailPage from "@/pages/suppliers/SupplierDetail";
 import ActiveSuppliersPage from "@/pages/suppliers/ActiveSuppliers";
@@ -46,6 +47,7 @@ export default function App() {
             <Route path="clv" element={<CustomerLifetimeValuePage />} />
             <Route path="funnel" element={<ConversionFunnelPage />} />
             <Route path="tours" element={<TourPerformancePage />} />
+            <Route path="tours/:id" element={<TourDetailPage />} />
             <Route path="suppliers" element={<SupplierApplicationsPage />} />
             <Route path="suppliers/:id" element={<SupplierDetailPage />} />
             <Route path="suppliers/active" element={<ActiveSuppliersPage />} />

@@ -31,7 +31,7 @@ export function Header() {
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
-      className="flex h-14 items-center justify-between border-b border-border-muted bg-surface-base px-6">
+      className="flex h-[72px] items-center justify-between border-b border-border-muted bg-surface-base px-6">
       <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-text-secondary">
         <Link to="/admin/overview" className="hover:text-text-primary">
           Home
