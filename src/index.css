@@ -4,31 +4,127 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 225 25% 14%;
+    --background: 0 0% 98%;
+    --foreground: 210 20% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 225 25% 14%;
+    --card-foreground: 210 20% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 225 25% 14%;
-    --primary: 225 60% 45%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 20% 96%;
-    --secondary-foreground: 225 25% 20%;
-    --muted: 210 20% 96%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 210 20% 96%;
-    --accent-foreground: 225 25% 20%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 225 60% 45%;
+    --popover-foreground: 210 20% 12%;
+
+    --primary: 152 40% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 16% 96%;
+    --secondary-foreground: 210 15% 25%;
+    --muted: 210 14% 95%;
+    --muted-foreground: 210 12% 50%;
+    --accent: 152 50% 94%;
+    --accent-foreground: 152 42% 30%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 152 40% 40%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 75% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 210 14% 90%;
+    --input: 210 14% 90%;
+    --ring: 152 40% 42%;
     --radius: 8px;
-    --chart-1: 225 60% 45%;
-    --chart-2: 142 76% 36%;
-    --chart-3: 25 95% 53%;
-    --chart-4: 48 96% 53%;
-    --chart-5: 272 81% 56%;
+
+    --text-primary: 210 20% 12%;
+    --text-secondary: 210 12% 45%;
+    --text-tertiary: 210 10% 60%;
+    --surface-base: 0 0% 100%;
+    --surface-muted: 210 14% 95%;
+    --border-muted: 210 12% 88%;
+
+    --status-pending: 38 75% 50%;
+    --status-approved: 210 60% 50%;
+    --status-active: 152 40% 40%;
+    --status-rejected: 0 65% 50%;
+    --status-suspended: 210 5% 45%;
+    --status-flagged: 25 70% 50%;
+    --status-processing: 270 40% 55%;
+
+    --chart-1: 152 40% 42%;
+    --chart-2: 210 55% 50%;
+    --chart-3: 38 70% 52%;
+    --chart-4: 25 65% 50%;
+    --chart-5: 270 35% 52%;
+
+    --green-50: 152 55% 94%;
+    --green-100: 152 50% 88%;
+    --green-200: 152 45% 76%;
+    --green-300: 152 40% 62%;
+    --green-400: 152 38% 50%;
+    --green-500: 152 40% 40%;
+    --green-600: 152 42% 32%;
+    --green-700: 152 44% 24%;
+    --green-800: 152 46% 16%;
+    --green-900: 152 50% 9%;
+  }
+
+  .dark {
+    --background: 210 20% 8%;
+    --foreground: 210 15% 90%;
+    --card: 210 18% 12%;
+    --card-foreground: 210 15% 90%;
+    --popover: 210 18% 12%;
+    --popover-foreground: 210 15% 90%;
+
+    --primary: 152 45% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 15% 18%;
+    --secondary-foreground: 210 15% 80%;
+    --muted: 210 15% 16%;
+    --muted-foreground: 210 10% 55%;
+    --accent: 152 30% 15%;
+    --accent-foreground: 152 40% 65%;
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 152 45% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 75% 55%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 210 15% 20%;
+    --input: 210 15% 20%;
+    --ring: 152 45% 48%;
+    --radius: 8px;
+
+    --text-primary: 210 15% 90%;
+    --text-secondary: 210 10% 60%;
+    --text-tertiary: 210 8% 45%;
+    --surface-base: 210 18% 12%;
+    --surface-muted: 210 15% 16%;
+    --border-muted: 210 14% 22%;
+
+    --status-pending: 38 75% 55%;
+    --status-approved: 210 55% 55%;
+    --status-active: 152 45% 45%;
+    --status-rejected: 0 65% 55%;
+    --status-suspended: 210 5% 50%;
+    --status-flagged: 25 70% 55%;
+    --status-processing: 270 35% 60%;
+
+    --chart-1: 152 45% 48%;
+    --chart-2: 210 50% 55%;
+    --chart-3: 38 70% 55%;
+    --chart-4: 25 65% 55%;
+    --chart-5: 270 35% 55%;
+
+    --green-50: 152 40% 14%;
+    --green-100: 152 42% 18%;
+    --green-200: 152 44% 22%;
+    --green-300: 152 42% 30%;
+    --green-400: 152 40% 38%;
+    --green-500: 152 45% 45%;
+    --green-600: 152 48% 52%;
+    --green-700: 152 50% 60%;
+    --green-800: 152 52% 72%;
+    --green-900: 152 55% 88%;
   }
 }
 
