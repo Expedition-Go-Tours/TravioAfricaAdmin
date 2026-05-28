@@ -23,7 +23,7 @@ const periods = [
 ];
 
 interface FunnelData {
-  funnel?: Array<{ step?: string; users?: number; dropOff?: number }>;
+  funnel?: Array<{ step?: string; users?: number; dropOff?: string | null }>;
   conversionRates?: { viewToCart?: number; cartToCheckout?: number; checkoutToComplete?: number; overall?: number };
   dailyTrend?: Array<{ date?: string; views?: number; cartAdds?: number; checkouts?: number; bookings?: number }>;
 }
@@ -97,7 +97,7 @@ export default function ConversionFunnelPage() {
                         <p className="text-xs text-text-tertiary">{pct.toFixed(1)}% of top</p>
                         {idx > 0 && step.dropOff != null && (
                           <p className="text-xs text-status-rejected flex items-center justify-end gap-0.5">
-                            <ArrowDown className="h-3 w-3" /> {step.dropOff.toFixed(1)}%
+                            <ArrowDown className="h-3 w-3" /> {step.dropOff}
                           </p>
                         )}
                       </div>
