@@ -28,32 +28,34 @@ export default function PayoutsOverview() {
 
   return (
     <div className="space-y-6">
-      {/* KPI Stats */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <KpiCard
-          label="Pending Payouts"
-          value={isLoading ? "..." : `${formatNumber(data?.data?.pending?.count ?? data?.pending?.count ?? 0)} totaling ${formatCurrency(data?.data?.pending?.total ?? data?.pending?.total ?? 0)}`}
-          icon={<Clock className="h-4 w-4" />}
-          accent="amber"
-        />
-        <KpiCard
-          label="Paid This Month"
-          value={isLoading ? "..." : `${formatNumber(data?.data?.paidThisMonth?.count ?? data?.paidThisMonth?.count ?? 0)} totaling ${formatCurrency(data?.data?.paidThisMonth?.total ?? data?.paidThisMonth?.total ?? 0)}`}
-          icon={<CheckCircle className="h-4 w-4" />}
-          accent="green"
-        />
-        <KpiCard
-          label="Total Commission"
-          value={isLoading ? "..." : formatCurrency(totalCommission)}
-          icon={<Wallet className="h-4 w-4" />}
-          accent="blue"
-        />
-        <KpiCard
-          label="Total Paid"
-          value={isLoading ? "..." : formatCurrency(totalPaid)}
-          icon={<DollarSign className="h-4 w-4" />}
-          accent="green"
-        />
+      {/* KPI Stats — blended panel */}
+      <div className="rounded-sm border border-border-muted shadow-2 overflow-hidden">
+        <div className="grid grid-cols-2 divide-x divide-border-muted sm:grid-cols-4">
+          <KpiCard
+            label="Pending Payouts"
+            value={isLoading ? "..." : `${formatNumber(data?.data?.pending?.count ?? data?.pending?.count ?? 0)} totaling ${formatCurrency(data?.data?.pending?.total ?? data?.pending?.total ?? 0)}`}
+            icon={<Clock className="h-5 w-5" />}
+            accent="amber"
+          />
+          <KpiCard
+            label="Paid This Month"
+            value={isLoading ? "..." : `${formatNumber(data?.data?.paidThisMonth?.count ?? data?.paidThisMonth?.count ?? 0)} totaling ${formatCurrency(data?.data?.paidThisMonth?.total ?? data?.paidThisMonth?.total ?? 0)}`}
+            icon={<CheckCircle className="h-5 w-5" />}
+            accent="green"
+          />
+          <KpiCard
+            label="Total Commission"
+            value={isLoading ? "..." : formatCurrency(totalCommission)}
+            icon={<Wallet className="h-5 w-5" />}
+            accent="blue"
+          />
+          <KpiCard
+            label="Total Paid"
+            value={isLoading ? "..." : formatCurrency(totalPaid)}
+            icon={<DollarSign className="h-5 w-5" />}
+            accent="green"
+          />
+        </div>
       </div>
 
       {/* Monthly Payout Trend Chart */}
@@ -224,24 +226,20 @@ function KpiCard({
   accent: "green" | "blue" | "amber";
 }) {
   const accentMap = {
-    green: { bg: "bg-gradient-to-br from-green-50 to-white", border: "border-green-200/40", iconBg: "bg-green-100", iconColor: "text-green-600" },
-    blue: { bg: "bg-gradient-to-br from-blue-50 to-white", border: "border-blue-200/40", iconBg: "bg-blue-100", iconColor: "text-blue-600" },
-    amber: { bg: "bg-gradient-to-br from-amber-50 to-white", border: "border-amber-200/40", iconBg: "bg-amber-100", iconColor: "text-amber-600" },
+    green: { bg: "bg-gradient-to-br from-green-50 to-white", sideBorder: "border-l-green-400", iconBg: "bg-green-100", iconColor: "text-green-600" },
+    blue: { bg: "bg-gradient-to-br from-blue-50 to-white", sideBorder: "border-l-blue-400", iconBg: "bg-blue-100", iconColor: "text-blue-600" },
+    amber: { bg: "bg-gradient-to-br from-amber-50 to-white", sideBorder: "border-l-amber-400", iconBg: "bg-amber-100", iconColor: "text-amber-600" },
   };
 
   const a = accentMap[accent];
 
   return (
-    <div className={`rounded-sm border ${a.border} ${a.bg} p-3.5 shadow-2 transition-all hover:shadow-md`}>
-      <div className="flex items-start justify-between">
-        <div className="min-w-0">
-          <p className="text-xs text-text-secondary truncate">{label}</p>
-          <p className="mt-1 text-base font-bold text-text-primary leading-tight">{value}</p>
-        </div>
-        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${a.iconBg} ${a.iconColor}`}>
-          {icon}
-        </div>
+    <div className={`${a.bg} ${a.sideBorder} border-l-2 flex flex-col items-center justify-center px-3 py-5 text-center`}>
+      <div className={`flex h-9 w-9 items-center justify-center rounded-full ${a.iconBg} ${a.iconColor} mb-2.5`}>
+        {icon}
       </div>
+      <p className="text-xs text-text-secondary truncate max-w-full">{label}</p>
+      <p className="mt-0.5 text-sm font-bold text-text-primary leading-snug">{value}</p>
     </div>
   );
 }
