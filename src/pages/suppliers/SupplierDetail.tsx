@@ -85,15 +85,10 @@ export default function SupplierDetailPage() {
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin", "supplier", id],
     queryFn: async () => {
-      try {
-        const direct = await api.get(`/suppliers/admin/applications/${id}`);
-        if (direct.data?.data || direct.data) return direct.data?.data || direct.data;
-      } catch {
-        // try applications list fallback
-      }
-      const res = await api.get<{ data: { applications?: SupplierData[] } }>(`/suppliers/admin/applications?limit=500`);
+      const res = await api.get(`/suppliers/admin/applications?limit=500`);
+      const apps: SupplierData[] = res.data?.data?.applications || res.data?.applications || [];
       const byId = (a: SupplierData) => a.id === id || a.user?.id === id;
-      const found = res.data?.data?.applications?.find(byId);
+      const found = apps.find(byId);
       if (found) return found;
       throw new Error("Supplier not found");
     },
