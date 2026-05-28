@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Eye, EyeOff, CheckCircle, Building2, Check, AlertCircle, ArrowLeft, Wallet, Smartphone, CreditCard, Globe, Calendar } from "lucide-react";
+import { Eye, EyeOff, CheckCircle, Building2, Check, AlertCircle, ArrowLeft, Wallet, Smartphone, CreditCard, Globe, Calendar, Search, Users, Banknote, XCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { DataTable } from "@/components/shared/DataTable";
 import type { Column } from "@/components/shared/DataTable";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -117,50 +118,102 @@ export default function PayoutMethodsPage() {
     },
   ];
 
+  const [search, setSearch] = useState("");
+
   const suppliers = data?.suppliers || data?.data?.suppliers || [];
   const pagination = data?.pagination || data?.data?.pagination;
   const selectedSupplier = suppliers.find((s: PayoutMethodSupplier) => s.id === viewSupplierId);
 
+  const stats = {
+    total: pagination?.totalCount ?? suppliers.length,
+    withMethods: suppliers.filter((s: PayoutMethodSupplier) => (s.payoutMethods?.length ?? s.methodsCount ?? 0) > 0).length,
+    totalMethods: suppliers.reduce((sum: number, s: PayoutMethodSupplier) => sum + (s.payoutMethods?.length ?? s.methodsCount ?? 0), 0),
+  };
+
+  const searchLower = search.toLowerCase();
+  const filteredSuppliers = search
+    ? suppliers.filter(
+        (s: PayoutMethodSupplier) =>
+          (s.name || s.user?.name || "").toLowerCase().includes(searchLower) ||
+          (s.email || s.user?.email || "").toLowerCase().includes(searchLower),
+      )
+    : suppliers;
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate(-1)} className="rounded-sm bg-white p-1.5 shadow-sm hover:ring-2 hover:ring-green-300 transition-all">
+          <button onClick={() => navigate(-1)} className="rounded-sm bg-white p-1.5 shadow-sm hover:ring-2 hover:ring-green-300 transition-all shrink-0">
             <ArrowLeft className="h-4 w-4 text-text-primary" />
           </button>
-          <h1 className="text-lg font-semibold text-text-primary">Payout Methods</h1>
+          <div>
+            <h1 className="text-lg font-semibold text-text-primary">Payout Methods</h1>
+            <p className="mt-0.5 text-sm text-text-secondary">
+              Manage and verify supplier payout methods across the platform
+            </p>
+          </div>
         </div>
-        <Select value={hasMethod} onValueChange={(v) => { setHasMethod(v); setPage(1); }}>
-          <SelectTrigger className="w-44">
-            <SelectValue placeholder="Filter" />
-          </SelectTrigger>
-          <SelectContent>
-            {filterOptions.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
 
+      {/* Stats row */}
+      {!isLoading && !isError && (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <KpiCard label="Total Suppliers" value={stats.total.toLocaleString()} icon={<Users className="h-4 w-4" />} accent="green" />
+          <KpiCard label="With Methods" value={stats.withMethods.toLocaleString()} icon={<Wallet className="h-4 w-4" />} accent="blue" />
+          <KpiCard label="Needs Setup" value={(suppliers.length - stats.withMethods).toLocaleString()} icon={<XCircle className="h-4 w-4" />} accent="amber" />
+          <KpiCard label="Total Methods" value={stats.totalMethods.toLocaleString()} icon={<Banknote className="h-4 w-4" />} accent="green" />
+        </div>
+      )}
+
+      {/* Search + Filter */}
+      {!isLoading && !isError && (
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 max-w-xs min-w-[200px]">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-tertiary pointer-events-none" />
+            <Input
+              placeholder="Search suppliers..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Select value={hasMethod} onValueChange={(v) => { setHasMethod(v); setPage(1); }}>
+            <SelectTrigger className="w-44">
+              <SelectValue placeholder="Filter" />
+            </SelectTrigger>
+            <SelectContent>
+              {filterOptions.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <span className="text-xs text-text-tertiary ml-auto tabular-nums">
+            {filteredSuppliers.length} of {pagination?.totalCount ?? suppliers.length} suppliers
+          </span>
+        </div>
+      )}
+
+      {/* Table */}
       <Card>
         <CardContent className="p-0">
           <DataTable
             columns={columns}
-            data={suppliers}
+            data={filteredSuppliers}
             loading={isLoading}
             error={isError ? "Failed to load payout methods" : null}
-            emptyMessage="No suppliers found"
-            pagination={pagination ? { page: pagination.page || page, totalPages: pagination.totalPages || 1, totalCount: pagination.totalCount || 0, onPageChange: setPage } : undefined}
+            emptyMessage={search ? "No suppliers match your search" : "No suppliers found"}
+            pagination={!search && pagination ? { page: pagination.page || page, totalPages: pagination.totalPages || 1, totalCount: pagination.totalCount || 0, onPageChange: setPage } : undefined}
             onRetry={() => refetch()}
             keyExtractor={(r) => r.id}
+            onRowClick={(r) => setViewSupplierId(r.id)}
           />
         </CardContent>
       </Card>
 
       {/* View Methods Dialog */}
       <Dialog open={!!viewSupplierId} onOpenChange={(v) => { if (!v) setViewSupplierId(null); }}>
-        <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden border-0 [&>button.absolute]:right-4 [&>button.absolute]:top-4 [&>button.absolute]:flex [&>button.absolute]:h-8 [&>button.absolute]:w-8 [&>button.absolute]:items-center [&>button.absolute]:justify-center [&>button.absolute]:rounded-full [&>button.absolute]:bg-white/30 [&>button.absolute]:text-black [&>button.absolute]:opacity-100 [&>button.absolute]:hover:bg-white/50 [&>button.absolute]:backdrop-blur-sm [&>button.absolute]:shadow-sm [&_.lucide-x]:h-4.5 [&_.lucide-x]:w-4.5">
-          {/* Supplier header — gradient banner */}
+        <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden border-0 [&>button.absolute]:right-4 [&>button.absolute]:top-4 [&>button.absolute]:flex [&>button.absolute]:h-8 [&>button.absolute]:w-8 [&>button.absolute]:items-center [&>button.absolute]:justify-center [&>button.absolute]:rounded-full [&>button.absolute]:bg-white/30 [&>button.absolute]:text-black [&>button.absolute]:opacity-100 [&>button.absolute]:hover:bg-white/50 [&>button.absolute]:backdrop-blur-sm [&>button.absolute]:shadow-sm">
           <div className="bg-gradient-to-r from-green-700 to-green-600 px-6 pt-6 pb-8">
             <div className="flex items-center gap-4">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/20 text-base font-bold text-white shadow-inner">
@@ -337,6 +390,40 @@ function Field({ label, value }: { label: string; value?: string | null }) {
     <div className="rounded-sm bg-surface-muted/50 px-3 py-2">
       <p className="text-[11px] text-text-tertiary uppercase tracking-wider">{label}</p>
       <p className="mt-0.5 text-sm font-medium text-text-primary">{value || "—"}</p>
+    </div>
+  );
+}
+
+function KpiCard({
+  label,
+  value,
+  icon,
+  accent,
+}: {
+  label: string;
+  value: string;
+  icon: React.ReactNode;
+  accent: "green" | "blue" | "amber";
+}) {
+  const accentMap = {
+    green: { bg: "bg-gradient-to-br from-green-50 to-white", border: "border-green-200/40", iconBg: "bg-green-100", iconColor: "text-green-600" },
+    blue: { bg: "bg-gradient-to-br from-blue-50 to-white", border: "border-blue-200/40", iconBg: "bg-blue-100", iconColor: "text-blue-600" },
+    amber: { bg: "bg-gradient-to-br from-amber-50 to-white", border: "border-amber-200/40", iconBg: "bg-amber-100", iconColor: "text-amber-600" },
+  };
+
+  const a = accentMap[accent];
+
+  return (
+    <div className={`rounded-sm border ${a.border} ${a.bg} p-3.5 shadow-2 transition-all hover:shadow-md`}>
+      <div className="flex items-start justify-between">
+        <div className="min-w-0">
+          <p className="text-xs text-text-secondary truncate">{label}</p>
+          <p className="mt-1 text-base font-bold text-text-primary leading-tight">{value}</p>
+        </div>
+        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${a.iconBg} ${a.iconColor}`}>
+          {icon}
+        </div>
+      </div>
     </div>
   );
 }
