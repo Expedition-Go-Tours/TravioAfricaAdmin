@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Eye, EyeOff, CheckCircle, Building2, Check, AlertCircle, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, CheckCircle, Building2, Check, AlertCircle, ArrowLeft, Wallet, Smartphone, CreditCard, Globe, Calendar } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -159,135 +159,171 @@ export default function PayoutMethodsPage() {
 
       {/* View Methods Dialog */}
       <Dialog open={!!viewSupplierId} onOpenChange={(v) => { if (!v) setViewSupplierId(null); }}>
-        <DialogContent className="max-w-xl">
-          <DialogHeader>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100 text-sm font-bold text-green-700">
+        <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden">
+          {/* Supplier header — gradient banner */}
+          <div className="bg-gradient-to-r from-green-700 to-green-600 px-6 pt-6 pb-8">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/20 text-base font-bold text-white shadow-inner">
                 {(selectedSupplier?.name || selectedSupplier?.user?.name)?.charAt(0)?.toUpperCase() || "?"}
               </div>
               <div className="min-w-0">
-                <DialogTitle className="text-base">{selectedSupplier?.name || selectedSupplier?.user?.name || "Supplier"}</DialogTitle>
-                <DialogDescription className="flex items-center gap-2 text-xs mt-0.5">
+                <DialogTitle className="text-lg font-semibold text-white">{selectedSupplier?.name || selectedSupplier?.user?.name || "Supplier"}</DialogTitle>
+                <DialogDescription className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-sm text-green-100">
                   <span>{selectedSupplier?.email || selectedSupplier?.user?.email || ""}</span>
-                  <span className="h-3 w-px bg-border-muted" />
+                  <span className="h-3 w-px bg-green-400/40" />
                   <StatusBadge status={selectedSupplier?.supplierProfile?.status || selectedSupplier?.status || "UNKNOWN"} />
                 </DialogDescription>
               </div>
             </div>
-          </DialogHeader>
+          </div>
 
-          {methodsLoading ? (
-            <div className="space-y-4">
-              {Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-36 w-full rounded-sm" />)}
-            </div>
-          ) : !methodsData?.data?.methods?.length ? (
-            <SectionEmpty message="No payout methods set up yet" />
-          ) : (
-            <div className="space-y-5">
-              <div className="flex items-center gap-3 px-1">
-                <span className="text-xs font-medium text-text-secondary uppercase tracking-wider">
-                  {methodsData.data.methods.length} Method{methodsData.data.methods.length > 1 ? "s" : ""}
-                </span>
-                <span className="h-3 w-px bg-border-muted" />
-                <span className="text-xs text-text-secondary">
-                  Default:{" "}
-                  <span className="font-medium text-text-primary">
-                    {methodsData.data.methods.find((m: PayoutMethod) => m.isDefault)?.type?.replace(/_/g, " ") || "None set"}
-                  </span>
-                </span>
+          <div className="px-6 py-5">
+            {methodsLoading ? (
+              <div className="space-y-4">
+                {Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-44 w-full rounded-sm" />)}
               </div>
-
-              {methodsData.data.methods.map((method: PayoutMethod) => (
-                <div key={method.id} className="rounded-sm border border-border bg-white shadow-2 overflow-hidden">
-                  <div className="flex items-center justify-between bg-gradient-to-r from-green-50 to-green-50/80 px-4 py-3 border-b border-border-muted">
-                    <div className="flex items-center gap-2.5">
-                      <Building2 className="h-4 w-4 text-green-600" />
-                      <span className="text-sm font-semibold text-green-800">{method.type?.replace(/_/g, " ") || "Unknown"}</span>
-                      {method.isDefault && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-green-700 px-2 py-0.5 text-xs font-medium text-white">
-                          <Check className="h-3 w-3" /> Default
-                        </span>
-                      )}
-                    </div>
-                    {method.verified ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
-                        <CheckCircle className="h-3 w-3" /> Verified
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700">
-                        <AlertCircle className="h-3 w-3" /> Unverified
-                      </span>
-                    )}
+            ) : !methodsData?.data?.methods?.length ? (
+              <SectionEmpty message="No payout methods set up yet" />
+            ) : (
+              <div className="space-y-6">
+                {/* Summary chip */}
+                <div className="flex items-center gap-3 rounded-sm bg-green-50/60 px-4 py-2.5 border border-green-100">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-green-100">
+                    <Building2 className="h-3.5 w-3.5 text-green-700" />
                   </div>
-
-                  <div className="p-4 space-y-4">
-                    {/* Bank Details */}
-                    <div>
-                      <p className="mb-2 text-xs font-semibold text-text-secondary uppercase tracking-wider">Bank Account Details</p>
-                      <div className="grid grid-cols-2 gap-x-6 gap-y-2.5">
-                        <Field label="Bank Name" value={method.bankName} />
-                        <Field label="Account Name" value={method.accountName} />
-                        <Field label="Account Number" value={method.accountNumber} />
-                        <Field label="Bank Code" value={method.bankCode} />
-                        <Field label="SWIFT / BIC" value={method.swift} />
-                        <Field label="IBAN" value={method.iban} />
-                        <Field label="Routing Number" value={method.routingNumber} />
-                      </div>
-                    </div>
-
-                    {/* Currency & Country */}
-                    {(method.currency || method.country) && (
-                      <div className="border-t border-border-muted pt-4">
-                        <p className="mb-2 text-xs font-semibold text-text-secondary uppercase tracking-wider">Region</p>
-                        <div className="grid grid-cols-2 gap-x-6 gap-y-2.5">
-                          <Field label="Currency" value={method.currency} />
-                          <Field label="Country" value={method.country} />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Contact Details (mobile money / PayPal) */}
-                    {(method.phoneNumber || method.email) && (
-                      <div className="border-t border-border-muted pt-4">
-                        <p className="mb-2 text-xs font-semibold text-text-secondary uppercase tracking-wider">Contact</p>
-                        <div className="grid grid-cols-2 gap-x-6 gap-y-2.5">
-                          <Field label="Phone Number" value={method.phoneNumber} />
-                          <Field label="Email" value={method.email} />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Additional Details */}
-                    {method.details && (
-                      <div className="border-t border-border-muted pt-4">
-                        <p className="mb-2 text-xs font-semibold text-text-secondary uppercase tracking-wider">Additional Notes</p>
-                        <p className="text-sm text-text-primary leading-relaxed">{method.details}</p>
-                      </div>
-                    )}
-
-                    {/* Footer */}
-                    <div className="flex items-center justify-between border-t border-border-muted pt-3">
-                      {method.createdAt && (
-                        <span className="text-xs text-text-tertiary">
-                          Added {formatDate(method.createdAt)}
-                        </span>
-                      )}
-                      <Button
-                        size="sm"
-                        variant={method.verified ? "outline" : "default"}
-                        onClick={() => verifyMutation.mutate({ methodId: method.id, verified: !method.verified })}
-                        disabled={verifyMutation.isPending}
-                        className="gap-1.5 ml-auto"
-                      >
-                        {method.verified ? <EyeOff className="h-3.5 w-3.5" /> : <CheckCircle className="h-3.5 w-3.5" />}
-                        {method.verified ? "Unverify" : "Verify"}
-                      </Button>
-                    </div>
-                  </div>
+                  <span className="text-sm text-text-primary">
+                    <span className="font-semibold">{methodsData.data.methods.length}</span> method{methodsData.data.methods.length > 1 ? "s" : ""} on file
+                  </span>
+                  <span className="h-4 w-px bg-green-200" />
+                  <span className="text-sm text-text-secondary">
+                    Default:{" "}
+                    <span className="font-medium text-text-primary">
+                      {methodsData.data.methods.find((m: PayoutMethod) => m.isDefault)?.type?.replace(/_/g, " ") || "None set"}
+                    </span>
+                  </span>
                 </div>
-              ))}
-            </div>
-          )}
+
+                {/* Method cards */}
+                {methodsData.data.methods.map((method: PayoutMethod) => {
+                  const typeKey = (method.type || "").toLowerCase();
+                  const isBank = typeKey.includes("bank");
+                  const isPaypal = typeKey.includes("paypal");
+                  const isMobile = typeKey.includes("mobile") || typeKey.includes("momo");
+                  const scheme = isBank
+                    ? { badge: "bg-blue-500", bg: "from-blue-50 to-white", border: "border-blue-100", icon: Building2, iconBg: "bg-blue-100", iconColor: "text-blue-700", label: "Bank Account" }
+                    : isPaypal
+                    ? { badge: "bg-indigo-500", bg: "from-indigo-50 to-white", border: "border-indigo-100", icon: Wallet, iconBg: "bg-indigo-100", iconColor: "text-indigo-700", label: "PayPal Account" }
+                    : isMobile
+                    ? { badge: "bg-amber-500", bg: "from-amber-50 to-white", border: "border-amber-100", icon: Smartphone, iconBg: "bg-amber-100", iconColor: "text-amber-700", label: "Mobile Money" }
+                    : { badge: "bg-green-500", bg: "from-green-50 to-white", border: "border-green-100", icon: CreditCard, iconBg: "bg-green-100", iconColor: "text-green-700", label: "Payment Method" };
+                  const Icon = scheme.icon;
+                  return (
+                    <div key={method.id} className={`rounded-sm border ${scheme.border} bg-white shadow-sm overflow-hidden`}>
+                      {/* Card stripe header */}
+                      <div className={`flex items-center justify-between bg-gradient-to-r ${scheme.bg} px-5 py-3.5 border-b ${scheme.border}`}>
+                        <div className="flex items-center gap-3">
+                          <div className={`flex h-9 w-9 items-center justify-center rounded-full ${scheme.iconBg}`}>
+                            <Icon className={`h-4.5 w-4.5 ${scheme.iconColor}`} />
+                          </div>
+                          <div>
+                            <span className="text-sm font-semibold text-text-primary">{method.type?.replace(/_/g, " ") || "Unknown"}</span>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              {method.isDefault && (
+                                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold text-white ${scheme.badge}`}>
+                                  <Check className="h-3 w-3" /> Default
+                                </span>
+                              )}
+                              {method.verified ? (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-medium text-green-700">
+                                  <CheckCircle className="h-3 w-3" /> Verified
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                                  <AlertCircle className="h-3 w-3" /> Unverified
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Card body */}
+                      <div className="px-5 py-4 space-y-4">
+                        {/* Bank details grid */}
+                        <div>
+                          <p className="mb-2.5 text-[11px] font-semibold text-text-tertiary uppercase tracking-widest flex items-center gap-1.5">
+                            <Building2 className="h-3 w-3" /> Account Details
+                          </p>
+                          <div className="grid grid-cols-2 gap-x-8 gap-y-3">
+                            {isBank && <Field label="Bank Name" value={method.bankName} />}
+                            <Field label="Account Name" value={method.accountName} />
+                            <Field label="Account Number" value={method.accountNumber} />
+                            {isBank && (
+                              <>
+                                {method.bankCode && <Field label="Bank Code" value={method.bankCode} />}
+                                {method.swift && <Field label="SWIFT / BIC" value={method.swift} />}
+                                {method.iban && <Field label="IBAN" value={method.iban} />}
+                                {method.routingNumber && <Field label="Routing Number" value={method.routingNumber} />}
+                              </>
+                            )}
+                            {isMobile && <Field label="Phone Number" value={method.phoneNumber} />}
+                            {isPaypal && <Field label="PayPal Email" value={method.email} />}
+                          </div>
+                        </div>
+
+                        {/* Region row */}
+                        {(method.currency || method.country) && (
+                          <div className="flex items-center gap-6 border-t border-border-muted pt-3.5">
+                            <span className="text-[11px] font-semibold text-text-tertiary uppercase tracking-widest flex items-center gap-1.5">
+                              <Globe className="h-3 w-3" /> Region
+                            </span>
+                            {method.currency && (
+                              <span className="inline-flex items-center gap-1.5 rounded-md bg-surface-muted px-2.5 py-1 text-xs font-medium text-text-primary">
+                                {method.currency}
+                              </span>
+                            )}
+                            {method.country && (
+                              <span className="inline-flex items-center gap-1.5 rounded-md bg-surface-muted px-2.5 py-1 text-xs font-medium text-text-primary">
+                                {method.country}
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Additional notes */}
+                        {method.details && (
+                          <div className="border-t border-border-muted pt-3.5">
+                            <p className="text-[11px] font-semibold text-text-tertiary uppercase tracking-widest mb-1.5">Notes</p>
+                            <p className="text-sm text-text-primary leading-relaxed">{method.details}</p>
+                          </div>
+                        )}
+
+                        {/* Footer with date + verify */}
+                        <div className="flex items-center justify-between border-t border-border-muted pt-3.5">
+                          {method.createdAt ? (
+                            <span className="inline-flex items-center gap-1.5 text-xs text-text-tertiary">
+                              <Calendar className="h-3 w-3" />
+                              Added {formatDate(method.createdAt)}
+                            </span>
+                          ) : <span />}
+                          <Button
+                            size="sm"
+                            variant={method.verified ? "outline" : "default"}
+                            onClick={() => verifyMutation.mutate({ methodId: method.id, verified: !method.verified })}
+                            disabled={verifyMutation.isPending}
+                            className="gap-1.5"
+                          >
+                            {method.verified ? <EyeOff className="h-3.5 w-3.5" /> : <CheckCircle className="h-3.5 w-3.5" />}
+                            {method.verified ? "Unverify" : "Verify"}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
@@ -298,8 +334,8 @@ export default function PayoutMethodsPage() {
 
 function Field({ label, value }: { label: string; value?: string | null }) {
   return (
-    <div>
-      <p className="text-xs text-text-secondary uppercase tracking-wider">{label}</p>
+    <div className="rounded-sm bg-surface-muted/50 px-3 py-2">
+      <p className="text-[11px] text-text-tertiary uppercase tracking-wider">{label}</p>
       <p className="mt-0.5 text-sm font-medium text-text-primary">{value || "—"}</p>
     </div>
   );
