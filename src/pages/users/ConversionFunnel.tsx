@@ -40,7 +40,7 @@ interface FunnelData {
 }
 
 const funnelIcons = [Eye, ShoppingCart, CreditCard, CheckCircle];
-const funnelColors = ["#2563eb", "#eab308", "#ea580c", "#16a34a"];
+const funnelColors = ["#3b82f6", "#d97706", "#d45a0a", "#40966e"];
 
 export default function ConversionFunnelPage() {
   const [period, setPeriod] = useState("30d");
@@ -127,15 +127,15 @@ export default function ConversionFunnelPage() {
           ) : (
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={data.dailyTrend}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#dfe3e8" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#dee3e8" />
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} />
                 <Tooltip />
                 <Legend />
-                <Line type="monotone" dataKey="views" stroke="#2563eb" name="Views" strokeWidth={2} />
-                <Line type="monotone" dataKey="cartAdds" stroke="#eab308" name="Cart Adds" strokeWidth={2} />
-                <Line type="monotone" dataKey="checkouts" stroke="#ea580c" name="Checkouts" strokeWidth={2} />
-                <Line type="monotone" dataKey="bookings" stroke="#16a34a" name="Bookings" strokeWidth={2} />
+                <Line type="monotone" dataKey="views" stroke="#3b82f6" name="Views" strokeWidth={2} />
+                <Line type="monotone" dataKey="cartAdds" stroke="#d97706" name="Cart Adds" strokeWidth={2} />
+                <Line type="monotone" dataKey="checkouts" stroke="#d45a0a" name="Checkouts" strokeWidth={2} />
+                <Line type="monotone" dataKey="bookings" stroke="#40966e" name="Bookings" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           )}

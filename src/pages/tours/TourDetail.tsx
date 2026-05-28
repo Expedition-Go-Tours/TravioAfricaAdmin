@@ -141,31 +141,35 @@ export default function TourDetailPage() {
                       <p className="text-sm text-text-secondary leading-relaxed">{tour.description}</p>
                     </div>
                   )}
-                  <div className="grid grid-cols-2 gap-4 border-t border-border-muted pt-4">
-                    <div>
-                      <p className="text-xs text-text-secondary">Duration</p>
-                      <p className="text-sm font-medium text-text-primary">{tour.duration || "—"}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-text-secondary">Group Size</p>
-                      <p className="text-sm font-medium text-text-primary">{tour.groupSize || "—"}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-text-secondary">Difficulty</p>
-                      <p className="text-sm font-medium text-text-primary">{tour.difficulty || "—"}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-text-secondary">Price</p>
-                      <p className="text-sm font-medium text-text-primary">{tour.price ? formatCurrency(tour.price) : "—"}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-text-secondary">Created</p>
-                      <p className="text-sm font-medium text-text-primary">{tour.createdAt ? formatDate(tour.createdAt) : "—"}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-text-secondary">Updated</p>
-                      <p className="text-sm font-medium text-text-primary">{tour.updatedAt ? formatDate(tour.updatedAt) : "—"}</p>
-                    </div>
+                  <div className="border-t border-border-muted">
+                    <table className="w-full text-sm">
+                      <tbody>
+                        <tr className="border-b border-border-muted transition-colors hover:bg-green-50/20 even:bg-green-50/10">
+                          <td className="px-5 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">Duration</td>
+                          <td className="px-5 py-3 font-medium text-text-primary">{tour.duration || "—"}</td>
+                        </tr>
+                        <tr className="border-b border-border-muted transition-colors hover:bg-green-50/20 even:bg-green-50/10">
+                          <td className="px-5 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">Group Size</td>
+                          <td className="px-5 py-3 font-medium text-text-primary">{tour.groupSize || "—"}</td>
+                        </tr>
+                        <tr className="border-b border-border-muted transition-colors hover:bg-green-50/20 even:bg-green-50/10">
+                          <td className="px-5 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">Difficulty</td>
+                          <td className="px-5 py-3 font-medium text-text-primary">{tour.difficulty || "—"}</td>
+                        </tr>
+                        <tr className="border-b border-border-muted transition-colors hover:bg-green-50/20 even:bg-green-50/10">
+                          <td className="px-5 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">Price</td>
+                          <td className="px-5 py-3 font-medium text-text-primary">{tour.price ? formatCurrency(tour.price) : "—"}</td>
+                        </tr>
+                        <tr className="border-b border-border-muted transition-colors hover:bg-green-50/20 even:bg-green-50/10">
+                          <td className="px-5 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">Created</td>
+                          <td className="px-5 py-3 font-medium text-text-primary">{tour.createdAt ? formatDate(tour.createdAt) : "—"}</td>
+                        </tr>
+                        <tr className="transition-colors hover:bg-green-50/20 even:bg-green-50/10">
+                          <td className="px-5 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">Updated</td>
+                          <td className="px-5 py-3 font-medium text-text-primary">{tour.updatedAt ? formatDate(tour.updatedAt) : "—"}</td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 </CardContent>
               </Card>
@@ -228,27 +232,31 @@ export default function TourDetailPage() {
                 <CardHeader>
                   <CardTitle>Stats</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex justify-between border-b border-border-muted pb-2 text-sm">
-                    <span className="text-text-secondary">Reviews</span>
-                    <span className="font-medium text-text-primary">{formatNumber(tour.reviewCount)}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-border-muted pb-2 text-sm">
-                    <span className="text-text-secondary">Avg Rating</span>
-                    <span className="font-medium text-text-primary">{tour.averageRating?.toFixed(1) || "—"}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-border-muted pb-2 text-sm">
-                    <span className="text-text-secondary">Conversion</span>
-                    <span className="font-medium text-text-primary">
-                      {tour.viewCount && tour.bookingCount ? `${((tour.bookingCount / tour.viewCount) * 100).toFixed(1)}%` : "—"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-text-secondary">Revenue/Booking</span>
-                    <span className="font-medium text-text-primary">
-                      {tour.totalRevenue && tour.bookingCount ? formatCurrency(tour.totalRevenue / tour.bookingCount) : "—"}
-                    </span>
-                  </div>
+                <CardContent className="p-0">
+                  <table className="w-full text-sm">
+                    <tbody>
+                      <tr className="border-b border-border-muted transition-colors hover:bg-green-50/20">
+                        <td className="px-5 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">Reviews</td>
+                        <td className="px-5 py-3 font-semibold text-text-primary text-right">{formatNumber(tour.reviewCount)}</td>
+                      </tr>
+                      <tr className="border-b border-border-muted transition-colors hover:bg-green-50/20 even:bg-green-50/10">
+                        <td className="px-5 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">Avg Rating</td>
+                        <td className="px-5 py-3 font-semibold text-text-primary text-right">{tour.averageRating?.toFixed(1) || "—"}</td>
+                      </tr>
+                      <tr className="border-b border-border-muted transition-colors hover:bg-green-50/20 even:bg-green-50/10">
+                        <td className="px-5 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">Conversion</td>
+                        <td className="px-5 py-3 font-semibold text-text-primary text-right">
+                          {tour.viewCount && tour.bookingCount ? `${((tour.bookingCount / tour.viewCount) * 100).toFixed(1)}%` : "—"}
+                        </td>
+                      </tr>
+                      <tr className="transition-colors hover:bg-green-50/20 even:bg-green-50/10">
+                        <td className="px-5 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">Revenue/Booking</td>
+                        <td className="px-5 py-3 font-semibold text-text-primary text-right">
+                          {tour.totalRevenue && tour.bookingCount ? formatCurrency(tour.totalRevenue / tour.bookingCount) : "—"}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </CardContent>
               </Card>
 

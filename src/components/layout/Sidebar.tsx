@@ -120,25 +120,25 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "flex h-screen flex-col border-r border-border-muted bg-surface-base transition-all duration-300",
+        "flex h-screen flex-col bg-gradient-to-b from-green-700 to-green-900 transition-all duration-300",
         collapsed ? "w-16" : "w-64",
       )}
       aria-label="Sidebar navigation"
     >
-      <div className="flex h-[72px] items-center justify-between border-b border-border-muted px-4">
+      <div className="flex h-[72px] items-center justify-between border-b border-white/10 px-4">
         {!collapsed && (
           <div className="flex items-center gap-2 truncate">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-muted text-xs font-semibold text-text-secondary">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 text-xs font-semibold text-white">
               {user?.displayName?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "A"}
             </div>
-            <span className="truncate text-sm font-semibold text-text-primary">
+            <span className="truncate text-sm font-semibold text-white">
               {user?.displayName || user?.email?.split("@")[0] || "Admin"}
             </span>
           </div>
         )}
         <button
           onClick={onToggle}
-          className="rounded-sm p-1.5 text-text-secondary hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="rounded-sm p-1.5 text-green-200 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
@@ -154,7 +154,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             animate="visible"
           >
             {!collapsed && (
-              <p className="border-b border-border-muted px-3 py-2 text-xs font-semibold uppercase tracking-wider text-text-primary">
+              <p className="border-b border-white/10 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-green-200">
                 {group.group}
               </p>
             )}
@@ -168,8 +168,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                       whileTap={{ scale: 0.98 }}
                       onClick={() => toggleMenu(item.label)}
                       className={cn(
-                        "flex w-full items-center gap-3 rounded-sm px-3 py-2 text-sm text-text-primary border-b border-border-muted hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
-                        isChildActive(item.children) && "bg-text-primary/[0.06] font-semibold",
+                        "flex w-full items-center gap-3 rounded-sm px-3 py-2 text-sm text-green-100 border-b border-white/5 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/40",
+                        isChildActive(item.children) && "bg-white/15 font-semibold text-white",
                       )}
                       aria-label={item.label}
                       aria-expanded={isOpen}
@@ -188,17 +188,17 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                       )}
                     </motion.button>
                     {isOpen && !collapsed && (
-                      <div className="ml-3 border-l border-border-muted pl-2 mt-1 space-y-0.5 overflow-hidden">
+                      <div className="ml-3 border-l border-white/10 pl-2 mt-1 space-y-0.5 overflow-hidden">
                         {item.children.map((child) => (
                           <Link
                             key={child.path}
                             to={child.path}
                             className={cn(
-                              "flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-text-secondary hover:bg-surface-muted hover:text-text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
-                              location.pathname === child.path && "bg-text-primary/[0.06] text-text-primary font-semibold",
+                              "flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-green-200 hover:bg-white/10 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/40",
+                              location.pathname === child.path && "bg-white/15 text-white font-semibold",
                             )}
                           >
-                            <span className="text-text-tertiary">{child.icon}</span>
+                            <span className="text-green-300">{child.icon}</span>
                             <span>{child.label}</span>
                           </Link>
                         ))}
@@ -212,8 +212,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   <Link
                     to={item.path!}
                     className={cn(
-                      "flex items-center gap-3 rounded-sm px-3 py-2 text-sm text-text-secondary hover:bg-surface-muted hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
-                      isActive(item.path) && "bg-text-primary/[0.06] text-text-primary font-semibold",
+                      "flex items-center gap-3 rounded-sm px-3 py-2 text-sm text-green-100 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/40",
+                      isActive(item.path) && "bg-white/15 text-white font-semibold",
                     )}
                     aria-label={item.label}
                   >

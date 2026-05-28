@@ -23,7 +23,7 @@ import { SectionEmpty } from "@/components/shared/SectionEmpty";
 import api from "@/lib/axios";
 import { formatCurrency, formatNumber, formatDate } from "@/lib/utils";
 
-const DIST_COLORS = ["#2563eb", "#16a34a", "#eab308", "#ea580c", "#9333ea"];
+const DIST_COLORS = ["#3b82f6", "#40966e", "#d97706", "#d45a0a", "#8b5cf6"];
 
 interface CLVData {
   overview?: { totalCustomers?: number; totalBookings?: number; avgBookingValue?: number; totalRevenue?: number; avgCLV?: number };

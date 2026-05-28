@@ -101,13 +101,13 @@ export function DataTable<T>({
       <div className="overflow-x-auto rounded-sm border border-border-muted">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-border-muted bg-surface-muted">
+            <tr className="border-b border-border-muted bg-gradient-to-r from-green-50 to-green-50/80">
               {columns.map((col) => (
                 <th
                   key={col.key}
                   className={cn(
-                    "px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-secondary",
-                    col.sortable && "cursor-pointer select-none hover:text-text-primary",
+                    "px-5 py-3.5 text-left text-xs font-semibold tracking-wider text-green-800 leading-tight",
+                    col.sortable && "cursor-pointer select-none hover:text-green-900",
                     col.className,
                   )}
                   onClick={() => {
@@ -159,8 +159,9 @@ export function DataTable<T>({
                   visible: { opacity: 1, y: 0, transition: { duration: 0.25 } },
                 }}
                 className={cn(
-                  "border-b border-border-muted transition-colors last:border-b-0",
-                  onRowClick && "cursor-pointer hover:bg-surface-muted/50",
+                  "border-b border-border-muted transition-all last:border-b-0",
+                  onRowClick && "cursor-pointer hover:bg-green-50/40 hover:border-green-200",
+                  "even:bg-green-50/20",
                 )}
                 onClick={() => onRowClick?.(row)}
                 tabIndex={onRowClick ? 0 : undefined}
@@ -172,7 +173,10 @@ export function DataTable<T>({
                 }}
               >
                 {columns.map((col) => (
-                  <td key={col.key} className={cn("px-4 py-3 text-text-primary", col.className)}>
+                  <td key={col.key}                   className={cn(
+                    "px-5 py-3.5 text-text-primary leading-relaxed",
+                    col.className,
+                  )}>
                     {col.render(row)}
                   </td>
                 ))}

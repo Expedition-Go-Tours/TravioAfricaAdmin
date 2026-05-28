@@ -108,14 +108,14 @@ export default function CartAbandonmentPage() {
           ) : (
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={data.dailyTrend}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#dfe3e8" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#dee3e8" />
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} />
                 <Tooltip />
                 <Legend />
-                <Line type="monotone" dataKey="carts" stroke="#eab308" name="Carts" strokeWidth={2} />
-                <Line type="monotone" dataKey="conversions" stroke="#16a34a" name="Conversions" strokeWidth={2} />
-                <Line type="monotone" dataKey="abandonmentRate" stroke="#dc2626" name="Abandonment Rate %" strokeWidth={2} />
+                <Line type="monotone" dataKey="carts" stroke="#d97706" name="Carts" strokeWidth={2} />
+                <Line type="monotone" dataKey="conversions" stroke="#40966e" name="Conversions" strokeWidth={2} />
+                <Line type="monotone" dataKey="abandonmentRate" stroke="#d92626" name="Abandonment Rate %" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           )}

@@ -51,12 +51,12 @@ export default function PayoutsOverview() {
           ) : (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={monthlyBreakdown}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#dfe3e8" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#dee3e8" />
                 <XAxis dataKey="month" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} />
                 <Tooltip />
-                <Bar dataKey="totalAmount" fill="#2563eb" name="Total" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="totalCommission" fill="#16a34a" name="Commission" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="totalAmount" fill="#3b82f6" name="Total" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="totalCommission" fill="#40966e" name="Commission" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}

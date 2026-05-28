@@ -188,10 +188,10 @@ export default function PayoutsList() {
               {statusTabs.map((tab) => (
                 <button
                   key={tab}
-                  className={`px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ring ${
+                  className={`px-4 py-2 text-sm font-medium transition-colors focus:outline-none ${
                     statusTab === tab
-                      ? "border-b-2 border-text-primary text-text-primary"
-                      : "text-text-secondary hover:text-text-primary"
+                      ? "border-b-2 border-green-600 text-green-700"
+                      : "text-text-secondary hover:text-green-600"
                   }`}
                   onClick={() => { setStatusTab(tab); setPage(1); }}
                 >

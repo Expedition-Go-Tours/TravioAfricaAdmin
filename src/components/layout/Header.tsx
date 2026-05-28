@@ -1,6 +1,7 @@
+import { useState, useCallback } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { LogOut } from "lucide-react";
+import { LogOut, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/ui/NotificationBell";
 import { useAuth } from "@/auth/useAuth";
@@ -24,14 +25,22 @@ const breadcrumbMap: Record<string, string> = {
 export function Header() {
   const location = useLocation();
   const { logout } = useAuth();
+  const [signingOut, setSigningOut] = useState(false);
   const segments = location.pathname.split("/").filter(Boolean);
+
+  const handleSignOut = useCallback(() => {
+    setSigningOut(true);
+    setTimeout(() => {
+      logout();
+    }, 2000);
+  }, [logout]);
 
   return (
     <motion.header
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
-      className="flex h-[72px] items-center justify-between border-b border-border-muted bg-surface-base px-6">
+      className="flex h-[72px] items-center justify-between border-b border-green-100 bg-white px-6">
       <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-text-secondary">
         <Link to="/admin/overview" className="hover:text-text-primary">
           Home
@@ -50,9 +59,13 @@ export function Header() {
       </nav>
       <div className="flex items-center gap-2">
         <NotificationBell />
-        <Button variant="ghost" size="sm" onClick={logout} aria-label="Sign out">
-          <LogOut className="mr-2 h-4 w-4" />
-          Sign Out
+        <Button variant="ghost" size="sm" onClick={handleSignOut} disabled={signingOut} aria-label="Sign out">
+          {signingOut ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <LogOut className="mr-2 h-4 w-4" />
+          )}
+          {signingOut ? "Please wait..." : "Sign Out"}
         </Button>
       </div>
     </motion.header>

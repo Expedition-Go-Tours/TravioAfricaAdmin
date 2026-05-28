@@ -17,9 +17,9 @@ import { SectionEmpty } from "@/components/shared/SectionEmpty";
 import api from "@/lib/axios";
 
 const metrics = [
-  { key: "revenue", label: "Revenue", color: "#2563eb" },
-  { key: "commission", label: "Commission", color: "#16a34a" },
-  { key: "supplierPayout", label: "Supplier Payout", color: "#ea580c" },
+  { key: "revenue", label: "Revenue", color: "#3b82f6" },
+  { key: "commission", label: "Commission", color: "#40966e" },
+  { key: "supplierPayout", label: "Supplier Payout", color: "#d45a0a" },
 ];
 
 export default function RevenueTrendPage() {
@@ -70,7 +70,7 @@ export default function RevenueTrendPage() {
           ) : (
             <ResponsiveContainer width="100%" height={500}>
               <BarChart data={months}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#dfe3e8" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#dee3e8" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip />

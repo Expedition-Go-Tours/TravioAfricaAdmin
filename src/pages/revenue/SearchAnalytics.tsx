@@ -21,8 +21,6 @@ import {
   Eye,
   ShoppingCart,
   TrendingUp,
-  ArrowUpRight,
-  ArrowDownRight,
 } from "lucide-react";
 import {
   Select,
@@ -33,7 +31,6 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { KPICard } from "@/components/shared/KPICard";
 import { DataTable } from "@/components/shared/DataTable";
 import type { Column } from "@/components/shared/DataTable";
 import { SectionError } from "@/components/shared/SectionError";
@@ -47,21 +44,6 @@ const periods = [
   { value: "90d", label: "90 days" },
   { value: "1y", label: "1 year" },
 ];
-
-interface SearchData {
-  overview?: { totalSearches?: number; uniqueSearchers?: number; zeroResultSearches?: number; zeroResultRate?: number };
-  conversion?: { searchToViewRate?: number; searchToBookRate?: number };
-  topQueries?: Array<{ query?: string; searches?: number; uniqueUsers?: number; avgResults?: number }>;
-  zeroResultQueries?: Array<{ query?: string; searches?: number }>;
-  dailyTrend?: Array<{ date?: string; withResults?: number; withoutResults?: number }>;
-}
-
-const TrendBadge = ({ value, good }: { value: number; good?: boolean }) => (
-  <span className={`inline-flex items-center gap-0.5 text-xs font-medium ${good ? "text-status-active" : "text-status-rejected"}`}>
-    {value >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-    {Math.abs(value).toFixed(1)}%
-  </span>
-);
 
 const ChartTooltip = ({ active, payload, label }: { active?: boolean; payload?: { dataKey: string; color: string; name: string; value: number }[]; label?: string }) => {
   if (!active || !payload?.length) return null;
@@ -96,13 +78,37 @@ const ChartLegend = ({ payload }: { payload?: { dataKey: string; color: string; 
 export default function SearchAnalyticsPage() {
   const [period, setPeriod] = useState("30d");
 
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data: raw, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin", "search", period],
-    queryFn: () => api.get<SearchData>(`/admin/analytics/search?period=${period}`).then((r) => r.data),
+    queryFn: async () => {
+      const res = await api.get(`/admin/analytics/search?period=${period}`);
+      const d = res.data.data;
+      return {
+        overview: d.overview as { totalSearches: number; uniqueSearchers: number; zeroResultSearches: number; zeroResultRate: number },
+        conversion: d.searchOutcome as { searchToViewRate: number; searchToBookRate: number },
+        topQueries: (d.topQueries || []).map((q: Record<string, unknown>) => ({
+          query: q.query as string,
+          searches: q.searches as number,
+          uniqueUsers: q.uniqueUsers as number,
+          avgResults: q.avgResults as number,
+        })),
+        zeroResultQueries: (d.zeroResultQueries || []).map((q: Record<string, unknown>) => ({
+          query: q.query as string,
+          searches: q.searches as number,
+        })),
+        dailyTrend: (d.dailyTrend || []).map((t: Record<string, unknown>) => ({
+          date: t.day as string,
+          withResults: t.searchesWithResults as number,
+          withoutResults: ((t.searches as number) - (t.searchesWithResults as number)),
+        })),
+      };
+    },
   });
 
-  const overview = data?.overview;
-  const conversion = data?.conversion;
+  const overview = raw?.overview;
+  const conversion = raw?.conversion;
+  const totalSearches = overview?.totalSearches ?? 0;
+  const zeroRate = overview?.zeroResultRate ?? 0;
 
   const topQueryColumns: Column<{ query?: string; searches?: number; uniqueUsers?: number; avgResults?: number }>[] = [
     { key: "query", header: "Query", render: (r) => r.query || "—" },
@@ -116,15 +122,12 @@ export default function SearchAnalyticsPage() {
     { key: "searches", header: "Searches", render: (r) => formatNumber(r.searches) },
   ];
 
-  const totalSearches = overview?.totalSearches ?? 0;
-  const zeroRate = overview?.zeroResultRate ?? 0;
-
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-lg font-semibold text-text-primary">Search Analytics</h1>
+          <h1 className="text-xl font-semibold text-text-primary">Search Analytics</h1>
           <p className="mt-0.5 text-sm text-text-tertiary">Track how users search and discover tours</p>
         </div>
         <Select value={period} onValueChange={setPeriod}>
@@ -139,47 +142,57 @@ export default function SearchAnalyticsPage() {
         </Select>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <KPICard label="Total Searches" value={isLoading ? "..." : formatNumber(totalSearches)} icon={<Search className="h-5 w-5 text-status-approved" />} color="bg-status-approved/10" className="bg-gradient-to-b from-emerald-50 to-white" />
-        <KPICard label="Unique Searchers" value={isLoading ? "..." : formatNumber(overview?.uniqueSearchers)} icon={<Users className="h-5 w-5 text-status-active" />} color="bg-status-active/10" className="bg-gradient-to-b from-blue-50 to-white" />
-        <KPICard label="Zero-Result Searches" value={isLoading ? "..." : formatNumber(overview?.zeroResultSearches)} icon={<FileX className="h-5 w-5 text-status-flagged" />} color="bg-status-flagged/10" className="bg-gradient-to-b from-rose-50 to-white" />
-        <KPICard label="Zero-Result Rate" value={isLoading ? "..." : zeroRate != null ? `${zeroRate.toFixed(1)}%` : "—"} icon={<Percent className="h-5 w-5 text-status-processing" />} color="bg-status-processing/10" className="bg-gradient-to-b from-violet-50 to-white" />
+      {/* KPI Cards — Overview page style */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <KpiCard
+          label="Total Searches"
+          value={isLoading ? "..." : formatNumber(totalSearches)}
+          icon={<Search className="h-4 w-4" />}
+          accent="green"
+        />
+        <KpiCard
+          label="Unique Searchers"
+          value={isLoading ? "..." : formatNumber(overview?.uniqueSearchers)}
+          icon={<Users className="h-4 w-4" />}
+          accent="blue"
+        />
+        <KpiCard
+          label="Zero-Result Searches"
+          value={isLoading ? "..." : formatNumber(overview?.zeroResultSearches)}
+          icon={<FileX className="h-4 w-4" />}
+          accent="amber"
+        />
+        <KpiCard
+          label="Zero-Result Rate"
+          value={isLoading ? "..." : zeroRate != null ? `${zeroRate.toFixed(1)}%` : "—"}
+          icon={<Percent className="h-4 w-4" />}
+          accent="amber"
+        />
       </div>
 
-      {/* Conversion Cards */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-2">
-        <Card>
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-status-approved/10">
-              <Eye className="h-5 w-5 text-status-approved" />
-            </div>
-            <div>
-              <p className="text-xs text-text-tertiary">Search-to-View Rate</p>
-              <p className="text-2xl font-bold text-text-primary">{isLoading ? "..." : conversion?.searchToViewRate != null ? `${conversion.searchToViewRate.toFixed(1)}%` : "—"}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-status-active/10">
-              <ShoppingCart className="h-5 w-5 text-status-active" />
-            </div>
-            <div>
-              <p className="text-xs text-text-tertiary">Search-to-Book Rate</p>
-              <p className="text-2xl font-bold text-text-primary">{isLoading ? "..." : conversion?.searchToBookRate != null ? `${conversion.searchToBookRate.toFixed(1)}%` : "—"}</p>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Conversion Cards — same style */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-2">
+        <KpiCard
+          label="Search-to-View Rate"
+          value={isLoading ? "..." : conversion?.searchToViewRate != null ? `${conversion.searchToViewRate.toFixed(1)}%` : "—"}
+          icon={<Eye className="h-4 w-4" />}
+          accent="green"
+        />
+        <KpiCard
+          label="Search-to-Book Rate"
+          value={isLoading ? "..." : conversion?.searchToBookRate != null ? `${conversion.searchToBookRate.toFixed(1)}%` : "—"}
+          icon={<ShoppingCart className="h-4 w-4" />}
+          accent="blue"
+        />
       </div>
 
       {/* Daily Trend Chart */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Daily Search Trend</CardTitle>
-            <p className="mt-0.5 text-xs text-text-tertiary">Searches with and without results over time</p>
-          </div>
+          <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+            <TrendingUp className="h-4 w-4 text-green-600" />
+            Daily Search Trend
+          </CardTitle>
           {!!conversion?.searchToViewRate && (
             <div className="hidden items-center gap-4 text-right sm:flex">
               <div>
@@ -199,31 +212,31 @@ export default function SearchAnalyticsPage() {
             <Skeleton className="h-72 w-full" />
           ) : isError ? (
             <SectionError message="Failed to load daily trend" onRetry={() => refetch()} />
-          ) : !data?.dailyTrend?.length ? (
+          ) : !raw?.dailyTrend?.length ? (
             <SectionEmpty message="No daily trend data" />
           ) : (
             <ResponsiveContainer width="100%" height={320}>
-              <ComposedChart data={data.dailyTrend}>
+              <ComposedChart data={raw.dailyTrend}>
                 <defs>
                   <linearGradient id="withResultsGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#16a34a" stopOpacity={0.15} />
-                    <stop offset="100%" stopColor="#16a34a" stopOpacity={0} />
+                    <stop offset="0%" stopColor="#40966e" stopOpacity={0.15} />
+                    <stop offset="100%" stopColor="#40966e" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="withoutResultsGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#dc2626" stopOpacity={0.15} />
-                    <stop offset="100%" stopColor="#dc2626" stopOpacity={0} />
+                    <stop offset="0%" stopColor="#d92626" stopOpacity={0.15} />
+                    <stop offset="100%" stopColor="#d92626" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#6b7280" }} tickLine={false} axisLine={{ stroke: "#e5e7eb" }} />
-                <YAxis tick={{ fontSize: 11, fill: "#6b7280" }} tickLine={false} axisLine={false} />
-                <Tooltip content={<ChartTooltip />} cursor={{ stroke: "#e5e7eb", strokeDasharray: "3 3" }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#dee3e8" vertical={false} />
+                <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#8a9ba8" }} tickLine={false} axisLine={{ stroke: "#dee3e8" }} />
+                <YAxis tick={{ fontSize: 11, fill: "#8a9ba8" }} tickLine={false} axisLine={false} />
+                <Tooltip content={<ChartTooltip />} cursor={{ stroke: "#dee3e8", strokeDasharray: "3 3" }} />
                 <Legend content={<ChartLegend />} />
-                <ReferenceLine y={0} stroke="#e5e7eb" />
+                <ReferenceLine y={0} stroke="#dee3e8" />
                 <Area type="monotone" dataKey="withResults" fill="url(#withResultsGrad)" stroke="none" />
                 <Area type="monotone" dataKey="withoutResults" fill="url(#withoutResultsGrad)" stroke="none" />
-                <Line type="monotone" dataKey="withResults" stroke="#16a34a" name="With Results" strokeWidth={2.5} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} animationDuration={800} />
-                <Line type="monotone" dataKey="withoutResults" stroke="#dc2626" name="Without Results" strokeWidth={2.5} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} animationDuration={800} />
+                <Line type="monotone" dataKey="withResults" stroke="#40966e" name="With Results" strokeWidth={2.5} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} animationDuration={800} />
+                <Line type="monotone" dataKey="withoutResults" stroke="#d92626" name="Without Results" strokeWidth={2.5} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} animationDuration={800} />
               </ComposedChart>
             </ResponsiveContainer>
           )}
@@ -234,15 +247,15 @@ export default function SearchAnalyticsPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-text-tertiary" />
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+              <TrendingUp className="h-4 w-4 text-green-600" />
               Top Queries
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <DataTable
               columns={topQueryColumns}
-              data={data?.topQueries || []}
+              data={raw?.topQueries || []}
               loading={isLoading}
               error={isError ? "Failed to load queries" : null}
               emptyMessage="No search query data"
@@ -253,15 +266,15 @@ export default function SearchAnalyticsPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileX className="h-4 w-4 text-status-flagged" />
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+              <FileX className="h-4 w-4 text-amber-500" />
               Zero-Result Queries
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <DataTable
               columns={zeroResultColumns}
-              data={data?.zeroResultQueries || []}
+              data={raw?.zeroResultQueries || []}
               loading={isLoading}
               error={isError ? "Failed to load zero-result queries" : null}
               emptyMessage="No zero-result queries found"
@@ -270,6 +283,57 @@ export default function SearchAnalyticsPage() {
             />
           </CardContent>
         </Card>
+      </div>
+    </div>
+  );
+}
+
+/* ── Matching KPI Card from Overview page ── */
+
+function KpiCard({
+  label,
+  value,
+  icon,
+  accent,
+}: {
+  label: string;
+  value: string;
+  icon: React.ReactNode;
+  accent: "green" | "blue" | "amber";
+}) {
+  const accentMap = {
+    green: {
+      bg: "bg-gradient-to-br from-green-50 to-white",
+      border: "border-green-200/40",
+      iconBg: "bg-green-100",
+      iconColor: "text-green-600",
+    },
+    blue: {
+      bg: "bg-gradient-to-br from-blue-50 to-white",
+      border: "border-blue-200/40",
+      iconBg: "bg-blue-100",
+      iconColor: "text-blue-600",
+    },
+    amber: {
+      bg: "bg-gradient-to-br from-amber-50 to-white",
+      border: "border-amber-200/40",
+      iconBg: "bg-amber-100",
+      iconColor: "text-amber-600",
+    },
+  };
+
+  const a = accentMap[accent];
+
+  return (
+    <div className={`rounded-sm border ${a.border} ${a.bg} p-3.5 shadow-2 transition-all hover:shadow-md`}>
+      <div className="flex items-start justify-between">
+        <div className="min-w-0">
+          <p className="text-xs text-text-secondary truncate">{label}</p>
+          <p className="mt-1 text-lg font-bold text-text-primary leading-tight">{value}</p>
+        </div>
+        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${a.iconBg} ${a.iconColor}`}>
+          {icon}
+        </div>
       </div>
     </div>
   );

@@ -87,20 +87,20 @@ export default function UserGrowthPage() {
               <BarChart data={growth} barGap={2} barCategoryGap="16%">
                 <defs>
                   <linearGradient id="customersGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#2563eb" stopOpacity={1} />
-                    <stop offset="100%" stopColor="#2563eb" stopOpacity={0.3} />
+                    <stop offset="0%" stopColor="#3b82f6" stopOpacity={1} />
+                    <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.3} />
                   </linearGradient>
                   <linearGradient id="suppliersGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#ea580c" stopOpacity={1} />
-                    <stop offset="100%" stopColor="#ea580c" stopOpacity={0.3} />
+                    <stop offset="0%" stopColor="#d45a0a" stopOpacity={1} />
+                    <stop offset="100%" stopColor="#d45a0a" stopOpacity={0.3} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#6b7280" }} axisLine={{ stroke: "#e5e7eb" }} tickLine={false} />
-                <YAxis tick={{ fontSize: 12, fill: "#6b7280" }} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: "#f3f4f6" }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#dee3e8" vertical={false} />
+                <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#8a9ba8" }} axisLine={{ stroke: "#dee3e8" }} tickLine={false} />
+                <YAxis tick={{ fontSize: 12, fill: "#8a9ba8" }} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: "#f0f2f4" }} />
                 <Legend content={<CustomLegend />} />
-                <ReferenceLine y={0} stroke="#e5e7eb" />
+                <ReferenceLine y={0} stroke="#dee3e8" />
                 <Bar
                   dataKey="customers"
                   fill={CUSTOMERS_GRADIENT}
