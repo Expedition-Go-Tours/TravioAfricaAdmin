@@ -159,7 +159,7 @@ export default function PayoutMethodsPage() {
 
       {/* View Methods Dialog */}
       <Dialog open={!!viewSupplierId} onOpenChange={(v) => { if (!v) setViewSupplierId(null); }}>
-        <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden">
+        <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden border-0">
           {/* Supplier header — gradient banner */}
           <div className="bg-gradient-to-r from-green-700 to-green-600 px-6 pt-6 pb-8">
             <div className="flex items-center gap-4">
@@ -171,7 +171,7 @@ export default function PayoutMethodsPage() {
                 <DialogDescription className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-sm text-green-100">
                   <span>{selectedSupplier?.email || selectedSupplier?.user?.email || ""}</span>
                   <span className="h-3 w-px bg-green-400/40" />
-                  <StatusBadge status={selectedSupplier?.supplierProfile?.status || selectedSupplier?.status || "UNKNOWN"} />
+                  <StatusBadge status={selectedSupplier?.supplierProfile?.status || selectedSupplier?.status || "UNKNOWN"} className="bg-white/90 text-green-800 border-white/50" />
                 </DialogDescription>
               </div>
             </div>
