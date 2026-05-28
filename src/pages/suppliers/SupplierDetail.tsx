@@ -59,7 +59,7 @@ interface SupplierData {
     idDocument?: string; licenses?: string[];
   };
   payoutInfo?: {
-    bankAccountName?: string; bankName?: string; bankCountry?: string; bankCode?: string;
+    bankAccountName?: string; bankAccountNumber?: string; bankName?: string; bankCountry?: string; bankCode?: string;
     payoutCurrency?: string; currency?: string; method?: string;
     accountName?: string; accountNumber?: string;
   };
@@ -393,7 +393,7 @@ export default function SupplierDetailPage() {
               <DetailTable
                 rows={[
                   { label: "Bank Account Name", value: supplier.payoutInfo?.bankAccountName || supplier.payoutInfo?.accountName },
-                  { label: "Account Number", value: supplier.payoutInfo?.accountNumber },
+                  { label: "Account Number", value: supplier.payoutInfo?.bankAccountNumber },
                   { label: "Bank Name", value: supplier.payoutInfo?.bankName },
                   { label: "Bank Code", value: supplier.payoutInfo?.bankCode },
                   { label: "Bank Country", value: supplier.payoutInfo?.bankCountry },
