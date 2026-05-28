@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
-import { Eye, ShoppingCart, CreditCard, CheckCircle, TrendingUp, ArrowRight, ArrowDown, ArrowLeft } from "lucide-react";
+import { Eye, ShoppingCart, CreditCard, CheckCircle, TrendingUp, ArrowRight, ArrowDown, ArrowLeft, Users } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -22,15 +22,42 @@ const periods = [
   { value: "1y", label: "1 year" },
 ];
 
-interface FunnelData {
-  funnel?: Array<{ step?: string; users?: number; dropOff?: string | null }>;
-  conversionRates?: { viewToCart?: number; cartToCheckout?: number; checkoutToComplete?: number; overall?: number };
-  dailyTrend?: Array<{ date?: string; views?: number; cartAdds?: number; checkouts?: number; bookings?: number }>;
-}
+const STEPS = [
+  { key: "viewed", label: "Tour Viewed", icon: Eye, color: "#3b82f6" },
+  { key: "cart_added", label: "Added to Cart", icon: ShoppingCart, color: "#d97706" },
+  { key: "checkout_started", label: "Checkout Started", icon: CreditCard, color: "#d45a0a" },
+  { key: "booking_completed", label: "Booking Completed", icon: CheckCircle, color: "#40966e" },
+];
 
-const funnelIcons = [Eye, ShoppingCart, CreditCard, CheckCircle];
-const funnelColors = ["#3b82f6", "#d97706", "#d45a0a", "#40966e"];
-const funnelLabels = ["Views", "Cart Adds", "Checkouts", "Bookings"];
+const STEP_DATAKEY_MAP: Record<string, string> = {
+  "tour.viewed": "views",
+  "cart.added": "cartAdds",
+  "booking.initiated": "checkouts",
+  "booking.completed": "bookings",
+};
+
+const LEGEND = [
+  { key: "views", label: "Views", color: "#3b82f6" },
+  { key: "cartAdds", label: "Cart Adds", color: "#d97706" },
+  { key: "checkouts", label: "Checkouts", color: "#d45a0a" },
+  { key: "bookings", label: "Bookings", color: "#40966e" },
+];
+
+function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: { dataKey: string; color: string; name: string; value: number }[]; label?: string }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rounded-sm border border-border bg-white p-3 shadow-lg">
+      <p className="mb-1.5 text-xs font-medium text-text-tertiary">{label}</p>
+      {payload.map((e) => (
+        <div key={e.dataKey} className="flex items-center gap-2 text-sm">
+          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: e.color }} />
+          <span className="text-text-secondary">{e.name}:</span>
+          <span className="font-semibold text-text-primary">{e.value.toLocaleString()}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function ConversionFunnelPage() {
   const navigate = useNavigate();
@@ -43,21 +70,38 @@ export default function ConversionFunnelPage() {
 
   const funnel = data?.data?.funnel || data?.funnel || [];
   const conversionRates = data?.data?.conversionRates || data?.conversionRates;
+  const rawDaily = data?.data?.dailyTrend || data?.dailyTrend || [];
   const firstUsers = funnel[0]?.users || 1;
+
+  const dailyTrend = useMemo(() => {
+    const map = new Map<string, Record<string, number | string>>();
+    for (const row of rawDaily) {
+      const day = row.day as string;
+      if (!map.has(day)) map.set(day, { date: day, views: 0, cartAdds: 0, checkouts: 0, bookings: 0 });
+      const entry = map.get(day)!;
+      const dk = STEP_DATAKEY_MAP[row.name as string];
+      if (dk) entry[dk] = ((entry[dk] as number) || 0) + ((row.users as number) || 0);
+    }
+    return Array.from(map.values()).sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  }, [rawDaily]);
+
+  const isLoadingValue = isLoading || false;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate(-1)} className="rounded-sm bg-white p-1.5 shadow-sm hover:ring-2 hover:ring-green-300 transition-all">
+          <button onClick={() => navigate(-1)} className="rounded-sm bg-white p-1.5 shadow-sm hover:ring-2 hover:ring-green-300 transition-all shrink-0">
             <ArrowLeft className="h-4 w-4 text-text-primary" />
           </button>
-          <h1 className="text-lg font-semibold text-text-primary">Conversion Funnel</h1>
+          <div>
+            <h1 className="text-xl font-semibold text-text-primary">Conversion Funnel</h1>
+            <p className="mt-0.5 text-sm text-text-tertiary">Track how users progress from browsing to booking</p>
+          </div>
         </div>
         <Select value={period} onValueChange={setPeriod}>
-          <SelectTrigger className="w-32">
-            <SelectValue />
-          </SelectTrigger>
+          <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
           <SelectContent>
             {periods.map((p) => (
               <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
@@ -66,46 +110,87 @@ export default function ConversionFunnelPage() {
         </Select>
       </div>
 
+      {/* Conversion Rate KPI Cards */}
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <KpiCard
+          label="View to Cart"
+          value={isLoadingValue ? "..." : conversionRates?.viewToCart != null ? `${conversionRates.viewToCart.toFixed(1)}%` : "—"}
+          icon={<ArrowRight className="h-4 w-4" />}
+          accent="blue"
+        />
+        <KpiCard
+          label="Cart to Checkout"
+          value={isLoadingValue ? "..." : conversionRates?.cartToCheckout != null ? `${conversionRates.cartToCheckout.toFixed(1)}%` : "—"}
+          icon={<ArrowRight className="h-4 w-4" />}
+          accent="amber"
+        />
+        <KpiCard
+          label="Checkout to Complete"
+          value={isLoadingValue ? "..." : conversionRates?.checkoutToComplete != null ? `${conversionRates.checkoutToComplete.toFixed(1)}%` : "—"}
+          icon={<ArrowRight className="h-4 w-4" />}
+          accent="green"
+        />
+        <KpiCard
+          label="Overall (View to Book)"
+          value={isLoadingValue ? "..." : conversionRates?.overall != null ? `${conversionRates.overall.toFixed(1)}%` : "—"}
+          icon={<CheckCircle className="h-4 w-4" />}
+          accent="green"
+        />
+      </div>
+
       {/* Funnel Visualization */}
       <Card>
-        <CardHeader><CardTitle className="text-sm font-semibold text-text-primary">Funnel Steps</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+            <Users className="h-4 w-4 text-blue-600" />
+            User Journey Funnel
+          </CardTitle>
+        </CardHeader>
         <CardContent>
-          {isLoading ? (
+          {isLoadingValue ? (
             <div className="space-y-4">
-              {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}
+              {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 w-full" />)}
             </div>
           ) : isError ? (
             <SectionError message="Failed to load funnel data" onRetry={() => refetch()} />
           ) : !funnel.length ? (
-            <SectionEmpty message="No funnel data" />
+            <SectionEmpty message="No funnel data for this period" />
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-6">
               {funnel.map((step: any, idx: number) => {
-                const Icon = funnelIcons[idx] || CheckCircle;
+                const info = STEPS[idx];
+                const Icon = info?.icon || CheckCircle;
                 const pct = ((step.users || 0) / firstUsers) * 100;
                 return (
                   <div key={step.step}>
-                    <div className="flex items-center gap-4 rounded-sm border border-border bg-white p-4 shadow-sm">
-                      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full`} style={{ backgroundColor: `${funnelColors[idx]}15` }}>
-                        <Icon className="h-4 w-4" style={{ color: funnelColors[idx] }} />
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${info?.color}18` }}>
+                        <Icon className="h-5 w-5" style={{ color: info?.color }} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-text-primary">{step.step || funnelLabels[idx]}</p>
-                        <p className="text-lg font-bold text-text-primary">{formatNumber(step.users)}</p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-semibold text-text-primary">{info?.label || step.step}</p>
+                          <p className="text-lg font-bold text-text-primary">{formatNumber(step.users)}</p>
+                        </div>
+                        <div className="mt-1.5 h-2 w-full rounded-full bg-surface-muted overflow-hidden">
+                          <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, backgroundColor: info?.color }} />
+                        </div>
                       </div>
-                      <div className="w-24 text-right shrink-0">
+                      <div className="w-28 text-right shrink-0">
                         <p className="text-xs text-text-tertiary">{pct.toFixed(1)}% of top</p>
                         {idx > 0 && step.dropOff != null && (
-                          <p className="text-xs text-status-rejected flex items-center justify-end gap-0.5">
-                            <ArrowDown className="h-3 w-3" /> {step.dropOff}
+                          <p className="mt-0.5 text-xs text-red-500 flex items-center justify-end gap-1">
+                            <ArrowDown className="h-3 w-3" />
+                            {step.dropOff} drop-off
                           </p>
                         )}
                       </div>
                     </div>
-                    {/* Progress bar */}
-                    <div className="mt-1 h-1.5 w-full rounded-full bg-surface-muted overflow-hidden">
-                      <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: funnelColors[idx] }} />
-                    </div>
+                    {idx < funnel.length - 1 && (
+                      <div className="flex justify-center py-1">
+                        <ArrowDown className="h-4 w-4 text-text-tertiary" />
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -114,52 +199,43 @@ export default function ConversionFunnelPage() {
         </CardContent>
       </Card>
 
-      {/* Conversion Rate Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard label="View to Cart" value={isLoading ? "..." : conversionRates?.viewToCart != null ? `${conversionRates.viewToCart.toFixed(1)}%` : "—"} icon={<ArrowRight className="h-4 w-4" />} accent="blue" />
-
-        <KpiCard label="Cart to Checkout" value={isLoading ? "..." : conversionRates?.cartToCheckout != null ? `${conversionRates.cartToCheckout.toFixed(1)}%` : "—"} icon={<ArrowRight className="h-4 w-4" />} accent="amber" />
-
-        <KpiCard label="Checkout to Complete" value={isLoading ? "..." : conversionRates?.checkoutToComplete != null ? `${conversionRates.checkoutToComplete.toFixed(1)}%` : "—"} icon={<ArrowRight className="h-4 w-4" />} accent="green" />
-
-        <KpiCard label="Overall" value={isLoading ? "..." : conversionRates?.overall != null ? `${conversionRates.overall.toFixed(1)}%` : "—"} icon={<CheckCircle className="h-4 w-4" />} accent="green" />
-      </div>
-
-      {/* Daily Trend */}
+      {/* Daily Trend Chart */}
       <Card>
-        <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary"><TrendingUp className="h-4 w-4 text-green-600" /> Daily Event Trend</CardTitle></CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+            <TrendingUp className="h-4 w-4 text-green-600" />
+            Daily Event Trend
+          </CardTitle>
+        </CardHeader>
         <CardContent>
-          {isLoading ? (
+          {isLoadingValue ? (
             <Skeleton className="h-72 w-full" />
           ) : isError ? (
             <SectionError message="Failed to load daily trend" onRetry={() => refetch()} />
-          ) : !data?.dailyTrend?.length ? (
-            <SectionEmpty message="No daily trend data" />
+          ) : !dailyTrend.length ? (
+            <SectionEmpty message="No daily trend data for this period" />
           ) : (
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={data.dailyTrend}>
-                <defs>
-                  {funnelColors.map((color, i) => (
-                    <linearGradient key={i} id={`lineGrad${i}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={color} stopOpacity={1} />
-                      <stop offset="100%" stopColor={color} stopOpacity={0.15} />
-                    </linearGradient>
+            <>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={dailyTrend}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#dee3e8" vertical={false} />
+                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#8a9ba8" }} axisLine={{ stroke: "#dee3e8" }} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: "#8a9ba8" }} axisLine={false} tickLine={false} />
+                  <Tooltip content={<ChartTooltip />} cursor={{ stroke: "#dee3e8", strokeDasharray: "3 3" }} />
+                  {LEGEND.map((item) => (
+                    <Line key={item.key} type="monotone" dataKey={item.key} stroke={item.color} name={item.label} strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
                   ))}
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#dee3e8" vertical={false} />
-                <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#8a9ba8" }} axisLine={{ stroke: "#dee3e8" }} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: "#8a9ba8" }} axisLine={false} tickLine={false} />
-                <Tooltip
-                  contentStyle={{ borderRadius: 4, border: "1px solid #dee3e8", fontSize: 12 }}
-                  formatter={(value: any) => [formatNumber(Number(value))]}
-                />
-                <Legend formatter={(value) => <span className="text-xs font-medium text-text-secondary">{value}</span>} />
-                <Line type="monotone" dataKey="views" stroke={funnelColors[0]} name="Views" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="cartAdds" stroke={funnelColors[1]} name="Cart Adds" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="checkouts" stroke={funnelColors[2]} name="Checkouts" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="bookings" stroke={funnelColors[3]} name="Bookings" strokeWidth={2} dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
+                </LineChart>
+              </ResponsiveContainer>
+              <div className="flex justify-center gap-6 pt-3">
+                {LEGEND.map((item) => (
+                  <div key={item.key} className="flex items-center gap-1.5 text-xs text-text-secondary">
+                    <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+                    {item.label}
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
@@ -168,20 +244,19 @@ export default function ConversionFunnelPage() {
 }
 
 function KpiCard({ label, value, icon, accent }: { label: string; value: string; icon: React.ReactNode; accent: "green" | "blue" | "amber" }) {
-  const accentMap = {
-    green: { bg: "bg-gradient-to-br from-green-50 to-white", border: "border-green-200/40", iconBg: "bg-green-100", iconColor: "text-green-600" },
-    blue: { bg: "bg-gradient-to-br from-blue-50 to-white", border: "border-blue-200/40", iconBg: "bg-blue-100", iconColor: "text-blue-600" },
-    amber: { bg: "bg-gradient-to-br from-amber-50 to-white", border: "border-amber-200/40", iconBg: "bg-amber-100", iconColor: "text-amber-600" },
-  };
-  const a = accentMap[accent];
+  const m = {
+    green: { bg: "bg-gradient-to-br from-green-50 to-white", border: "border-green-200/40", ib: "bg-green-100", ic: "text-green-600" },
+    blue: { bg: "bg-gradient-to-br from-blue-50 to-white", border: "border-blue-200/40", ib: "bg-blue-100", ic: "text-blue-600" },
+    amber: { bg: "bg-gradient-to-br from-amber-50 to-white", border: "border-amber-200/40", ib: "bg-amber-100", ic: "text-amber-600" },
+  }[accent];
   return (
-    <div className={`rounded-sm border ${a.border} ${a.bg} p-3.5 shadow-2 transition-all hover:shadow-md`}>
+    <div className={`rounded-sm border ${m.border} ${m.bg} p-3.5 shadow-2 transition-all hover:shadow-md`}>
       <div className="flex items-start justify-between">
         <div className="min-w-0">
           <p className="text-xs text-text-secondary truncate">{label}</p>
-          <p className="mt-1 text-lg font-bold text-text-primary leading-tight">{value}</p>
+          <p className="mt-1 text-xl font-bold text-text-primary leading-tight">{value}</p>
         </div>
-        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${a.iconBg} ${a.iconColor}`}>{icon}</div>
+        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${m.ib} ${m.ic}`}>{icon}</div>
       </div>
     </div>
   );
