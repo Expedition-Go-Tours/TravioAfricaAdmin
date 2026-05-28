@@ -176,14 +176,20 @@ export default function PayoutsList() {
     <div className="space-y-6">
       {/* Summary Bar */}
       {summary && (
-        <div className="grid grid-cols-2 gap-4">
-          <div className="rounded-sm border border-blue-200/40 bg-gradient-to-br from-blue-50 to-white p-3.5 shadow-2">
-            <p className="text-xs text-text-secondary">Total Payout Amount</p>
-            <p className="mt-1 text-lg font-bold text-text-primary">{formatCurrency(summary.totalAmount ?? 0)}</p>
-          </div>
-          <div className="rounded-sm border border-green-200/40 bg-gradient-to-br from-green-50 to-white p-3.5 shadow-2">
-            <p className="text-xs text-text-secondary">Total Commission</p>
-            <p className="mt-1 text-lg font-bold text-text-primary">{formatCurrency(summary.totalCommission ?? 0)}</p>
+        <div className="rounded-sm border border-border-muted shadow-2 overflow-hidden">
+          <div className="grid grid-cols-2 divide-x divide-border-muted">
+            <KpiCard
+              label="Total Payout Amount"
+              value={formatCurrency(summary.totalAmount ?? 0)}
+              icon={<DollarSign className="h-5 w-5" />}
+              accent="blue"
+            />
+            <KpiCard
+              label="Total Commission"
+              value={formatCurrency(summary.totalCommission ?? 0)}
+              icon={<Wallet className="h-5 w-5" />}
+              accent="green"
+            />
           </div>
         </div>
       )}
@@ -337,6 +343,38 @@ export default function PayoutsList() {
           </div>
         </ConfirmModal>
       )}
+    </div>
+  );
+}
+
+/* ── KpiCard ── */
+
+function KpiCard({
+  label,
+  value,
+  icon,
+  accent,
+}: {
+  label: string;
+  value: string;
+  icon: React.ReactNode;
+  accent: "green" | "blue" | "amber";
+}) {
+  const accentMap = {
+    green: { bg: "bg-gradient-to-br from-green-50 to-white", sideBorder: "border-l-green-400", iconBg: "bg-green-100", iconColor: "text-green-600" },
+    blue: { bg: "bg-gradient-to-br from-blue-50 to-white", sideBorder: "border-l-blue-400", iconBg: "bg-blue-100", iconColor: "text-blue-600" },
+    amber: { bg: "bg-gradient-to-br from-amber-50 to-white", sideBorder: "border-l-amber-400", iconBg: "bg-amber-100", iconColor: "text-amber-600" },
+  };
+
+  const a = accentMap[accent];
+
+  return (
+    <div className={`${a.bg} ${a.sideBorder} border-l-2 flex flex-col items-center justify-center px-3 py-5 text-center`}>
+      <div className={`flex h-9 w-9 items-center justify-center rounded-full ${a.iconBg} ${a.iconColor} mb-2.5`}>
+        {icon}
+      </div>
+      <p className="text-xs text-text-secondary truncate max-w-full">{label}</p>
+      <p className="mt-0.5 text-sm font-bold text-text-primary leading-snug">{value}</p>
     </div>
   );
 }
