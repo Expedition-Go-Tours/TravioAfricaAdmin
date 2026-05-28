@@ -14,6 +14,7 @@ import {
   XCircle,
   AlertTriangle,
   ChevronRight,
+  ArrowLeft,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -203,6 +204,9 @@ export default function SupplierDetailPage() {
     <div className="space-y-6">
       {/* Breadcrumb-style nav */}
       <div className="flex items-center gap-2 text-sm text-text-tertiary">
+        <button onClick={() => navigate(-1)} className="rounded-sm bg-white p-1.5 shadow-sm hover:ring-2 hover:ring-green-300 transition-all">
+          <ArrowLeft className="h-4 w-4 text-text-primary" />
+        </button>
         <button onClick={() => navigate("/admin/suppliers")} className="hover:text-text-primary transition-colors">Suppliers</button>
         <ChevronRight className="h-3 w-3" />
         <span className="text-text-primary font-medium truncate">{user?.name || "Supplier Detail"}</span>

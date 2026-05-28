@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   LineChart,
@@ -21,6 +22,7 @@ import {
   Eye,
   ShoppingCart,
   TrendingUp,
+  ArrowLeft,
 } from "lucide-react";
 import {
   Select,
@@ -76,6 +78,7 @@ const ChartLegend = ({ payload }: { payload?: { dataKey: string; color: string; 
 };
 
 export default function SearchAnalyticsPage() {
+  const navigate = useNavigate();
   const [period, setPeriod] = useState("30d");
 
   const { data: raw, isLoading, isError, refetch } = useQuery({
@@ -114,7 +117,7 @@ export default function SearchAnalyticsPage() {
     { key: "query", header: "Query", render: (r) => r.query || "—" },
     { key: "searches", header: "Searches", sortable: true, render: (r) => formatNumber(r.searches) },
     { key: "uniqueUsers", header: "Unique Users", render: (r) => formatNumber(r.uniqueUsers) },
-    { key: "avgResults", header: "Avg Results", render: (r) => r.avgResults?.toFixed(1) || "—" },
+    { key: "avgResults", header: "Avg Results", render: (r) => r.avgResults != null ? r.avgResults.toFixed(1) : "—" },
   ];
 
   const zeroResultColumns: Column<{ query?: string; searches?: number }>[] = [
@@ -126,9 +129,14 @@ export default function SearchAnalyticsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-semibold text-text-primary">Search Analytics</h1>
-          <p className="mt-0.5 text-sm text-text-tertiary">Track how users search and discover tours</p>
+        <div className="flex items-center gap-4">
+          <button onClick={() => navigate(-1)} className="rounded-sm bg-white p-1.5 shadow-sm hover:ring-2 hover:ring-green-300 transition-all shrink-0">
+            <ArrowLeft className="h-4 w-4 text-text-primary" />
+          </button>
+          <div>
+            <h1 className="text-xl font-semibold text-text-primary">Search Analytics</h1>
+            <p className="mt-0.5 text-sm text-text-tertiary">Track how users search and discover tours</p>
+          </div>
         </div>
         <Select value={period} onValueChange={setPeriod}>
           <SelectTrigger className="w-32">

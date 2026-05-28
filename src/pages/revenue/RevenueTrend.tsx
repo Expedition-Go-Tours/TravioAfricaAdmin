@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { ArrowLeft } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -23,6 +25,7 @@ const metrics = [
 ];
 
 export default function RevenueTrendPage() {
+  const navigate = useNavigate();
   const [visible, setVisible] = useState<Record<string, boolean>>({
     revenue: true,
     commission: true,
@@ -38,7 +41,12 @@ export default function RevenueTrendPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-lg font-semibold text-text-primary">Revenue Trend</h1>
+      <div className="flex items-center gap-4">
+        <button onClick={() => navigate(-1)} className="rounded-sm bg-white p-1.5 shadow-sm hover:ring-2 hover:ring-green-300 transition-all">
+          <ArrowLeft className="h-4 w-4 text-text-primary" />
+        </button>
+        <h1 className="text-lg font-semibold text-text-primary">Revenue Trend</h1>
+      </div>
 
       <Card>
         <CardHeader>

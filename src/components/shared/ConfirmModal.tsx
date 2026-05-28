@@ -12,9 +12,10 @@ import { useEffect, useRef } from "react";
 interface ConfirmModalProps {
   open: boolean;
   title: string;
-  description: string;
+  description: string | React.ReactNode;
   confirmLabel?: string;
   confirmVariant?: "default" | "destructive";
+  confirmDisabled?: boolean;
   loading?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
@@ -27,6 +28,7 @@ export function ConfirmModal({
   description,
   confirmLabel = "Confirm",
   confirmVariant = "default",
+  confirmDisabled = false,
   loading = false,
   onConfirm,
   onCancel,
@@ -62,7 +64,7 @@ export function ConfirmModal({
           <Button ref={cancelRef} variant="outline" onClick={onCancel} disabled={loading}>
             Cancel
           </Button>
-          <Button variant={confirmVariant} onClick={onConfirm} disabled={loading}>
+          <Button variant={confirmVariant} onClick={onConfirm} disabled={loading || confirmDisabled}>
             {loading ? "Loading..." : confirmLabel}
           </Button>
         </DialogFooter>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { queryClient } from "@/lib/query-client";
@@ -19,6 +19,7 @@ import TourDetailPage from "@/pages/tours/TourDetail";
 import SupplierApplicationsPage from "@/pages/suppliers/SupplierApplications";
 import SupplierDetailPage from "@/pages/suppliers/SupplierDetail";
 import ActiveSuppliersPage from "@/pages/suppliers/ActiveSuppliers";
+import { ArrowLeft } from "lucide-react";
 import PayoutsOverview from "@/pages/finance/PayoutsOverview";
 import PayoutsList from "@/pages/finance/PayoutsList";
 import PayoutMethodsPage from "@/pages/finance/PayoutMethods";
@@ -74,19 +75,25 @@ export default function App() {
 }
 
 function PayoutsTabPage() {
+  const navigate = useNavigate();
   const [tab, setTab] = useState<"overview" | "list">("overview");
 
   return (
     <div className="space-y-6">
-      <h1 className="text-lg font-semibold text-text-primary">Payouts</h1>
+      <div className="flex items-center gap-4">
+        <button onClick={() => navigate(-1)} className="rounded-sm bg-white p-1.5 shadow-sm hover:ring-2 hover:ring-green-300 transition-all">
+          <ArrowLeft className="h-4 w-4 text-text-primary" />
+        </button>
+        <h1 className="text-lg font-semibold text-text-primary">Payouts</h1>
+      </div>
       <div className="flex gap-2 border-b border-border-muted">
         {(["overview", "list"] as const).map((t) => (
           <button
             key={t}
-            className={`px-4 py-2 text-sm font-medium capitalize transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ring ${
+            className={`px-4 py-2 text-sm font-medium capitalize transition-colors focus:outline-none ${
               tab === t
-                ? "border-b-2 border-text-primary text-text-primary"
-                : "text-text-secondary hover:text-text-primary"
+                ? "border-b-2 border-green-600 text-green-700"
+                : "text-text-secondary hover:text-green-600"
             }`}
             onClick={() => setTab(t)}
           >

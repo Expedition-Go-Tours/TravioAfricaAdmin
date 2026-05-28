@@ -1,7 +1,8 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Eye, EyeOff, CheckCircle, XCircle } from "lucide-react";
+import { Eye, EyeOff, CheckCircle, Building2, Check, AlertCircle, ArrowLeft } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -18,7 +19,6 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/shared/DataTable";
 import type { Column } from "@/components/shared/DataTable";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -26,6 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SectionError } from "@/components/shared/SectionError";
 import { SectionEmpty } from "@/components/shared/SectionEmpty";
 import api from "@/lib/axios";
+import { formatDate } from "@/lib/utils";
 
 interface PayoutMethodSupplier {
   id: string;
@@ -45,8 +46,18 @@ interface PayoutMethod {
   details?: string;
   bankName?: string;
   accountName?: string;
+  accountNumber?: string;
+  bankCode?: string;
+  swift?: string;
+  iban?: string;
+  routingNumber?: string;
+  currency?: string;
+  country?: string;
+  phoneNumber?: string;
+  email?: string;
   isDefault?: boolean;
   verified?: boolean;
+  createdAt?: string;
 }
 
 const filterOptions = [
@@ -56,6 +67,7 @@ const filterOptions = [
 ];
 
 export default function PayoutMethodsPage() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [hasMethod, setHasMethod] = useState("all");
@@ -107,11 +119,17 @@ export default function PayoutMethodsPage() {
 
   const suppliers = data?.suppliers || data?.data?.suppliers || [];
   const pagination = data?.pagination || data?.data?.pagination;
+  const selectedSupplier = suppliers.find((s: PayoutMethodSupplier) => s.id === viewSupplierId);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-text-primary">Payout Methods</h1>
+        <div className="flex items-center gap-4">
+          <button onClick={() => navigate(-1)} className="rounded-sm bg-white p-1.5 shadow-sm hover:ring-2 hover:ring-green-300 transition-all">
+            <ArrowLeft className="h-4 w-4 text-text-primary" />
+          </button>
+          <h1 className="text-lg font-semibold text-text-primary">Payout Methods</h1>
+        </div>
         <Select value={hasMethod} onValueChange={(v) => { setHasMethod(v); setPage(1); }}>
           <SelectTrigger className="w-44">
             <SelectValue placeholder="Filter" />
@@ -141,47 +159,148 @@ export default function PayoutMethodsPage() {
 
       {/* View Methods Dialog */}
       <Dialog open={!!viewSupplierId} onOpenChange={(v) => { if (!v) setViewSupplierId(null); }}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-xl">
           <DialogHeader>
-            <DialogTitle>Supplier Payout Methods</DialogTitle>
-            <DialogDescription>Manage payout methods for this supplier.</DialogDescription>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100 text-sm font-bold text-green-700">
+                {(selectedSupplier?.name || selectedSupplier?.user?.name)?.charAt(0)?.toUpperCase() || "?"}
+              </div>
+              <div className="min-w-0">
+                <DialogTitle className="text-base">{selectedSupplier?.name || selectedSupplier?.user?.name || "Supplier"}</DialogTitle>
+                <DialogDescription className="flex items-center gap-2 text-xs mt-0.5">
+                  <span>{selectedSupplier?.email || selectedSupplier?.user?.email || ""}</span>
+                  <span className="h-3 w-px bg-border-muted" />
+                  <StatusBadge status={selectedSupplier?.supplierProfile?.status || selectedSupplier?.status || "UNKNOWN"} />
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
-          <div className="space-y-3">
-            {methodsLoading ? (
-              Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-20 w-full" />)
-            ) : !methodsData?.data?.methods?.length ? (
-              <SectionEmpty message="No payout methods found" />
-            ) : (
-              methodsData.data.methods.map((method: PayoutMethod) => (
-                <div key={method.id} className="flex items-center justify-between rounded-sm border border-border p-4">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary">{method.type || "Unknown"}</Badge>
-                      {method.isDefault && <Badge variant="info">Default</Badge>}
-                      {method.verified ? (
-                        <Badge variant="success"><CheckCircle className="mr-1 h-3 w-3" /> Verified</Badge>
-                      ) : (
-                        <Badge variant="error"><XCircle className="mr-1 h-3 w-3" /> Unverified</Badge>
+
+          {methodsLoading ? (
+            <div className="space-y-4">
+              {Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-36 w-full rounded-sm" />)}
+            </div>
+          ) : !methodsData?.data?.methods?.length ? (
+            <SectionEmpty message="No payout methods set up yet" />
+          ) : (
+            <div className="space-y-5">
+              <div className="flex items-center gap-3 px-1">
+                <span className="text-xs font-medium text-text-secondary uppercase tracking-wider">
+                  {methodsData.data.methods.length} Method{methodsData.data.methods.length > 1 ? "s" : ""}
+                </span>
+                <span className="h-3 w-px bg-border-muted" />
+                <span className="text-xs text-text-secondary">
+                  Default:{" "}
+                  <span className="font-medium text-text-primary">
+                    {methodsData.data.methods.find((m: PayoutMethod) => m.isDefault)?.type?.replace(/_/g, " ") || "None set"}
+                  </span>
+                </span>
+              </div>
+
+              {methodsData.data.methods.map((method: PayoutMethod) => (
+                <div key={method.id} className="rounded-sm border border-border bg-white shadow-2 overflow-hidden">
+                  <div className="flex items-center justify-between bg-gradient-to-r from-green-50 to-green-50/80 px-4 py-3 border-b border-border-muted">
+                    <div className="flex items-center gap-2.5">
+                      <Building2 className="h-4 w-4 text-green-600" />
+                      <span className="text-sm font-semibold text-green-800">{method.type?.replace(/_/g, " ") || "Unknown"}</span>
+                      {method.isDefault && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-green-700 px-2 py-0.5 text-xs font-medium text-white">
+                          <Check className="h-3 w-3" /> Default
+                        </span>
                       )}
                     </div>
-                    {method.bankName && <p className="text-sm text-text-primary">{method.bankName}</p>}
-                    {method.accountName && <p className="text-sm text-text-secondary">{method.accountName}</p>}
-                    {method.details && <p className="text-sm text-text-tertiary">{method.details}</p>}
+                    {method.verified ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
+                        <CheckCircle className="h-3 w-3" /> Verified
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700">
+                        <AlertCircle className="h-3 w-3" /> Unverified
+                      </span>
+                    )}
                   </div>
-                  <Button
-                    size="sm"
-                    variant={method.verified ? "outline" : "default"}
-                    onClick={() => verifyMutation.mutate({ methodId: method.id, verified: !method.verified })}
-                    disabled={verifyMutation.isPending}
-                  >
-                    {method.verified ? "Unverify" : "Verify"}
-                  </Button>
+
+                  <div className="p-4 space-y-4">
+                    {/* Bank Details */}
+                    <div>
+                      <p className="mb-2 text-xs font-semibold text-text-secondary uppercase tracking-wider">Bank Account Details</p>
+                      <div className="grid grid-cols-2 gap-x-6 gap-y-2.5">
+                        <Field label="Bank Name" value={method.bankName} />
+                        <Field label="Account Name" value={method.accountName} />
+                        <Field label="Account Number" value={method.accountNumber} />
+                        <Field label="Bank Code" value={method.bankCode} />
+                        <Field label="SWIFT / BIC" value={method.swift} />
+                        <Field label="IBAN" value={method.iban} />
+                        <Field label="Routing Number" value={method.routingNumber} />
+                      </div>
+                    </div>
+
+                    {/* Currency & Country */}
+                    {(method.currency || method.country) && (
+                      <div className="border-t border-border-muted pt-4">
+                        <p className="mb-2 text-xs font-semibold text-text-secondary uppercase tracking-wider">Region</p>
+                        <div className="grid grid-cols-2 gap-x-6 gap-y-2.5">
+                          <Field label="Currency" value={method.currency} />
+                          <Field label="Country" value={method.country} />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Contact Details (mobile money / PayPal) */}
+                    {(method.phoneNumber || method.email) && (
+                      <div className="border-t border-border-muted pt-4">
+                        <p className="mb-2 text-xs font-semibold text-text-secondary uppercase tracking-wider">Contact</p>
+                        <div className="grid grid-cols-2 gap-x-6 gap-y-2.5">
+                          <Field label="Phone Number" value={method.phoneNumber} />
+                          <Field label="Email" value={method.email} />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Additional Details */}
+                    {method.details && (
+                      <div className="border-t border-border-muted pt-4">
+                        <p className="mb-2 text-xs font-semibold text-text-secondary uppercase tracking-wider">Additional Notes</p>
+                        <p className="text-sm text-text-primary leading-relaxed">{method.details}</p>
+                      </div>
+                    )}
+
+                    {/* Footer */}
+                    <div className="flex items-center justify-between border-t border-border-muted pt-3">
+                      {method.createdAt && (
+                        <span className="text-xs text-text-tertiary">
+                          Added {formatDate(method.createdAt)}
+                        </span>
+                      )}
+                      <Button
+                        size="sm"
+                        variant={method.verified ? "outline" : "default"}
+                        onClick={() => verifyMutation.mutate({ methodId: method.id, verified: !method.verified })}
+                        disabled={verifyMutation.isPending}
+                        className="gap-1.5 ml-auto"
+                      >
+                        {method.verified ? <EyeOff className="h-3.5 w-3.5" /> : <CheckCircle className="h-3.5 w-3.5" />}
+                        {method.verified ? "Unverify" : "Verify"}
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+/* ── Sub-components ── */
+
+function Field({ label, value }: { label: string; value?: string | null }) {
+  return (
+    <div>
+      <p className="text-xs text-text-secondary uppercase tracking-wider">{label}</p>
+      <p className="mt-0.5 text-sm font-medium text-text-primary">{value || "—"}</p>
     </div>
   );
 }

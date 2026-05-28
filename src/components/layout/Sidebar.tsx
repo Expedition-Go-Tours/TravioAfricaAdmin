@@ -120,7 +120,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "flex h-screen flex-col bg-gradient-to-b from-green-700 to-green-900 transition-all duration-300",
+        "flex h-screen flex-col bg-gradient-to-b from-green-700 to-green-800 transition-all duration-300",
         collapsed ? "w-16" : "w-64",
       )}
       aria-label="Sidebar navigation"

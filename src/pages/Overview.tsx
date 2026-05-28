@@ -15,6 +15,7 @@ import {
   ArrowRight,
   Star,
   ChevronRight,
+  ArrowLeft,
 } from "lucide-react";
 import {
   BarChart,
@@ -126,9 +127,14 @@ export default function OverviewPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-text-primary">Dashboard Overview</h1>
-          <p className="text-sm text-text-tertiary mt-0.5">Your business at a glance</p>
+        <div className="flex items-center gap-4">
+          <button onClick={() => navigate(-1)} className="rounded-sm bg-white p-1.5 shadow-sm hover:ring-2 hover:ring-green-300 transition-all">
+            <ArrowLeft className="h-4 w-4 text-text-primary" />
+          </button>
+          <div>
+            <h1 className="text-xl font-semibold text-text-primary">Dashboard Overview</h1>
+            <p className="text-sm text-text-tertiary mt-0.5">Your business at a glance</p>
+          </div>
         </div>
       </div>
 
@@ -260,7 +266,7 @@ export default function OverviewPage() {
                         <td className="px-5 py-3.5 text-right">
                           <span className="inline-flex items-center gap-1 text-amber-600">
                             <Star className="h-3 w-3 fill-amber-400" />
-                            {tour.averageRating?.toFixed(1) || "—"}
+                            {tour.averageRating != null ? tour.averageRating.toFixed(1) : "—"}
                           </span>
                         </td>
                         <td className="px-5 py-3.5 text-right text-text-primary">{formatNumber(tour.reviewCount)}</td>

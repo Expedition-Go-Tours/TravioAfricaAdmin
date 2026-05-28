@@ -174,7 +174,7 @@ export function DataTable<T>({
               >
                 {columns.map((col) => (
                   <td key={col.key}                   className={cn(
-                    "px-5 py-3.5 text-text-primary leading-relaxed",
+                    "px-5 py-3.5 text-text-primary leading-relaxed align-middle",
                     col.className,
                   )}>
                     {col.render(row)}

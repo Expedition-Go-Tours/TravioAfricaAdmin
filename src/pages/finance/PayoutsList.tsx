@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Download } from "lucide-react";
+import { Download, CheckCircle, XCircle, Send, Ban, Wallet, DollarSign } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -30,6 +30,11 @@ interface Payout {
   commission?: number;
   status?: string;
   createdAt?: string;
+}
+
+interface PayoutSummary {
+  totalAmount?: number;
+  totalCommission?: number;
 }
 
 const statusTabs = ["All", "Pending", "Approved", "Processing", "Paid", "Failed", "Cancelled"];
@@ -122,39 +127,39 @@ export default function PayoutsList() {
   };
 
   const columns: Column<Payout>[] = [
-    { key: "id", header: "ID", render: (r) => <span className="font-mono text-xs">{truncateId(r.id)}</span> },
-    { key: "supplier", header: "Supplier", render: (r) => r.supplier?.name || "—" },
-    { key: "tour", header: "Tour", render: (r) => r.tour?.title || "—" },
-    { key: "bookingId", header: "Booking #", render: (r) => r.bookingId ? truncateId(r.bookingId) : "—" },
-    { key: "amount", header: "Amount", render: (r) => formatCurrency(r.amount) },
-    { key: "commission", header: "Commission", render: (r) => formatCurrency(r.commission) },
+    { key: "id", header: "ID", render: (r) => <span className="font-mono text-xs text-text-tertiary">{truncateId(r.id)}</span> },
+    { key: "supplier", header: "Supplier", render: (r) => <span className="font-medium text-text-primary">{r.supplier?.name || "—"}</span> },
+    { key: "tour", header: "Tour", render: (r) => <span className="text-text-secondary">{r.tour?.title || "—"}</span> },
+    { key: "bookingId", header: "Booking #", render: (r) => <span className="font-mono text-xs text-text-tertiary">{r.bookingId ? truncateId(r.bookingId) : "—"}</span> },
+    { key: "amount", header: "Amount", render: (r) => <span className="font-semibold text-text-primary">{formatCurrency(r.amount)}</span> },
+    { key: "commission", header: "Commission", render: (r) => <span className="text-text-secondary">{formatCurrency(r.commission)}</span> },
     { key: "status", header: "Status", render: (r) => <StatusBadge status={r.status || "UNKNOWN"} /> },
-    { key: "createdAt", header: "Created", render: (r) => formatDate(r.createdAt) },
+    { key: "createdAt", header: "Date", render: (r) => <span className="text-xs text-text-tertiary">{formatDate(r.createdAt)}</span> },
     {
       key: "actions",
-      header: "Actions",
+      header: "",
       render: (r) => {
         const status = r.status;
         return (
           <div className="flex gap-1">
             {status === "PENDING" && (
-              <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActionPayout(r); setActionType("approve"); }}>
-                Approve
+              <Button size="sm" variant="outline" className="gap-1" onClick={(e) => { e.stopPropagation(); setActionPayout(r); setActionType("approve"); }}>
+                <CheckCircle className="h-3.5 w-3.5" /> Approve
               </Button>
             )}
             {status === "APPROVED" && (
               <>
-                <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActionPayout(r); setActionType("release"); }}>
-                  Release
+                <Button size="sm" variant="default" className="gap-1" onClick={(e) => { e.stopPropagation(); setActionPayout(r); setActionType("release"); }}>
+                  <Send className="h-3.5 w-3.5" /> Release
                 </Button>
-                <Button size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); setActionPayout(r); setActionType("fail"); }}>
-                  Fail
+                <Button size="sm" variant="destructive" className="gap-1" onClick={(e) => { e.stopPropagation(); setActionPayout(r); setActionType("fail"); }}>
+                  <XCircle className="h-3.5 w-3.5" /> Fail
                 </Button>
               </>
             )}
             {status === "PROCESSING" && (
-              <Button size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); setActionPayout(r); setActionType("fail"); }}>
-                Fail
+              <Button size="sm" variant="destructive" className="gap-1" onClick={(e) => { e.stopPropagation(); setActionPayout(r); setActionType("fail"); }}>
+                <Ban className="h-3.5 w-3.5" /> Fail
               </Button>
             )}
           </div>
@@ -165,19 +170,21 @@ export default function PayoutsList() {
 
   const payouts = data?.payouts || data?.data?.payouts || [];
   const pagination = data?.pagination || data?.data?.pagination;
-  const summary = data?.summary;
+  const summary: PayoutSummary | undefined = data?.data?.summary || data?.summary;
 
   return (
     <div className="space-y-6">
       {/* Summary Bar */}
       {summary && (
-        <div className="flex flex-wrap gap-4 rounded-sm border border-border bg-surface-base p-4">
-          <p className="text-sm text-text-secondary">
-            Total: <span className="font-semibold text-text-primary">{formatCurrency(summary.totalAmount)}</span>
-          </p>
-          <p className="text-sm text-text-secondary">
-            Commission: <span className="font-semibold text-text-primary">{formatCurrency(summary.totalCommission)}</span>
-          </p>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="rounded-sm border border-blue-200/40 bg-gradient-to-br from-blue-50 to-white p-3.5 shadow-2">
+            <p className="text-xs text-text-secondary">Total Payout Amount</p>
+            <p className="mt-1 text-lg font-bold text-text-primary">{formatCurrency(summary.totalAmount ?? 0)}</p>
+          </div>
+          <div className="rounded-sm border border-green-200/40 bg-gradient-to-br from-green-50 to-white p-3.5 shadow-2">
+            <p className="text-xs text-text-secondary">Total Commission</p>
+            <p className="mt-1 text-lg font-bold text-text-primary">{formatCurrency(summary.totalCommission ?? 0)}</p>
+          </div>
         </div>
       )}
 
@@ -199,8 +206,8 @@ export default function PayoutsList() {
                 </button>
               ))}
             </div>
-            <Button variant="outline" size="sm" onClick={handleExport}>
-              <Download className="mr-2 h-4 w-4" /> Export CSV
+            <Button variant="outline" size="sm" onClick={handleExport} className="gap-1.5">
+              <Download className="h-4 w-4" /> Export CSV
             </Button>
           </div>
         </CardHeader>
@@ -223,7 +230,18 @@ export default function PayoutsList() {
         <ConfirmModal
           open={true}
           title="Approve Payout"
-          description={`Approve payout of ${formatCurrency(actionPayout.amount)} for ${actionPayout.tour?.title || "tour"}?`}
+          description={
+            <div className="space-y-1">
+              <p>Approve this payout to move it to the release stage.</p>
+              <div className="mt-3 flex items-center gap-4 rounded-sm bg-green-50 p-3 text-sm">
+                <DollarSign className="h-5 w-5 text-green-600" />
+                <div>
+                  <p className="font-medium text-green-800">{formatCurrency(actionPayout.amount)}</p>
+                  <p className="text-xs text-green-600">{actionPayout.tour?.title || "Tour"} · {actionPayout.supplier?.name || "Supplier"}</p>
+                </div>
+              </div>
+            </div>
+          }
           confirmLabel="Approve"
           loading={approveMutation.isPending}
           onConfirm={() => approveMutation.mutate()}
@@ -236,8 +254,20 @@ export default function PayoutsList() {
         <ConfirmModal
           open={true}
           title="Release Payout"
-          description={`Release payout of ${formatCurrency(actionPayout.amount)}?`}
+          description={
+            <div className="space-y-1">
+              <p>Release funds to the supplier. Select a payout method below.</p>
+              <div className="mt-3 flex items-center gap-4 rounded-sm bg-blue-50 p-3 text-sm">
+                <Wallet className="h-5 w-5 text-blue-600" />
+                <div>
+                  <p className="font-medium text-blue-800">{formatCurrency(actionPayout.amount)}</p>
+                  <p className="text-xs text-blue-600">{actionPayout.supplier?.name || "Supplier"}</p>
+                </div>
+              </div>
+            </div>
+          }
           confirmLabel="Release"
+          confirmDisabled={!releaseMethod}
           loading={releaseMutation.isPending}
           onConfirm={() => releaseMutation.mutate()}
           onCancel={closeModal}
@@ -245,7 +275,7 @@ export default function PayoutsList() {
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label>Payout Method</Label>
-              {methodsData?.methods?.length ? (
+              {((methodsData?.data?.methods || methodsData?.methods) as any[])?.length ? (
                 <Select value={releaseMethod} onValueChange={setReleaseMethod}>
                   <SelectTrigger><SelectValue placeholder="Select method" /></SelectTrigger>
                   <SelectContent>
@@ -273,9 +303,21 @@ export default function PayoutsList() {
         <ConfirmModal
           open={true}
           title="Mark Payout as Failed"
-          description="Enter the reason for failure."
+          description={
+            <div className="space-y-1">
+              <p>This will mark the payout as failed. A reason is required.</p>
+              <div className="mt-3 flex items-center gap-4 rounded-sm bg-red-50 p-3 text-sm">
+                <XCircle className="h-5 w-5 text-red-600" />
+                <div>
+                  <p className="font-medium text-red-800">{formatCurrency(actionPayout.amount)}</p>
+                  <p className="text-xs text-red-600">{actionPayout.supplier?.name || "Supplier"}</p>
+                </div>
+              </div>
+            </div>
+          }
           confirmLabel="Mark as Failed"
           confirmVariant="destructive"
+          confirmDisabled={failReason.length < 10}
           loading={failMutation.isPending}
           onConfirm={() => failMutation.mutate()}
           onCancel={closeModal}
@@ -286,7 +328,7 @@ export default function PayoutsList() {
               id="failReason"
               value={failReason}
               onChange={(e) => setFailReason(e.target.value)}
-              placeholder="Enter reason..."
+              placeholder="Enter the reason for failure..."
               rows={3}
             />
             {failReason.length > 0 && failReason.length < 10 && (

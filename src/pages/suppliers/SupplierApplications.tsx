@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { Search, X, ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { DataTable } from "@/components/shared/DataTable";
 import type { Column } from "@/components/shared/DataTable";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -23,6 +25,7 @@ export default function SupplierApplicationsPage() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [activeTab, setActiveTab] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
   const limit = 20;
 
   const statusParam = activeTab === "All" ? "" : activeTab.toUpperCase().replace(/\s+/g, "_");
@@ -53,16 +56,56 @@ export default function SupplierApplicationsPage() {
     },
   ];
 
-  const applications = data?.applications || data?.data?.applications || [];
+  const rawApplications = data?.applications || data?.data?.applications || [];
   const pagination = data?.pagination || data?.data?.pagination;
+
+  const query = searchQuery.toLowerCase().trim();
+  const applications: Application[] = query
+    ? rawApplications
+        .filter((app: Application) =>
+          [app.user?.name, app.user?.email, app.businessInfo?.legalBusinessName, app.businessInfo?.businessName, app.businessInfo?.displayName]
+            .some((f) => f?.toLowerCase().includes(query))
+        )
+        .sort((a: Application, b: Application) => {
+          const aName = (a.user?.name || a.businessInfo?.legalBusinessName || "").toLowerCase();
+          const bName = (b.user?.name || b.businessInfo?.legalBusinessName || "").toLowerCase();
+          const aStarts = aName.startsWith(query) ? 0 : 1;
+          const bStarts = bName.startsWith(query) ? 0 : 1;
+          return aStarts - bStarts;
+        })
+    : rawApplications;
 
   return (
     <div className="space-y-6">
-      <h1 className="text-lg font-semibold text-text-primary">Supplier Applications</h1>
+      <div className="flex items-center gap-4">
+        <button onClick={() => navigate(-1)} className="rounded-sm bg-white p-1.5 shadow-sm hover:ring-2 hover:ring-green-300 transition-all">
+          <ArrowLeft className="h-4 w-4 text-text-primary" />
+        </button>
+        <h1 className="text-lg font-semibold text-text-primary">Supplier Applications</h1>
+      </div>
 
       <Card>
         <CardHeader>
-          <div className="flex gap-2 border-b border-border-muted">
+          <div className="flex flex-wrap items-center gap-3 pb-3 border-b border-border-muted">
+            <div className="relative flex-1 min-w-[200px] max-w-xs">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" />
+              <Input
+                placeholder="Search suppliers..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-primary"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="flex gap-2">
             {tabs.map((tab) => (
               <button
                 key={tab}

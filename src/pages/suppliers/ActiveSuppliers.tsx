@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { Search, X, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { DataTable } from "@/components/shared/DataTable";
 import type { Column } from "@/components/shared/DataTable";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -25,13 +27,17 @@ export default function ActiveSuppliersPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
   const [actionTarget, setActionTarget] = useState<{ id: string; userId: string; name: string; action: "suspend" | "reactivate" } | null>(null);
   const [suspendReason, setSuspendReason] = useState("");
   const limit = 20;
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin", "suppliers", { page, limit, status: "ACTIVE" }],
-    queryFn: () => api.get(`/suppliers/admin/applications?page=${page}&limit=${limit}&status=ACTIVE`).then((r) => r.data),
+    queryFn: () => {
+      const params = new URLSearchParams({ page: String(page), limit: String(limit), status: "ACTIVE" });
+      return api.get(`/suppliers/admin/applications?${params.toString()}`).then((r) => r.data);
+    },
   });
 
   const toggleMutation = useMutation({
@@ -81,15 +87,55 @@ export default function ActiveSuppliersPage() {
     },
   ];
 
-  const applications = data?.applications || data?.data?.applications || [];
+  const rawApplications = data?.applications || data?.data?.applications || [];
   const pagination = data?.pagination || data?.data?.pagination;
+
+  const query = searchQuery.toLowerCase().trim();
+  const applications: Supplier[] = query
+    ? rawApplications
+        .filter((app: Supplier) =>
+          [app.user?.name, app.user?.email, app.businessInfo?.legalBusinessName, app.businessInfo?.businessName, app.businessInfo?.displayName]
+            .some((f) => f?.toLowerCase().includes(query))
+        )
+        .sort((a: Supplier, b: Supplier) => {
+          const aName = (a.user?.name || a.businessInfo?.legalBusinessName || "").toLowerCase();
+          const bName = (b.user?.name || b.businessInfo?.legalBusinessName || "").toLowerCase();
+          const aStarts = aName.startsWith(query) ? 0 : 1;
+          const bStarts = bName.startsWith(query) ? 0 : 1;
+          return aStarts - bStarts;
+        })
+    : rawApplications;
 
   return (
     <div className="space-y-6">
-      <h1 className="text-lg font-semibold text-text-primary">Active Suppliers</h1>
+      <div className="flex items-center gap-4">
+        <button onClick={() => navigate(-1)} className="rounded-sm bg-white p-1.5 shadow-sm hover:ring-2 hover:ring-green-300 transition-all">
+          <ArrowLeft className="h-4 w-4 text-text-primary" />
+        </button>
+        <h1 className="text-lg font-semibold text-text-primary">Active Suppliers</h1>
+      </div>
 
       <Card>
         <CardHeader>
+          <div className="flex flex-wrap items-center gap-3 pb-3">
+            <div className="relative flex-1 min-w-[200px] max-w-xs">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" />
+              <Input
+                placeholder="Search suppliers..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-primary"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
           <p className="text-sm text-text-secondary">Manage active suppliers — suspend or reactivate accounts.</p>
         </CardHeader>
         <CardContent>
