@@ -38,6 +38,119 @@ interface TourDetail {
   itinerary?: { day?: number; title?: string; description?: string }[];
   inclusions?: string[];
   exclusions?: string[];
+
+  categorization?: {
+    category?: string;
+    subcategory?: string;
+    difficulty?: string;
+    duration?: { days?: number; hours?: number; minutes?: number };
+    groupSize?: { min?: number; max?: number };
+    transportMode?: unknown;
+  };
+  productContent?: {
+    highlights?: string[];
+    included?: string[];
+    excluded?: string[];
+    itinerary?: { day?: number; title?: string; description?: string }[];
+    whatToBring?: string[];
+    location?: { city?: string; country?: string; address?: string };
+  };
+  schedulesAndPricing?: {
+    pricingSchedules?: {
+      currency?: string;
+      schedules?: Array<{
+        startDate?: string;
+        endDate?: string;
+        prices?: Array<{ ageGroup?: string; retailPrice?: number }>;
+      }>;
+    };
+    travelerDetails?: { pricingModel?: string; maxTravelersPerBooking?: number };
+    availability?: { daysOfWeek?: string[]; timeSlots?: string[] };
+  };
+  bookingAndTickets?: {
+    confirmationType?: string;
+    cancellationPolicy?: string;
+    meetingPoint?: unknown;
+  };
+}
+
+function ensureArray(value: unknown): unknown[] | undefined {
+  if (Array.isArray(value)) return value;
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) return parsed;
+    } catch { /* not JSON */ }
+  }
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    const vals = Object.values(value);
+    if (vals.length > 0) return vals;
+  }
+  return undefined;
+}
+
+function normalizeTour(raw: Record<string, unknown>): TourDetail {
+  const categorization = (raw.categorization || {}) as TourDetail["categorization"];
+  const productContent = (raw.productContent || {}) as TourDetail["productContent"];
+  const schedulesAndPricing = (raw.schedulesAndPricing || {}) as TourDetail["schedulesAndPricing"];
+  const pricingSchedules = schedulesAndPricing?.pricingSchedules || {};
+  const schedules = pricingSchedules?.schedules || [];
+  const firstSchedule = schedules[0] || {};
+  const prices = firstSchedule?.prices || [];
+  const firstPrice = prices[0] || {};
+
+  let durationStr: string | undefined;
+  const dur = categorization?.duration;
+  if (dur) {
+    if (dur.days) durationStr = `${dur.days} day${dur.days > 1 ? "s" : ""}`;
+    else if (dur.hours) durationStr = `${dur.hours} hour${dur.hours > 1 ? "s" : ""}`;
+    else if (dur.minutes) durationStr = `${dur.minutes} min`;
+  } else if (raw.durationMinutes) {
+    const hours = Math.floor((raw.durationMinutes as number) / 60);
+    const mins = (raw.durationMinutes as number) % 60;
+    durationStr = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+  }
+
+  let groupSizeStr: string | undefined;
+  const gs = categorization?.groupSize;
+  if (gs) {
+    if (gs.min != null && gs.max != null) groupSizeStr = `${gs.min}–${gs.max}`;
+    else if (gs.max != null) groupSizeStr = `Up to ${gs.max}`;
+    else if (gs.min != null) groupSizeStr = `Min ${gs.min}`;
+  }
+
+  const avgRating =
+    raw.averageRating != null
+      ? Number(raw.averageRating)
+      : undefined;
+
+  return {
+    ...raw,
+    duration: durationStr,
+    groupSize: groupSizeStr,
+    price: firstPrice?.retailPrice ?? undefined,
+    currency: pricingSchedules?.currency || undefined,
+    highlights: ensureArray(productContent?.highlights),
+    itinerary: (() => {
+      const raw = productContent?.itinerary;
+      if (Array.isArray(raw)) return raw as TourDetail["itinerary"];
+      if (typeof raw === "string") {
+        try { const p = JSON.parse(raw); if (Array.isArray(p)) return p as TourDetail["itinerary"]; } catch { /* not JSON */ }
+        return [{ description: raw }] as TourDetail["itinerary"];
+      }
+      if (raw && typeof raw === "object") {
+        const vals = Object.values(raw);
+        if (vals.length > 0) return vals as TourDetail["itinerary"];
+      }
+      return undefined;
+    })(),
+    inclusions: ensureArray(productContent?.included) as string[] | undefined,
+    exclusions: ensureArray(productContent?.excluded) as string[] | undefined,
+    averageRating: avgRating || undefined,
+    bookingCount: (raw._count as { bookings?: number })?.bookings ?? (raw.totalBookings as number ?? undefined),
+    reviewCount: (raw._count as { reviews?: number })?.reviews ?? (raw.reviewCount as number ?? undefined),
+    totalRevenue: raw.totalRevenue != null ? Number(raw.totalRevenue) : undefined,
+  } as TourDetail;
 }
 
 export default function TourDetailPage() {
@@ -50,7 +163,7 @@ export default function TourDetailPage() {
       const res = await api.get(`/tours/${id}`);
       const tour = res.data?.data?.tour || res.data?.tour || res.data;
       if (!tour) throw new Error("Tour not found");
-      return tour as TourDetail;
+      return normalizeTour(tour);
     },
     enabled: !!id,
   });
@@ -175,6 +288,7 @@ export default function TourDetailPage() {
               <TabsTrigger value="details"><BookOpen className="mr-1.5 h-3.5 w-3.5" /> Details</TabsTrigger>
               <TabsTrigger value="itinerary"><Map className="mr-1.5 h-3.5 w-3.5" /> Itinerary</TabsTrigger>
               <TabsTrigger value="inclusions"><CheckCircle className="mr-1.5 h-3.5 w-3.5" /> Inclusions</TabsTrigger>
+              <TabsTrigger value="exclusions"><XCircle className="mr-1.5 h-3.5 w-3.5" /> Exclusions</TabsTrigger>
             </TabsList>
 
             <TabsContent value="details">
@@ -214,29 +328,43 @@ export default function TourDetailPage() {
               {tour.itinerary && tour.itinerary.length > 0 ? (
                 <Card>
                   <CardContent className="p-0">
-                    {tour.itinerary.map((day, idx) => (
-                      <div
-                        key={day.day}
-                        className={`px-5 py-4 ${idx < (tour.itinerary?.length || 0) - 1 ? "border-b border-border-muted" : ""} ${idx % 2 === 0 ? "bg-white" : "bg-green-50/20"}`}
-                      >
-                        <div className="flex gap-4">
-                          <div className="flex flex-col items-center">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-xs font-bold text-green-700">
-                              {day.day}
-                            </div>
-                            {idx < (tour.itinerary?.length || 0) - 1 && (
-                              <div className="mt-1 h-full w-px bg-green-200" />
-                            )}
+                    {tour.itinerary.map((item, idx) => {
+                      const entry = item as Record<string, unknown>;
+                      const hasTime = "time" in entry || "day" in entry;
+                      const dayNumber = hasTime ? (entry.day ?? entry.time ?? (idx + 1)) : null;
+                      const title = hasTime ? (entry.title || entry.activity || null) : null;
+                      const description = (entry.description as string) || null;
+                      if (!hasTime && !title && description) {
+                        return (
+                          <div key={idx} className="px-5 py-4">
+                            <p className="text-sm text-text-secondary leading-relaxed whitespace-pre-line">{description}</p>
                           </div>
-                          <div className="pb-4 min-w-0">
-                            <p className="text-sm font-semibold text-text-primary">{day.title || `Day ${day.day}`}</p>
-                            {day.description && (
-                              <p className="mt-1 text-sm text-text-secondary leading-relaxed">{day.description}</p>
-                            )}
+                        );
+                      }
+                      return (
+                        <div
+                          key={idx}
+                          className={`px-5 py-4 ${idx < (tour.itinerary?.length || 0) - 1 ? "border-b border-border-muted" : ""} ${idx % 2 === 0 ? "bg-white" : "bg-green-50/20"}`}
+                        >
+                          <div className="flex gap-4">
+                            <div className="flex flex-col items-center">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-xs font-bold text-green-700">
+                                {dayNumber}
+                              </div>
+                              {idx < (tour.itinerary?.length || 0) - 1 && (
+                                <div className="mt-1 h-full w-px bg-green-200" />
+                              )}
+                            </div>
+                            <div className="pb-4 min-w-0">
+                              {title && <p className="text-sm font-semibold text-text-primary">{title}</p>}
+                              {description && (
+                                <p className={`mt-1 text-sm text-text-secondary leading-relaxed whitespace-pre-line ${title ? "" : ""}`}>{description}</p>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </CardContent>
                 </Card>
               ) : (
@@ -249,7 +377,7 @@ export default function TourDetailPage() {
             <TabsContent value="inclusions">
               <Card>
                 <CardContent className="p-0">
-                  {tour.inclusions && tour.inclusions.length > 0 && (
+                  {tour.inclusions && tour.inclusions.length > 0 ? (
                     <div className="divide-y divide-border-muted">
                       {tour.inclusions.map((inc, i) => (
                         <div key={i} className={`flex items-center gap-3 px-5 py-3 ${i % 2 === 0 ? "bg-white" : "bg-green-50/20"}`}>
@@ -258,19 +386,27 @@ export default function TourDetailPage() {
                         </div>
                       ))}
                     </div>
+                  ) : (
+                    <div className="py-8 text-center text-sm text-text-tertiary">No inclusions listed</div>
                   )}
-                  {tour.exclusions && tour.exclusions.length > 0 && (
-                    <div className="border-t border-border-muted divide-y divide-border-muted">
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="exclusions">
+              <Card>
+                <CardContent className="p-0">
+                  {tour.exclusions && tour.exclusions.length > 0 ? (
+                    <div className="divide-y divide-border-muted">
                       {tour.exclusions.map((exc, i) => (
-                        <div key={i} className={`flex items-center gap-3 px-5 py-3 ${(tour.inclusions?.length || 0) % 2 === 0 ? "bg-white" : "bg-green-50/20"}`}>
+                        <div key={i} className={`flex items-center gap-3 px-5 py-3 ${i % 2 === 0 ? "bg-white" : "bg-green-50/20"}`}>
                           <XCircle className="h-4 w-4 shrink-0 text-red-400" />
                           <span className="text-sm text-text-secondary">{exc}</span>
                         </div>
                       ))}
                     </div>
-                  )}
-                  {(!tour.inclusions || tour.inclusions.length === 0) && (!tour.exclusions || tour.exclusions.length === 0) && (
-                    <div className="py-8 text-center text-sm text-text-tertiary">No inclusions or exclusions listed</div>
+                  ) : (
+                    <div className="py-8 text-center text-sm text-text-tertiary">No exclusions listed</div>
                   )}
                 </CardContent>
               </Card>

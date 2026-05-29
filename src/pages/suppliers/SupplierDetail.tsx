@@ -15,6 +15,12 @@ import {
   AlertTriangle,
   ChevronRight,
   ArrowLeft,
+  Wallet,
+  Smartphone,
+  CreditCard,
+  Check,
+  EyeOff,
+  AlertCircle,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -30,7 +36,8 @@ import { formatDate } from "@/lib/utils";
 
 interface SupplierData {
   id?: string;
-  user?: { id?: string; name?: string; email?: string; photo?: string; role?: string; roles?: string[] };
+  userId?: string;
+  user?: { id?: string; name?: string; email?: string; photoURL?: string; photo?: string; role?: string; roles?: string[] };
   businessInfo?: {
     legalBusinessName?: string; businessName?: string; displayName?: string; businessType?: string;
     country?: string; city?: string; state?: string; address?: string | { line1?: string; city?: string; state?: string; postalCode?: string };
@@ -39,7 +46,7 @@ interface SupplierData {
   };
   operatingInfo?: {
     tourCategories?: string[]; destinations?: string[]; languages?: string[];
-    cancellationPolicy?: string; meetingStyle?: string; yearsInBusiness?: string;
+    cancellationPolicy?: string; meetingStyle?: string; yearsInBusiness?: string | number;
     regions?: string[]; serviceArea?: string;
     hours?: Record<string, string>;
     capacity?: { maxGroupSize?: number; monthlyBookings?: number };
@@ -52,6 +59,7 @@ interface SupplierData {
   };
   businessDocuments?: {
     registrationDocumentUrl?: string; taxDocumentUrl?: string; proofOfAddressUrl?: string;
+    certificateOfRegistration?: string; taxCertificate?: string; proofOfAddress?: string;
     licenses?: string[];
   };
   documents?: {
@@ -69,7 +77,12 @@ interface SupplierData {
     dataProcessingAccepted?: boolean; marketingConsent?: boolean;
   };
   status?: string;
+  totalBookings?: number;
+  totalEarnings?: string | number;
+  averageRating?: number;
+  adminNotes?: string | null;
   createdAt?: string;
+  updatedAt?: string;
 }
 
 type ActionType = "approve" | "reject" | "request_info" | "activate" | "suspend" | "reactivate" | "delete";
@@ -99,6 +112,14 @@ export default function SupplierDetailPage() {
   const user = supplier?.user;
   const status = supplier?.status || "";
   const userId = user?.id || id;
+
+  const { data: payoutData, isLoading: payoutLoading } = useQuery({
+    queryKey: ["admin", "payout-methods", "supplier", userId],
+    queryFn: () => api.get(`/payout-methods/admin/suppliers/${userId}`).then((r) => r.data?.data),
+    enabled: !!userId,
+  });
+
+  const payoutMethods = payoutData?.methods || [];
 
   const reviewMutation = useMutation({
     mutationFn: (body: { action: string; notes?: string }) =>
@@ -382,21 +403,31 @@ export default function SupplierDetailPage() {
         </TabsContent>
 
         <TabsContent value="payout">
-          <Card>
-            <CardHeader><CardTitle className="text-sm font-semibold text-text-primary">Payout Information</CardTitle></CardHeader>
-            <CardContent>
-              <DetailTable
-                rows={[
-                  { label: "Bank Account Name", value: supplier.payoutInfo?.bankAccountName || supplier.payoutInfo?.accountName },
-                  { label: "Account Number", value: supplier.payoutInfo?.bankAccountNumber },
-                  { label: "Bank Name", value: supplier.payoutInfo?.bankName },
-                  { label: "Bank Code", value: supplier.payoutInfo?.bankCode },
-                  { label: "Bank Country", value: supplier.payoutInfo?.bankCountry },
-                  { label: "Payout Currency", value: supplier.payoutInfo?.payoutCurrency || supplier.payoutInfo?.currency },
-                ]}
-              />
-            </CardContent>
-          </Card>
+          <div className="space-y-4">
+            {payoutLoading ? (
+              <Card><CardContent className="p-6"><Skeleton className="h-32 w-full" /></CardContent></Card>
+            ) : payoutMethods.length > 0 ? (
+              payoutMethods.map((method: PayoutMethodItem) => (
+                <PayoutMethodCard key={method.id} method={method} />
+              ))
+            ) : (
+              <Card>
+                <CardHeader><CardTitle className="text-sm font-semibold text-text-primary">Payout Information</CardTitle></CardHeader>
+                <CardContent>
+                  <DetailTable
+                    rows={[
+                      { label: "Bank Account Name", value: supplier.payoutInfo?.bankAccountName || supplier.payoutInfo?.accountName },
+                      { label: "Account Number", value: supplier.payoutInfo?.bankAccountNumber },
+                      { label: "Bank Name", value: supplier.payoutInfo?.bankName },
+                      { label: "Bank Code", value: supplier.payoutInfo?.bankCode },
+                      { label: "Bank Country", value: supplier.payoutInfo?.bankCountry },
+                      { label: "Payout Currency", value: supplier.payoutInfo?.payoutCurrency || supplier.payoutInfo?.currency },
+                    ]}
+                  />
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </TabsContent>
 
         <TabsContent value="compliance">
@@ -537,6 +568,125 @@ function DetailTable({ rows }: { rows: Array<{ label: string; value?: string | n
         ))}
       </tbody>
     </table>
+  );
+}
+
+interface PayoutMethodItem {
+  id: string;
+  type?: string;
+  bankName?: string;
+  accountName?: string;
+  accountNumber?: string;
+  sortCode?: string;
+  branchCode?: string;
+  swiftCode?: string;
+  iban?: string;
+  routingNumber?: string;
+  bankCountry?: string;
+  currency?: string;
+  mobileProvider?: string;
+  mobileNumber?: string;
+  paypalEmail?: string;
+  isDefault?: boolean;
+  verified?: boolean;
+  createdAt?: string;
+}
+
+function PayoutMethodCard({ method }: { method: PayoutMethodItem }) {
+  const typeKey = (method.type || "").toLowerCase();
+  const isBank = typeKey.includes("bank");
+  const isPaypal = typeKey.includes("paypal");
+  const isMobile = typeKey.includes("mobile") || typeKey.includes("momo");
+  const scheme = isBank
+    ? { badge: "bg-blue-500", bg: "from-blue-50 to-white", border: "border-blue-100", icon: Building2, iconBg: "bg-blue-100", iconColor: "text-blue-700", label: "Bank Account" }
+    : isPaypal
+    ? { badge: "bg-indigo-500", bg: "from-indigo-50 to-white", border: "border-indigo-100", icon: Wallet, iconBg: "bg-indigo-100", iconColor: "text-indigo-700", label: "PayPal Account" }
+    : isMobile
+    ? { badge: "bg-amber-500", bg: "from-amber-50 to-white", border: "border-amber-100", icon: Smartphone, iconBg: "bg-amber-100", iconColor: "text-amber-700", label: "Mobile Money" }
+    : { badge: "bg-green-500", bg: "from-green-50 to-white", border: "border-green-100", icon: CreditCard, iconBg: "bg-green-100", iconColor: "text-green-700", label: "Payment Method" };
+  const Icon = scheme.icon;
+  return (
+    <Card className="overflow-hidden border-0 shadow-sm">
+      <div className={`flex items-center justify-between bg-gradient-to-r ${scheme.bg} px-5 py-3.5 border-b ${scheme.border} border-l-2 ${scheme.border.replace("border-", "border-l-")}`}>
+        <div className="flex items-center gap-3">
+          <div className={`flex h-9 w-9 items-center justify-center rounded-full ${scheme.iconBg}`}>
+            <Icon className={`h-4.5 w-4.5 ${scheme.iconColor}`} />
+          </div>
+          <div>
+            <span className="text-sm font-semibold text-text-primary">{method.type?.replace(/_/g, " ") || "Unknown"}</span>
+            <div className="flex items-center gap-2 mt-0.5">
+              {method.isDefault && (
+                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold text-white ${scheme.badge}`}>
+                  <Check className="h-3 w-3" /> Default
+                </span>
+              )}
+              {method.verified ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-medium text-green-700">
+                  <CheckCircle className="h-3 w-3" /> Verified
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                  <AlertCircle className="h-3 w-3" /> Unverified
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+      <CardContent className="p-5 space-y-4">
+        <div>
+          <p className="mb-2.5 text-[11px] font-semibold text-text-tertiary uppercase tracking-widest">Account Details</p>
+          <div className="grid grid-cols-2 gap-x-8 gap-y-3">
+            {isBank && <Field label="Bank Name" value={method.bankName} />}
+            {isBank && <Field label="Account Name" value={method.accountName} />}
+            {isBank && <Field label="Account Number" value={method.accountNumber} />}
+            {isBank && method.sortCode && <Field label="Sort Code" value={method.sortCode} />}
+            {isBank && method.branchCode && <Field label="Branch Code" value={method.branchCode} />}
+            {isBank && method.swiftCode && <Field label="SWIFT / BIC" value={method.swiftCode} />}
+            {isBank && method.iban && <Field label="IBAN" value={method.iban} />}
+            {isBank && method.routingNumber && <Field label="Routing Number" value={method.routingNumber} />}
+            {isMobile && <Field label="Mobile Provider" value={method.mobileProvider} />}
+            {isMobile && <Field label="Mobile Number" value={method.mobileNumber} />}
+            {isPaypal && <Field label="PayPal Email" value={method.paypalEmail} />}
+            {isPaypal && <Field label="Account Name" value={method.accountName} />}
+          </div>
+        </div>
+        {(method.currency || method.bankCountry) && (
+          <div className="flex items-center gap-6 border-t border-border-muted pt-3.5">
+            <span className="text-[11px] font-semibold text-text-tertiary uppercase tracking-widest flex items-center gap-1.5">
+              <Globe className="h-3 w-3" /> Region
+            </span>
+            {method.currency && (
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-surface-muted px-2.5 py-1 text-xs font-medium text-text-primary">
+                {method.currency}
+              </span>
+            )}
+            {method.bankCountry && (
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-surface-muted px-2.5 py-1 text-xs font-medium text-text-primary">
+                {method.bankCountry}
+              </span>
+            )}
+          </div>
+        )}
+        {method.createdAt && (
+          <div className="flex items-center border-t border-border-muted pt-3.5">
+            <span className="inline-flex items-center gap-1.5 text-xs text-text-tertiary">
+              <Calendar className="h-3 w-3" />
+              Added {formatDate(method.createdAt)}
+            </span>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function Field({ label, value }: { label: string; value?: string | null }) {
+  return (
+    <div className="rounded-sm bg-surface-muted/50 px-3 py-2">
+      <p className="text-[11px] text-text-tertiary uppercase tracking-wider">{label}</p>
+      <p className="mt-0.5 text-sm font-medium text-text-primary">{value || "—"}</p>
+    </div>
   );
 }
 

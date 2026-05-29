@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import { queryClient } from "@/lib/query-client";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProtectedRoute } from "@/auth/ProtectedRoute";
+import { useDataSocket } from "@/hooks/useDataSocket";
 
 import LoginPage from "@/pages/Login";
 import OverviewPage from "@/pages/Overview";
@@ -28,6 +29,7 @@ import ReviewModerationPage from "@/pages/reviews/ReviewModeration";
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <DataSocketInit />
       <BrowserRouter>
         <Routes>
           <Route path="/admin/login" element={<LoginPage />} />
@@ -72,6 +74,11 @@ export default function App() {
       />
     </QueryClientProvider>
   );
+}
+
+function DataSocketInit() {
+  useDataSocket();
+  return null;
 }
 
 function PayoutsTabPage() {

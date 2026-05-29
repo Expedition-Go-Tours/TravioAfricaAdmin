@@ -209,9 +209,9 @@ export default function OverviewPage() {
 
       {/* Revenue Trend + Top Tours */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+        <Card className="lg:col-span-1 overflow-hidden border-0 shadow-sm">
+          <CardHeader className="bg-gradient-to-r from-green-50 to-white border-b border-green-100 border-l-2 border-l-green-500">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-green-800">
               <TrendingUp className="h-4 w-4 text-green-600" />
               Revenue Trend (24mo)
             </CardTitle>
@@ -221,9 +221,9 @@ export default function OverviewPage() {
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+        <Card className="lg:col-span-2 overflow-hidden border-0 shadow-sm">
+          <CardHeader className="bg-gradient-to-r from-amber-50 to-white border-b border-amber-100 border-l-2 border-l-amber-500">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-amber-800">
               <Star className="h-4 w-4 text-amber-500" />
               Top Tours
             </CardTitle>
@@ -283,9 +283,9 @@ export default function OverviewPage() {
       {/* Bottom Grid: Suppliers, Booking Status, Activity, Payouts */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-4">
         {/* Top Suppliers */}
-        <Card className="xl:col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+        <Card className="xl:col-span-1 overflow-hidden border-0 shadow-sm">
+          <CardHeader className="bg-gradient-to-r from-green-50 to-white border-b border-green-100 border-l-2 border-l-green-500">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-green-800">
               <Building className="h-4 w-4 text-green-600" />
               Top Suppliers
             </CardTitle>
@@ -336,9 +336,9 @@ export default function OverviewPage() {
         </Card>
 
         {/* Booking Status */}
-        <Card className="xl:col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+        <Card className="xl:col-span-1 overflow-hidden border-0 shadow-sm">
+          <CardHeader className="bg-gradient-to-r from-green-50 to-white border-b border-green-100 border-l-2 border-l-green-500">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-green-800">
               <PieChart className="h-4 w-4 text-green-600" />
               Booking Status
             </CardTitle>
@@ -384,9 +384,9 @@ export default function OverviewPage() {
         </Card>
 
         {/* Recent Activity */}
-        <Card className="xl:col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+        <Card className="xl:col-span-1 overflow-hidden border-0 shadow-sm">
+          <CardHeader className="bg-gradient-to-r from-green-50 to-white border-b border-green-100 border-l-2 border-l-green-500">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-green-800">
               <Activity className="h-4 w-4 text-green-600" />
               Recent Activity
             </CardTitle>
@@ -419,10 +419,10 @@ export default function OverviewPage() {
         </Card>
 
         {/* Payout Summary */}
-        <Card className="xl:col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
-              <DollarSign className="h-4 w-4 text-green-600" />
+        <Card className="xl:col-span-1 overflow-hidden border-0 shadow-sm">
+          <CardHeader className="bg-gradient-to-r from-amber-50 to-white border-b border-amber-100 border-l-2 border-l-amber-500">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-amber-800">
+              <DollarSign className="h-4 w-4 text-amber-600" />
               Payout Summary
             </CardTitle>
           </CardHeader>
@@ -526,19 +526,23 @@ function KpiCard({
 
 function RevenuePeriodCard({ period, data }: { period: string; data?: { revenue?: number; commission?: number; supplierPayout?: number } }) {
   return (
-    <Card>
-      <CardContent className="p-4">
-        <p className="text-xs font-medium text-text-secondary uppercase tracking-wider">{period}</p>
-        <p className="mt-1.5 text-xl font-bold text-text-primary">{formatCurrency(data?.revenue)}</p>
-        <div className="mt-2 flex items-center gap-3 text-xs text-text-tertiary border-t border-border-muted pt-2">
-          <span className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full bg-green-500" />
-            Comm {formatCurrency(data?.commission)}
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full bg-amber-500" />
-            Payout {formatCurrency(data?.supplierPayout)}
-          </span>
+    <Card className="overflow-hidden border-0 shadow-sm">
+      <CardContent className="p-0">
+        <div className="bg-gradient-to-r from-green-50 to-white px-4 py-3 border-b border-green-100 border-l-2 border-l-green-500">
+          <p className="text-xs font-semibold text-green-800 uppercase tracking-wider">{period}</p>
+        </div>
+        <div className="p-4">
+          <p className="text-xl font-bold text-text-primary">{formatCurrency(data?.revenue)}</p>
+          <div className="mt-2 flex items-center gap-3 text-xs text-text-tertiary border-t border-border-muted pt-2.5">
+            <span className="flex items-center gap-1">
+              <span className="h-2 w-2 rounded-full bg-green-500" />
+              Comm {formatCurrency(data?.commission)}
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="h-2 w-2 rounded-full bg-amber-500" />
+              Payout {formatCurrency(data?.supplierPayout)}
+            </span>
+          </div>
         </div>
       </CardContent>
     </Card>

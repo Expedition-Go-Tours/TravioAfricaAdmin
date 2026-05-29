@@ -48,14 +48,16 @@ interface PayoutMethod {
   bankName?: string;
   accountName?: string;
   accountNumber?: string;
-  bankCode?: string;
-  swift?: string;
+  sortCode?: string;
+  branchCode?: string;
+  swiftCode?: string;
   iban?: string;
   routingNumber?: string;
+  bankCountry?: string;
   currency?: string;
-  country?: string;
-  phoneNumber?: string;
-  email?: string;
+  mobileProvider?: string;
+  mobileNumber?: string;
+  paypalEmail?: string;
   isDefault?: boolean;
   verified?: boolean;
   createdAt?: string;
@@ -311,23 +313,22 @@ export default function PayoutMethodsPage() {
                           </p>
                           <div className="grid grid-cols-2 gap-x-8 gap-y-3">
                             {isBank && <Field label="Bank Name" value={method.bankName} />}
-                            <Field label="Account Name" value={method.accountName} />
-                            <Field label="Account Number" value={method.accountNumber} />
-                            {isBank && (
-                              <>
-                                {method.bankCode && <Field label="Bank Code" value={method.bankCode} />}
-                                {method.swift && <Field label="SWIFT / BIC" value={method.swift} />}
-                                {method.iban && <Field label="IBAN" value={method.iban} />}
-                                {method.routingNumber && <Field label="Routing Number" value={method.routingNumber} />}
-                              </>
-                            )}
-                            {isMobile && <Field label="Phone Number" value={method.phoneNumber} />}
-                            {isPaypal && <Field label="PayPal Email" value={method.email} />}
+                            {isBank && <Field label="Account Name" value={method.accountName} />}
+                            {isBank && <Field label="Account Number" value={method.accountNumber} />}
+                            {isBank && method.sortCode && <Field label="Sort Code" value={method.sortCode} />}
+                            {isBank && method.branchCode && <Field label="Branch Code" value={method.branchCode} />}
+                            {isBank && method.swiftCode && <Field label="SWIFT / BIC" value={method.swiftCode} />}
+                            {isBank && method.iban && <Field label="IBAN" value={method.iban} />}
+                            {isBank && method.routingNumber && <Field label="Routing Number" value={method.routingNumber} />}
+                            {isMobile && <Field label="Mobile Provider" value={method.mobileProvider} />}
+                            {isMobile && <Field label="Mobile Number" value={method.mobileNumber} />}
+                            {isPaypal && <Field label="PayPal Email" value={method.paypalEmail} />}
+                            {isPaypal && <Field label="Account Name" value={method.accountName} />}
                           </div>
                         </div>
 
                         {/* Region row */}
-                        {(method.currency || method.country) && (
+                        {(method.currency || method.bankCountry) && (
                           <div className="flex items-center gap-6 border-t border-border-muted pt-3.5">
                             <span className="text-[11px] font-semibold text-text-tertiary uppercase tracking-widest flex items-center gap-1.5">
                               <Globe className="h-3 w-3" /> Region
@@ -337,9 +338,9 @@ export default function PayoutMethodsPage() {
                                 {method.currency}
                               </span>
                             )}
-                            {method.country && (
+                            {method.bankCountry && (
                               <span className="inline-flex items-center gap-1.5 rounded-md bg-surface-muted px-2.5 py-1 text-xs font-medium text-text-primary">
-                                {method.country}
+                                {method.bankCountry}
                               </span>
                             )}
                           </div>
