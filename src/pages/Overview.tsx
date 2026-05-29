@@ -398,7 +398,7 @@ export default function OverviewPage() {
                         <td className="px-5 py-3.5 text-right">
                           <span className="inline-flex items-center gap-1 text-amber-600">
                             <Star className="h-3 w-3 fill-amber-400" />
-                            {tour.averageRating != null ? tour.averageRating.toFixed(1) : "—"}
+                            {tour.averageRating != null ? Number(tour.averageRating).toFixed(1) : "—"}
                           </span>
                         </td>
                         <td className="px-5 py-3.5 text-right text-text-primary">{formatNumber(tour.reviewCount)}</td>
