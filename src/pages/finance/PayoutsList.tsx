@@ -23,7 +23,22 @@ import { formatCurrency, formatDate, truncateId } from "@/lib/utils";
 
 interface Payout {
   id: string;
-  supplier?: { name?: string; id?: string };
+  supplier?: {
+    name?: string;
+    id?: string;
+    email?: string;
+    phone?: string;
+    supplierProfile?: {
+      businessInfo?: {
+        legalBusinessName?: string;
+        displayName?: string;
+        country?: string;
+        address?: { city?: string; line1?: string; state?: string; postalCode?: string };
+        phoneNumber?: string;
+      };
+      payoutInfo?: any;
+    };
+  };
   tour?: { title?: string };
   booking?: { bookingNumber?: string; total?: string; paidAt?: string; tour?: { title?: string } };
   bookingId?: string;
@@ -240,11 +255,28 @@ export default function PayoutsList() {
           description={
             <div className="space-y-1">
               <p>Approve this payout to move it to the release stage.</p>
-              <div className="mt-3 flex items-center gap-4 rounded-sm bg-green-50 p-3 text-sm">
-                <DollarSign className="h-5 w-5 text-green-600" />
-                <div>
-                  <p className="font-medium text-green-800">{formatCurrency(actionPayout.amount)}</p>
-                  <p className="text-xs text-green-600">{actionPayout.tour?.title || "Tour"} · {actionPayout.supplier?.name || "Supplier"}</p>
+              <div className="mt-3 rounded-sm bg-green-50 p-3 text-sm">
+                <div className="flex items-center gap-4 mb-3">
+                  <DollarSign className="h-5 w-5 text-green-600 shrink-0" />
+                  <div>
+                    <p className="font-medium text-green-800">{formatCurrency(actionPayout.amount)}</p>
+                    <p className="text-xs text-green-600">{actionPayout.booking?.tour?.title || actionPayout.tour?.title || "Tour"}</p>
+                  </div>
+                </div>
+                <div className="border-t border-green-200/50 pt-3 space-y-1.5">
+                  <p className="text-xs font-semibold text-green-700 uppercase tracking-wide">Supplier Details</p>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-green-700">
+                    <span className="text-green-500">Legal Name</span>
+                    <span className="font-medium text-right">{actionPayout.supplier?.supplierProfile?.businessInfo?.legalBusinessName || "—"}</span>
+                    <span className="text-green-500">Display Name</span>
+                    <span className="font-medium text-right">{actionPayout.supplier?.supplierProfile?.businessInfo?.displayName || actionPayout.supplier?.name || "—"}</span>
+                    <span className="text-green-500">Country</span>
+                    <span className="font-medium text-right">{actionPayout.supplier?.supplierProfile?.businessInfo?.country || "—"}</span>
+                    <span className="text-green-500">City</span>
+                    <span className="font-medium text-right">{actionPayout.supplier?.supplierProfile?.businessInfo?.address?.city || "—"}</span>
+                    <span className="text-green-500">Phone</span>
+                    <span className="font-medium text-right">{actionPayout.supplier?.supplierProfile?.businessInfo?.phoneNumber || actionPayout.supplier?.phone || "—"}</span>
+                  </div>
                 </div>
               </div>
             </div>
