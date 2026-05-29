@@ -146,7 +146,7 @@ function normalizeTour(raw: Record<string, unknown>): TourDetail {
     })(),
     inclusions: ensureArray(productContent?.included) as string[] | undefined,
     exclusions: ensureArray(productContent?.excluded) as string[] | undefined,
-    averageRating: avgRating || undefined,
+    averageRating: avgRating,
     bookingCount: (raw._count as { bookings?: number })?.bookings ?? (raw.totalBookings as number ?? undefined),
     reviewCount: (raw._count as { reviews?: number })?.reviews ?? (raw.reviewCount as number ?? undefined),
     totalRevenue: raw.totalRevenue != null ? Number(raw.totalRevenue) : undefined,

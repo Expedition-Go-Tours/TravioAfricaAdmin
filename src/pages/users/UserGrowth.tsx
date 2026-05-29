@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine,
 } from "recharts";
-import { TrendingUp, Users, UserPlus, ArrowLeft, Calendar, Activity, X, Mail, Shield, Clock } from "lucide-react";
+import { TrendingUp, TrendingDown, Users, UserPlus, ArrowLeft, Activity, X, Mail, Shield } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -65,8 +65,8 @@ export default function UserGrowthPage() {
 
   const growth = data?.data?.growth || [];
 
-  const { totals, latestMonth, avgMonthly, momChange } = useMemo(() => {
-    if (!growth.length) return { totals: { customers: 0, suppliers: 0, total: 0 }, latestMonth: null, avgMonthly: 0, momChange: null };
+  const { totals, latestMonth, avgMonthly, momChange, customerMom, supplierMom } = useMemo(() => {
+    if (!growth.length) return { totals: { customers: 0, suppliers: 0, total: 0 }, latestMonth: null, avgMonthly: 0, momChange: null, customerMom: null, supplierMom: null };
 
     const totals = growth.reduce(
       (acc: { customers: number; suppliers: number; total: number }, curr: { customers?: number; suppliers?: number; total?: number }) => ({
@@ -80,13 +80,13 @@ export default function UserGrowthPage() {
     const lm = growth[growth.length - 1];
     const prev = growth.length > 1 ? growth[growth.length - 2] : null;
     const mom = prev && prev.total > 0 ? ((lm.total - prev.total) / prev.total) * 100 : null;
+    const custMom = prev && prev.customers > 0 ? ((lm.customers - prev.customers) / prev.customers) * 100 : null;
+    const suppMom = prev && prev.suppliers > 0 ? ((lm.suppliers - prev.suppliers) / prev.suppliers) * 100 : null;
 
-    return { totals, latestMonth: lm, avgMonthly: Math.round(totals.total / growth.length), momChange: mom };
+    return { totals, latestMonth: lm, avgMonthly: Math.round(totals.total / growth.length), momChange: mom, customerMom: custMom, supplierMom: suppMom };
   }, [growth]);
 
-  const latestLabel = latestMonth?.month
-    ? new Date(latestMonth.month + "-02").toLocaleDateString("en-US", { month: "long", year: "numeric" })
-    : "";
+
 
   return (
     <div className="space-y-6">
@@ -120,6 +120,8 @@ export default function UserGrowthPage() {
           value={isLoading ? "..." : formatNumber(totals.total)}
           icon={<Users className="h-4 w-4" />}
           accent="green"
+          trend={momChange}
+          subtitle={latestMonth ? `${formatNumber(latestMonth.total)} this month` : undefined}
           onClick={() => setDialog({ type: "all" })}
         />
         <KpiCard
@@ -127,6 +129,8 @@ export default function UserGrowthPage() {
           value={isLoading ? "..." : formatNumber(totals.customers)}
           icon={<UserPlus className="h-4 w-4" />}
           accent="blue"
+          trend={customerMom}
+          subtitle={latestMonth ? `${formatNumber(latestMonth.customers)} this month` : undefined}
           onClick={() => setDialog({ type: "customer" })}
         />
         <KpiCard
@@ -134,6 +138,8 @@ export default function UserGrowthPage() {
           value={isLoading ? "..." : formatNumber(totals.suppliers)}
           icon={<TrendingUp className="h-4 w-4" />}
           accent="amber"
+          trend={supplierMom}
+          subtitle={latestMonth ? `${formatNumber(latestMonth.suppliers)} this month` : undefined}
           onClick={() => setDialog({ type: "supplier" })}
         />
         <KpiCard
@@ -141,40 +147,9 @@ export default function UserGrowthPage() {
           value={isLoading ? "..." : formatNumber(avgMonthly)}
           icon={<Activity className="h-4 w-4" />}
           accent="green"
+          subtitle={growth.length ? `over ${growth.length} months` : undefined}
         />
       </div>
-
-      {/* Latest Month + MoM */}
-      {latestMonth && (
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          <div className="col-span-2 md:col-span-1 rounded-sm border border-blue-200/40 bg-gradient-to-br from-blue-50 to-white p-3.5 shadow-2">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-blue-600" />
-              <span className="text-xs font-medium text-text-secondary">Latest Month</span>
-            </div>
-            <p className="mt-1.5 text-sm font-bold text-text-primary">{latestLabel}</p>
-            <div className="mt-2 flex items-center gap-3 text-xs text-text-secondary">
-              <span>{formatNumber(latestMonth.customers)} customers</span>
-              <span className="h-3 w-px bg-border-muted" />
-              <span>{formatNumber(latestMonth.suppliers)} suppliers</span>
-              <span className="h-3 w-px bg-border-muted" />
-              <span>{formatNumber(latestMonth.total)} total</span>
-            </div>
-          </div>
-          <div className="col-span-2 md:col-span-1 rounded-sm border border-green-200/40 bg-gradient-to-br from-green-50 to-white p-3.5 shadow-2">
-            <div className="flex items-center gap-2">
-              <TrendingUp className={`h-4 w-4 ${momChange != null && momChange >= 0 ? "text-green-600" : "text-red-500"}`} />
-              <span className="text-xs font-medium text-text-secondary">Month-over-Month</span>
-            </div>
-            <p className={`mt-1.5 text-lg font-bold ${momChange != null && momChange >= 0 ? "text-green-700" : "text-red-600"}`}>
-              {momChange != null ? `${momChange >= 0 ? "+" : ""}${momChange.toFixed(1)}%` : "—"}
-            </p>
-            <p className="mt-0.5 text-xs text-text-tertiary">
-              {momChange != null ? `${momChange >= 0 ? "Increase" : "Decrease"} from previous month` : "First month in period"}
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* Chart */}
       <Card>
@@ -236,30 +211,125 @@ export default function UserGrowthPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* User List Dialog */}
+      {dialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setDialog(null)}>
+          <div className="w-full max-w-lg rounded-sm border border-border bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-border-muted bg-gradient-to-r from-blue-50 to-white px-5 py-3.5 border-l-2 border-l-blue-500">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
+                  <Users className="h-4 w-4 text-blue-600" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-semibold text-blue-800">
+                    {dialog.type === "all" ? "New Users" : dialog.type === "customer" ? "New Customers" : "New Suppliers"}
+                  </h2>
+                  <p className="text-xs text-text-tertiary">{dialogUsers?.length || 0} users</p>
+                </div>
+              </div>
+              <button onClick={() => setDialog(null)} className="rounded-sm p-1 text-text-tertiary hover:bg-surface-muted hover:text-text-primary transition-colors">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="max-h-96 overflow-y-auto">
+              {dialogLoading ? (
+                <div className="p-6 space-y-3">
+                  {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+                </div>
+              ) : !dialogUsers?.length ? (
+                <div className="py-10 text-center text-sm text-text-tertiary">No users found for this period</div>
+              ) : (
+                <div className="divide-y divide-border-muted">
+                  {dialogUsers.map((u) => (
+                    <div key={u.id} className="flex items-start gap-3 px-5 py-3.5 transition-colors hover:bg-blue-50/30">
+                      <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-xs font-bold text-white mt-0.5">
+                        <span>{(u.name || u.email || "?").charAt(0).toUpperCase()}</span>
+                        {u.photoURL && (
+                          <img
+                            src={u.photoURL}
+                            alt={u.name || ""}
+                            className="absolute inset-0 h-full w-full object-cover"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                          />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-text-primary truncate">{u.name || "Unknown"}</p>
+                        <p className="text-xs text-text-tertiary truncate mt-0.5 flex items-center gap-1">
+                          <Mail className="h-3 w-3 shrink-0" />
+                          {u.email || "—"}
+                        </p>
+                        {u.roles && u.roles.length > 0 && (
+                          <p className="text-xs text-text-tertiary truncate mt-0.5 flex items-center gap-1">
+                            <Shield className="h-3 w-3 shrink-0" />
+                            {u.roles.join(", ")}
+                          </p>
+                        )}
+                      </div>
+                      {u.createdAt && (
+                        <span className="shrink-0 text-xs text-text-tertiary whitespace-nowrap pt-0.5">{formatDate(u.createdAt)}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function KpiCard({ label, value, icon, accent, onClick }: { label: string; value: string; icon: React.ReactNode; accent: "green" | "blue" | "amber"; onClick?: () => void }) {
+function KpiCard({
+  label,
+  value,
+  icon,
+  accent,
+  trend,
+  subtitle,
+  onClick,
+}: {
+  label: string;
+  value: string;
+  icon: React.ReactNode;
+  accent: "green" | "blue" | "amber";
+  trend?: number | null;
+  subtitle?: string;
+  onClick?: () => void;
+}) {
   const m = {
-    green: { bg: "bg-gradient-to-br from-green-50 to-white", border: "border-green-200/40", ib: "bg-green-100", ic: "text-green-600" },
-    blue: { bg: "bg-gradient-to-br from-blue-50 to-white", border: "border-blue-200/40", ib: "bg-blue-100", ic: "text-blue-600" },
-    amber: { bg: "bg-gradient-to-br from-amber-50 to-white", border: "border-amber-200/40", ib: "bg-amber-100", ic: "text-amber-600" },
+    green: { l: "border-l-green-500", bg: "bg-gradient-to-br from-green-50 to-white", ib: "bg-green-100", ic: "text-green-600" },
+    blue: { l: "border-l-blue-500", bg: "bg-gradient-to-br from-blue-50 to-white", ib: "bg-blue-100", ic: "text-blue-600" },
+    amber: { l: "border-l-amber-500", bg: "bg-gradient-to-br from-amber-50 to-white", ib: "bg-amber-100", ic: "text-amber-600" },
   }[accent];
+  const isPos = trend != null && trend >= 0;
   return (
     <div
-      className={`rounded-sm border ${m.border} ${m.bg} p-3.5 shadow-2 transition-all hover:shadow-md ${onClick ? "cursor-pointer" : ""}`}
+      className={`rounded-sm border border-border-muted border-l-[3px] ${m.l} ${m.bg} p-4 shadow-2 transition-all hover:shadow-md ${onClick ? "cursor-pointer" : ""}`}
       onClick={onClick}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={onClick ? (e) => { if (e.key === "Enter") onClick(); } : undefined}
     >
-      <div className="flex items-start justify-between">
-        <div className="min-w-0">
-          <p className="text-xs text-text-secondary truncate">{label}</p>
-          <p className="mt-1 text-lg font-bold text-text-primary leading-tight">{value}</p>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-medium text-text-secondary truncate">{label}</p>
+          <p className="mt-1 text-xl font-bold text-text-primary leading-tight">{value}</p>
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+            {trend != null && (
+              <span className={`inline-flex items-center gap-0.5 text-xs font-medium ${isPos ? "text-green-600" : "text-red-500"}`}>
+                {isPos ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                {isPos ? "+" : ""}{trend.toFixed(1)}%
+              </span>
+            )}
+            {subtitle && (
+              <span className="text-[10px] text-text-tertiary">{subtitle}</span>
+            )}
+          </div>
         </div>
-        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${m.ib} ${m.ic}`}>{icon}</div>
+        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${m.ib} ${m.ic} mt-0.5`}>{icon}</div>
       </div>
     </div>
   );

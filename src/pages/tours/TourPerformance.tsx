@@ -18,6 +18,7 @@ interface Tour {
   id: string;
   title?: string;
   status?: string;
+  coverPhoto?: string;
   supplier?: { name?: string };
   bookingCount?: number;
   totalRevenue?: number;
@@ -81,8 +82,16 @@ export default function TourPerformancePage() {
       header: "Tour",
       render: (r) => (
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-green-100 text-xs font-bold text-green-700">
-            {r.title?.charAt(0)?.toUpperCase() || "?"}
+          <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-400 to-green-600 text-xs font-bold text-white">
+            <span>{r.title?.charAt(0)?.toUpperCase() || "?"}</span>
+            {r.coverPhoto && (
+              <img
+                src={r.coverPhoto}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+              />
+            )}
           </div>
           <div className="min-w-0">
             <p className="text-sm font-medium text-text-primary truncate">{r.title || "—"}</p>
@@ -96,7 +105,7 @@ export default function TourPerformancePage() {
     { key: "totalRevenue", header: "Revenue", sortable: true, render: (r) => <span className="font-semibold text-green-700">{formatCurrency(r.totalRevenue)}</span> },
     { key: "averageRating", header: "Rating", sortable: true, render: (r) => (
       <span className="inline-flex items-center gap-1 text-amber-600">
-        {r.averageRating ? `${r.averageRating.toFixed(1)}` : "—"} <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+        {(r.averageRating ?? 0).toFixed(1)} <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
       </span>
     )},
     { key: "reviewCount", header: "Reviews", sortable: true, render: (r) => formatNumber(r.reviewCount) },
@@ -205,20 +214,19 @@ export default function TourPerformancePage() {
 }
 
 function KpiCard({ label, value, icon, accent }: { label: string; value: string; icon: React.ReactNode; accent: "green" | "blue" | "amber" }) {
-  const accentMap = {
-    green: { bg: "bg-gradient-to-br from-green-50 to-white", border: "border-green-200/40", iconBg: "bg-green-100", iconColor: "text-green-600" },
-    blue: { bg: "bg-gradient-to-br from-blue-50 to-white", border: "border-blue-200/40", iconBg: "bg-blue-100", iconColor: "text-blue-600" },
-    amber: { bg: "bg-gradient-to-br from-amber-50 to-white", border: "border-amber-200/40", iconBg: "bg-amber-100", iconColor: "text-amber-600" },
-  };
-  const a = accentMap[accent];
+  const m = {
+    green: { l: "border-l-green-500", bg: "bg-gradient-to-br from-green-50 to-white", ib: "bg-green-100", ic: "text-green-600" },
+    blue: { l: "border-l-blue-500", bg: "bg-gradient-to-br from-blue-50 to-white", ib: "bg-blue-100", ic: "text-blue-600" },
+    amber: { l: "border-l-amber-500", bg: "bg-gradient-to-br from-amber-50 to-white", ib: "bg-amber-100", ic: "text-amber-600" },
+  }[accent];
   return (
-    <div className={`rounded-sm border ${a.border} ${a.bg} p-3.5 shadow-2 transition-all hover:shadow-md`}>
-      <div className="flex items-start justify-between">
-        <div className="min-w-0">
-          <p className="text-xs text-text-secondary truncate">{label}</p>
-          <p className="mt-1 text-lg font-bold text-text-primary leading-tight">{value}</p>
+    <div className={`rounded-sm border border-border-muted border-l-[3px] ${m.l} ${m.bg} p-4 shadow-2 transition-all hover:shadow-md`}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-medium text-text-secondary truncate">{label}</p>
+          <p className="mt-1 text-xl font-bold text-text-primary leading-tight">{value}</p>
         </div>
-        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${a.iconBg} ${a.iconColor}`}>{icon}</div>
+        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${m.ib} ${m.ic} mt-0.5`}>{icon}</div>
       </div>
     </div>
   );
