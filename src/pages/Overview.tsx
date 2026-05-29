@@ -45,10 +45,11 @@ import api from "@/lib/axios";
 import { formatCurrency, formatNumber, formatDate, timeAgo, cn } from "@/lib/utils";
 
 interface OverviewData {
-  revenue?: { today?: { revenue?: number }; thisWeek?: { revenue?: number; commission?: number; supplierPayout?: number }; thisMonth?: { revenue?: number; commission?: number; supplierPayout?: number }; ytd?: { revenue?: number; commission?: number; supplierPayout?: number } };
-  bookings?: { today?: number };
-  signups?: { today?: number };
+  revenue?: { today?: { revenue?: number }; yesterday?: { revenue?: number }; thisWeek?: { revenue?: number; commission?: number; supplierPayout?: number }; thisMonth?: { revenue?: number; commission?: number; supplierPayout?: number }; ytd?: { revenue?: number; commission?: number; supplierPayout?: number } };
+  bookings?: { today?: number; yesterday?: number };
+  signups?: { today?: number; yesterday?: number };
   activeUsersLast30Days?: number;
+  activeUsersPrevious30?: number;
   topTours?: Array<{ id?: string; title?: string; bookingCount?: number; revenue?: number; averageRating?: number; reviewCount?: number }>;
   topSuppliers?: Array<{ id?: string; user?: { name?: string; email?: string }; totalEarnings?: number; totalBookings?: number; averageRating?: number }>;
   bookingStatusDistribution?: Array<{ status?: string; count?: number; }>;
@@ -80,6 +81,7 @@ export default function OverviewPage() {
         bookings: d.overview?.bookings,
         signups: d.overview?.signups,
         activeUsersLast30Days: d.overview?.activeUsersLast30Days,
+        activeUsersPrevious30: d.overview?.activeUsersPrevious30,
         topTours: (d.topTours || []).map((t: Record<string, unknown>) => ({
           id: t.id as string,
           title: t.title as string,
@@ -168,6 +170,15 @@ export default function OverviewPage() {
     enabled: showNewSignups,
   });
 
+  const calcTrend = (current: number | undefined | null, previous: number | undefined | null): { value: number; isPositive: boolean } | undefined => {
+    const cur = Number(current) || 0;
+    if (cur === 0) return undefined;
+    const prev = Number(previous) || 0;
+    if (prev === 0) return { value: 0, isPositive: true };
+    const change = ((cur - prev) / prev) * 100;
+    return { value: Math.abs(Math.round(change)), isPositive: change >= 0 };
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -189,7 +200,10 @@ export default function OverviewPage() {
           value={overviewLoading ? "..." : formatCurrency(overview?.revenue?.today?.revenue)}
           icon={<DollarSign className="h-4 w-4" />}
           accent="green"
-          trend={overview?.revenue?.today?.revenue ? { value: 12.5, isPositive: true } : undefined}
+          trend={calcTrend(
+            overview?.revenue?.today?.revenue ? Number(overview.revenue.today.revenue) : undefined,
+            overview?.revenue?.yesterday?.revenue ? Number(overview.revenue.yesterday.revenue) : undefined
+          )}
         />
         <KpiCard
           label="Bookings Today"
@@ -197,6 +211,7 @@ export default function OverviewPage() {
           icon={<CalendarCheck className="h-4 w-4" />}
           accent="green"
           onClick={() => setShowTodayBookings(true)}
+          trend={calcTrend(overview?.bookings?.today, overview?.bookings?.yesterday)}
         />
         <KpiCard
           label="New Signups"
@@ -204,6 +219,7 @@ export default function OverviewPage() {
           icon={<UserPlus className="h-4 w-4" />}
           accent="blue"
           onClick={() => setShowNewSignups(true)}
+          trend={calcTrend(overview?.signups?.today, overview?.signups?.yesterday)}
         />
         <KpiCard
           label="Active Users (30d)"
@@ -211,24 +227,28 @@ export default function OverviewPage() {
           icon={<Users className="h-4 w-4" />}
           accent="blue"
           onClick={() => setShowActiveUsers(true)}
+          trend={calcTrend(overview?.activeUsersLast30Days, overview?.activeUsersPrevious30)}
         />
         <KpiCard
           label="Pending Payouts"
           value={overviewLoading ? "..." : formatNumber(payoutSummary?.pending?.count)}
           icon={<Clock className="h-4 w-4" />}
           accent="amber"
+          trend={payoutSummary?.pending?.count ? { value: 0, isPositive: true } : undefined}
         />
         <KpiCard
           label="Pending Reviews"
           value={overviewLoading ? "..." : formatNumber(pendingReviews?.pagination?.totalCount)}
           icon={<MessageSquare className="h-4 w-4" />}
           accent="amber"
+          trend={pendingReviews?.pagination?.totalCount ? { value: 0, isPositive: true } : undefined}
         />
         <KpiCard
           label="Pending Suppliers"
           value={overviewLoading ? "..." : formatNumber(pendingSuppliers?.pagination?.totalCount)}
           icon={<Building className="h-4 w-4" />}
           accent="amber"
+          trend={pendingSuppliers?.pagination?.totalCount ? { value: 0, isPositive: true } : undefined}
         />
       </div>
 
@@ -758,7 +778,7 @@ function KpiCard({
           {trend && (
             <p className={`mt-1 inline-flex items-center gap-0.5 text-xs font-medium ${trend.isPositive ? a.trendUp : a.trendDown}`}>
               {trend.isPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-              {trend.value}%
+              {trend.value > 0 ? `${trend.value}%` : ""}
             </p>
           )}
         </div>
