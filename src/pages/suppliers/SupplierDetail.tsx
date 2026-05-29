@@ -331,7 +331,7 @@ export default function SupplierDetailPage() {
                   { label: "Service Area", value: supplier.operatingInfo?.serviceArea },
                   { label: "Cancellation Policy", value: supplier.operatingInfo?.cancellationPolicy },
                   { label: "Meeting Style", value: supplier.operatingInfo?.meetingStyle },
-                  { label: "Years in Business", value: supplier.operatingInfo?.yearsInBusiness },
+                  { label: "Years in Business", value: supplier.operatingInfo?.yearsInBusiness != null ? String(supplier.operatingInfo.yearsInBusiness) : null },
                 ]}
               />
             </CardContent>

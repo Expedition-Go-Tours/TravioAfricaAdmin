@@ -17,7 +17,7 @@ import { formatDate } from "@/lib/utils";
 
 interface Supplier {
   id: string;
-  user?: { name?: string; email?: string };
+  user?: { name?: string; email?: string; photoURL?: string };
   businessInfo?: { legalBusinessName?: string; businessName?: string; displayName?: string };
   status?: string;
   createdAt?: string;
@@ -53,7 +53,30 @@ export default function ActiveSuppliersPage() {
   });
 
   const columns: Column<Supplier>[] = [
-    { key: "name", header: "Name", render: (r) => r.user?.name || "—" },
+    {
+      key: "name",
+      header: "Name",
+      render: (r) => {
+        const name = r.user?.name || "—";
+        const initial = name.charAt(0).toUpperCase();
+        return (
+          <div className="flex items-center gap-2.5">
+            <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-xs font-bold text-white">
+              <span>{initial}</span>
+              {r.user?.photoURL && (
+                <img
+                  src={r.user.photoURL}
+                  alt={name}
+                  className="absolute inset-0 h-full w-full object-cover"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                />
+              )}
+            </div>
+            <span className="truncate">{name}</span>
+          </div>
+        );
+      },
+    },
     { key: "email", header: "Email", render: (r) => r.user?.email || "—" },
     { key: "businessName", header: "Business Name", render: (r) => r.businessInfo?.legalBusinessName || r.businessInfo?.businessName || r.businessInfo?.displayName || r.user?.name || "—" },
     { key: "status", header: "Status", render: (r) => <StatusBadge status={r.status || "UNKNOWN"} /> },

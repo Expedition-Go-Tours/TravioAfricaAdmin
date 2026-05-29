@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -16,6 +17,10 @@ import {
   Star,
   ChevronRight,
   ArrowLeft,
+  X,
+  Mail,
+  Calendar,
+  Shield,
 } from "lucide-react";
 import {
   BarChart,
@@ -61,6 +66,9 @@ const bookingColors: Record<string, string> = {
 
 export default function OverviewPage() {
   const navigate = useNavigate();
+  const [showActiveUsers, setShowActiveUsers] = useState(false);
+  const [showTodayBookings, setShowTodayBookings] = useState(false);
+  const [showNewSignups, setShowNewSignups] = useState(false);
 
   const { data: overview, isLoading: overviewLoading, isError: overviewError, refetch: overviewRefetch } = useQuery({
     queryKey: ["admin", "overview"],
@@ -124,6 +132,42 @@ export default function OverviewPage() {
     },
   });
 
+  const { data: activeUsersData, isLoading: activeUsersLoading } = useQuery({
+    queryKey: ["admin", "active-users"],
+    queryFn: async () => {
+      const res = await api.get("/admin/users/active");
+      return (res.data?.data?.users || []) as Array<{ id: string; name: string; email: string; photoURL?: string; roles?: string[]; lastLoginAt?: string }>;
+    },
+    enabled: showActiveUsers,
+  });
+
+  const { data: todayBookings, isLoading: todayBookingsLoading } = useQuery({
+    queryKey: ["admin", "bookings", "today"],
+    queryFn: async () => {
+      const res = await api.get("/admin/bookings/today");
+      return (res.data?.data?.bookings || []) as Array<{
+        id: string;
+        bookingNumber: string;
+        status: string;
+        total: number;
+        currency: string;
+        createdAt: string;
+        customer: { id: string; name: string; email: string };
+        tour: { id: string; title: string; supplier: { id: string; name: string } };
+      }>;
+    },
+    enabled: showTodayBookings,
+  });
+
+  const { data: newSignupsData, isLoading: newSignupsLoading } = useQuery({
+    queryKey: ["admin", "users", "new-signups"],
+    queryFn: async () => {
+      const res = await api.get("/admin/users/new-signups");
+      return (res.data?.data?.users || []) as Array<{ id: string; name: string; email: string; photoURL?: string; roles?: string[]; createdAt?: string }>;
+    },
+    enabled: showNewSignups,
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -152,18 +196,21 @@ export default function OverviewPage() {
           value={overviewLoading ? "..." : formatNumber(overview?.bookings?.today)}
           icon={<CalendarCheck className="h-4 w-4" />}
           accent="green"
+          onClick={() => setShowTodayBookings(true)}
         />
         <KpiCard
           label="New Signups"
           value={overviewLoading ? "..." : formatNumber(overview?.signups?.today)}
           icon={<UserPlus className="h-4 w-4" />}
           accent="blue"
+          onClick={() => setShowNewSignups(true)}
         />
         <KpiCard
           label="Active Users (30d)"
           value={overviewLoading ? "..." : formatNumber(overview?.activeUsersLast30Days)}
           icon={<Users className="h-4 w-4" />}
           accent="blue"
+          onClick={() => setShowActiveUsers(true)}
         />
         <KpiCard
           label="Pending Payouts"
@@ -426,7 +473,7 @@ export default function OverviewPage() {
               Payout Summary
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-5">
             {!payoutSummary ? (
               <Skeleton className="h-32 w-full" />
             ) : (
@@ -455,6 +502,197 @@ export default function OverviewPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Active Users Dialog */}
+      {showActiveUsers && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setShowActiveUsers(false)}>
+          <div className="w-full max-w-lg rounded-sm border border-border bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-border-muted bg-gradient-to-r from-blue-50 to-white px-5 py-3.5 border-l-2 border-l-blue-500">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
+                  <Users className="h-4 w-4 text-blue-600" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-semibold text-blue-800">Active Users (30d)</h2>
+                  <p className="text-xs text-text-tertiary">{activeUsersData?.length || 0} users</p>
+                </div>
+              </div>
+              <button onClick={() => setShowActiveUsers(false)} className="rounded-sm p-1 text-text-tertiary hover:bg-surface-muted hover:text-text-primary transition-colors">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="max-h-96 overflow-y-auto">
+              {activeUsersLoading ? (
+                <div className="p-6 space-y-3">
+                  {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+                </div>
+              ) : !activeUsersData?.length ? (
+                <div className="py-10 text-center text-sm text-text-tertiary">No active users in the last 30 days</div>
+              ) : (
+                <div className="divide-y divide-border-muted">
+                  {activeUsersData.map((user) => (
+                    <div key={user.id} className="flex items-start gap-3 px-5 py-3.5 transition-colors hover:bg-blue-50/30">
+                      <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-xs font-bold text-white mt-0.5">
+                        <span>{user.name?.charAt(0)?.toUpperCase() || "?"}</span>
+                        {user.photoURL && (
+                          <img
+                            src={user.photoURL}
+                            alt={user.name || ""}
+                            className="absolute inset-0 h-full w-full object-cover"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                          />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-text-primary truncate">{user.name || "Unknown"}</p>
+                        <p className="text-xs text-text-tertiary truncate mt-0.5 flex items-center gap-1">
+                          <Mail className="h-3 w-3 shrink-0" />
+                          {user.email || "—"}
+                        </p>
+                        {user.roles && user.roles.length > 0 && (
+                          <p className="text-xs text-text-tertiary truncate mt-0.5 flex items-center gap-1">
+                            <Shield className="h-3 w-3 shrink-0" />
+                            {user.roles.join(", ")}
+                          </p>
+                        )}
+                      </div>
+                      {user.lastLoginAt && (
+                        <span className="shrink-0 text-xs text-text-tertiary whitespace-nowrap pt-0.5">{formatDate(user.lastLoginAt)}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Today's Bookings Dialog */}
+      {showTodayBookings && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setShowTodayBookings(false)}>
+          <div className="w-full max-w-2xl rounded-sm border border-border bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-border-muted bg-gradient-to-r from-green-50 to-white px-5 py-3.5 border-l-2 border-l-green-500">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100">
+                  <CalendarCheck className="h-4 w-4 text-green-600" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-semibold text-green-800">Today's Bookings</h2>
+                  <p className="text-xs text-text-tertiary">{todayBookings?.length || 0} bookings</p>
+                </div>
+              </div>
+              <button onClick={() => setShowTodayBookings(false)} className="rounded-sm p-1 text-text-tertiary hover:bg-surface-muted hover:text-text-primary transition-colors">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="max-h-96 overflow-y-auto">
+              {todayBookingsLoading ? (
+                <div className="p-6 space-y-3">
+                  {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}
+                </div>
+              ) : !todayBookings?.length ? (
+                <div className="py-10 text-center text-sm text-text-tertiary">No bookings today</div>
+              ) : (
+                <div className="divide-y divide-border-muted">
+                  {todayBookings.map((booking) => (
+                    <div key={booking.id} className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-green-50/30">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600 text-xs font-bold text-white">
+                        {booking.bookingNumber?.slice(-4) || "?"}
+                      </div>
+                      <div className="flex-1 min-w-0 grid grid-cols-3 gap-4">
+                        <div>
+                          <p className="text-sm font-medium text-text-primary truncate">{booking.customer?.name || "Unknown"}</p>
+                          <p className="text-xs text-text-tertiary truncate mt-0.5">{booking.bookingNumber}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-text-primary truncate">{booking.tour?.title || "—"}</p>
+                          <p className="text-xs text-text-tertiary truncate mt-0.5">
+                            Supplier: {booking.tour?.supplier?.name || "—"}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-semibold text-green-700">
+                            {formatCurrency(booking.total)} {booking.currency}
+                          </p>
+                          <p className={`text-xs font-medium mt-0.5 ${booking.status === "CONFIRMED" || booking.status === "COMPLETED" ? "text-green-600" : booking.status === "CANCELLED" ? "text-red-500" : "text-amber-600"}`}>
+                            {booking.status}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* New Signups Dialog */}
+      {showNewSignups && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setShowNewSignups(false)}>
+          <div className="w-full max-w-lg rounded-sm border border-border bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-border-muted bg-gradient-to-r from-blue-50 to-white px-5 py-3.5 border-l-2 border-l-blue-500">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
+                  <UserPlus className="h-4 w-4 text-blue-600" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-semibold text-blue-800">New Signups (30d)</h2>
+                  <p className="text-xs text-text-tertiary">{newSignupsData?.length || 0} users</p>
+                </div>
+              </div>
+              <button onClick={() => setShowNewSignups(false)} className="rounded-sm p-1 text-text-tertiary hover:bg-surface-muted hover:text-text-primary transition-colors">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="max-h-96 overflow-y-auto">
+              {newSignupsLoading ? (
+                <div className="p-6 space-y-3">
+                  {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+                </div>
+              ) : !newSignupsData?.length ? (
+                <div className="py-10 text-center text-sm text-text-tertiary">No new signups in the last 30 days</div>
+              ) : (
+                <div className="divide-y divide-border-muted">
+                  {newSignupsData.map((user) => (
+                    <div key={user.id} className="flex items-start gap-3 px-5 py-3.5 transition-colors hover:bg-blue-50/30">
+                      <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-xs font-bold text-white mt-0.5">
+                        <span>{user.name?.charAt(0)?.toUpperCase() || "?"}</span>
+                        {user.photoURL && (
+                          <img
+                            src={user.photoURL}
+                            alt={user.name || ""}
+                            className="absolute inset-0 h-full w-full object-cover"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                          />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-text-primary truncate">{user.name || "Unknown"}</p>
+                        <p className="text-xs text-text-tertiary truncate mt-0.5 flex items-center gap-1">
+                          <Mail className="h-3 w-3 shrink-0" />
+                          {user.email || "—"}
+                        </p>
+                        {user.roles && user.roles.length > 0 && (
+                          <p className="text-xs text-text-tertiary truncate mt-0.5 flex items-center gap-1">
+                            <Shield className="h-3 w-3 shrink-0" />
+                            {user.roles.join(", ")}
+                          </p>
+                        )}
+                      </div>
+                      {user.createdAt && (
+                        <span className="shrink-0 text-xs text-text-tertiary whitespace-nowrap pt-0.5">{formatDate(user.createdAt)}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -467,12 +705,14 @@ function KpiCard({
   icon,
   accent,
   trend,
+  onClick,
 }: {
   label: string;
   value: string;
   icon: React.ReactNode;
   accent: "green" | "blue" | "amber";
   trend?: { value: number; isPositive: boolean };
+  onClick?: () => void;
 }) {
   const accentMap = {
     green: {
@@ -504,7 +744,13 @@ function KpiCard({
   const a = accentMap[accent];
 
   return (
-    <div className={`rounded-sm border ${a.border} ${a.bg} p-3.5 shadow-2 transition-all hover:shadow-md`}>
+    <div
+      className={`rounded-sm border ${a.border} ${a.bg} p-3.5 shadow-2 transition-all hover:shadow-md ${onClick ? "cursor-pointer" : ""}`}
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => { if (e.key === "Enter") onClick(); } : undefined}
+    >
       <div className="flex items-start justify-between">
         <div className="min-w-0">
           <p className="text-xs text-text-secondary truncate">{label}</p>
