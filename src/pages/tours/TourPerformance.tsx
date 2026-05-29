@@ -122,7 +122,7 @@ export default function TourPerformancePage() {
     { key: "totalRevenue", header: "Revenue", sortable: true, render: (r) => <span className="font-semibold text-green-700">{formatCurrency(r.totalRevenue)}</span> },
     { key: "averageRating", header: "Rating", sortable: true, render: (r) => (
       <span className="inline-flex items-center gap-1 text-amber-600">
-        {(r.averageRating ?? 0).toFixed(1)} <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+        {Number(r.averageRating ?? 0).toFixed(1)} <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
       </span>
     )},
     { key: "reviewCount", header: "Reviews", sortable: true, render: (r) => formatNumber(r.reviewCount) },

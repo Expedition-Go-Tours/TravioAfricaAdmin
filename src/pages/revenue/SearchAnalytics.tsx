@@ -119,7 +119,7 @@ export default function SearchAnalyticsPage() {
     { key: "query", header: "Query", render: (r) => r.query || "—" },
     { key: "searches", header: "Searches", sortable: true, render: (r) => formatNumber(r.searches) },
     { key: "uniqueUsers", header: "Unique Users", render: (r) => formatNumber(r.uniqueUsers) },
-    { key: "avgResults", header: "Avg Results", render: (r) => r.avgResults != null ? r.avgResults.toFixed(1) : "—" },
+    { key: "avgResults", header: "Avg Results", render: (r) => r.avgResults != null ? Number(r.avgResults).toFixed(1) : "—" },
   ];
 
   const zeroResultColumns: Column<{ query?: string; searches?: number }>[] = [

@@ -265,7 +265,7 @@ export default function TourDetailPage() {
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <KpiCard label="Total Revenue" value={formatCurrency(tour.totalRevenue)} icon={<DollarSign className="h-4 w-4" />} accent="green" />
         <KpiCard label="Bookings" value={formatNumber(tour.bookingCount)} icon={<Calendar className="h-4 w-4" />} accent="blue" />
-        <KpiCard label="Avg Rating" value={tour.averageRating != null ? tour.averageRating.toFixed(1) : "—"} icon={<Star className="h-4 w-4" />} accent="amber" />
+        <KpiCard label="Avg Rating" value={tour.averageRating != null ? Number(tour.averageRating).toFixed(1) : "—"} icon={<Star className="h-4 w-4" />} accent="amber" />
         <KpiCard label="Views" value={formatNumber(tour.viewCount)} icon={<Eye className="h-4 w-4" />} accent="green" />
       </div>
 
@@ -450,7 +450,7 @@ export default function TourDetailPage() {
               <DetailTable
                 rows={[
                   { label: "Reviews", value: formatNumber(tour.reviewCount) },
-                  { label: "Avg Rating", value: tour.averageRating != null ? tour.averageRating.toFixed(1) : "—" },
+                  { label: "Avg Rating", value: tour.averageRating != null ? Number(tour.averageRating).toFixed(1) : "—" },
                   { label: "Conversion", value: conversionRate ? `${conversionRate}%` : null },
                   { label: "Revenue/Booking", value: revenuePerBooking ? formatCurrency(revenuePerBooking) : null, highlight: true },
                 ]}
@@ -466,7 +466,7 @@ export default function TourDetailPage() {
             </div>
             <div className="rounded-sm border border-amber-200/40 bg-gradient-to-br from-amber-50 to-white p-3 text-center shadow-2">
               <p className="text-xs text-text-secondary">Rating</p>
-              <p className="text-xl font-bold text-amber-700">{tour.averageRating != null ? tour.averageRating.toFixed(1) : "—"}</p>
+              <p className="text-xl font-bold text-amber-700">{tour.averageRating != null ? Number(tour.averageRating).toFixed(1) : "—"}</p>
             </div>
           </div>
         </div>
