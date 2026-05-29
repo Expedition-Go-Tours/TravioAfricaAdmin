@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Download, CheckCircle, XCircle, Send, Ban, Wallet, DollarSign } from "lucide-react";
+import { Download, CheckCircle, XCircle, Send, Ban, Wallet, DollarSign, Search, X } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -68,6 +68,7 @@ export default function PayoutsList() {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [statusTab, setStatusTab] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
   const [actionPayout, setActionPayout] = useState<Payout | null>(null);
   const [actionType, setActionType] = useState<"approve" | "release" | "fail" | null>(null);
   const [failReason, setFailReason] = useState("");
@@ -193,9 +194,26 @@ export default function PayoutsList() {
     },
   ];
 
-  const payouts = data?.payouts || data?.data?.payouts || [];
+  const payoutsRaw = data?.payouts || data?.data?.payouts || [];
   const pagination = data?.pagination || data?.data?.pagination;
   const summary: PayoutSummary | undefined = data?.data?.summary || data?.summary;
+
+  // Filter payouts by search query
+  const query = searchQuery.toLowerCase().trim();
+  const payouts = query
+    ? payoutsRaw.filter((p: Payout) => {
+        const supplierName = p.supplier?.name?.toLowerCase() || "";
+        const supplierEmail = p.supplier?.email?.toLowerCase() || "";
+        const bookingNumber = p.booking?.bookingNumber?.toLowerCase() || "";
+        const tourTitle = p.booking?.tour?.title?.toLowerCase() || p.tour?.title?.toLowerCase() || "";
+        return (
+          supplierName.includes(query) ||
+          supplierEmail.includes(query) ||
+          bookingNumber.includes(query) ||
+          tourTitle.includes(query)
+        );
+      })
+    : payoutsRaw;
 
   return (
     <div className="space-y-6">
@@ -222,7 +240,7 @@ export default function PayoutsList() {
       <Card>
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex gap-2 border-b border-border-muted">
+            <div className="flex gap-2 border-b border-border-muted flex-1">
               {statusTabs.map((tab) => (
                 <button
                   key={tab}
@@ -236,6 +254,24 @@ export default function PayoutsList() {
                   {tab}
                 </button>
               ))}
+            </div>
+            {/* Search Bar */}
+            <div className="relative min-w-[200px] max-w-xs flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" />
+              <Input
+                placeholder="Search payouts..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-primary"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
             <Button variant="outline" size="sm" onClick={handleExport} className="gap-1.5">
               <Download className="h-4 w-4" /> Export CSV
