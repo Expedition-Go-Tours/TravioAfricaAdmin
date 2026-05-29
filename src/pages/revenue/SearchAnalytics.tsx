@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -38,6 +39,7 @@ import type { Column } from "@/components/shared/DataTable";
 import { SectionError } from "@/components/shared/SectionError";
 import { SectionEmpty } from "@/components/shared/SectionEmpty";
 import api from "@/lib/axios";
+import { staggerContainer, fadeIn } from "@/lib/animations";
 import { formatNumber } from "@/lib/utils";
 
 const periods = [
@@ -151,48 +153,48 @@ export default function SearchAnalyticsPage() {
       </div>
 
       {/* KPI Cards — Overview page style */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <KpiCard
+      <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <motion.div variants={fadeIn}><KpiCard
           label="Total Searches"
           value={isLoading ? "..." : formatNumber(totalSearches)}
           icon={<Search className="h-4 w-4" />}
           accent="green"
-        />
-        <KpiCard
+        /></motion.div>
+        <motion.div variants={fadeIn}><KpiCard
           label="Unique Searchers"
           value={isLoading ? "..." : formatNumber(overview?.uniqueSearchers)}
           icon={<Users className="h-4 w-4" />}
           accent="blue"
-        />
-        <KpiCard
+        /></motion.div>
+        <motion.div variants={fadeIn}><KpiCard
           label="Zero-Result Searches"
           value={isLoading ? "..." : formatNumber(overview?.zeroResultSearches)}
           icon={<FileX className="h-4 w-4" />}
           accent="amber"
-        />
-        <KpiCard
+        /></motion.div>
+        <motion.div variants={fadeIn}><KpiCard
           label="Zero-Result Rate"
           value={isLoading ? "..." : zeroRate != null ? `${zeroRate.toFixed(1)}%` : "—"}
           icon={<Percent className="h-4 w-4" />}
           accent="amber"
-        />
-      </div>
+        /></motion.div>
+      </motion.div>
 
       {/* Conversion Cards — same style */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-2">
-        <KpiCard
+      <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="grid grid-cols-2 gap-3 md:grid-cols-2">
+        <motion.div variants={fadeIn}><KpiCard
           label="Search-to-View Rate"
           value={isLoading ? "..." : conversion?.searchToViewRate != null ? `${conversion.searchToViewRate.toFixed(1)}%` : "—"}
           icon={<Eye className="h-4 w-4" />}
           accent="green"
-        />
-        <KpiCard
+        /></motion.div>
+        <motion.div variants={fadeIn}><KpiCard
           label="Search-to-Book Rate"
           value={isLoading ? "..." : conversion?.searchToBookRate != null ? `${conversion.searchToBookRate.toFixed(1)}%` : "—"}
           icon={<ShoppingCart className="h-4 w-4" />}
           accent="blue"
-        />
-      </div>
+        /></motion.div>
+      </motion.div>
 
       {/* Daily Trend Chart */}
       <Card>
@@ -333,7 +335,12 @@ function KpiCard({
   const a = accentMap[accent];
 
   return (
-    <div className={`rounded-sm border ${a.border} ${a.bg} p-3.5 shadow-2 transition-all hover:shadow-md`}>
+    <motion.div
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      className={`rounded-sm border ${a.border} ${a.bg} p-3.5 shadow-2 transition-all hover:shadow-md`}
+    >
       <div className="flex items-start justify-between">
         <div className="min-w-0">
           <p className="text-xs text-text-secondary truncate">{label}</p>
@@ -343,6 +350,6 @@ function KpiCard({
           {icon}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

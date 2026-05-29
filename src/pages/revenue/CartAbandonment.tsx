@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -15,6 +16,7 @@ import type { Column } from "@/components/shared/DataTable";
 import { SectionError } from "@/components/shared/SectionError";
 import { SectionEmpty } from "@/components/shared/SectionEmpty";
 import api from "@/lib/axios";
+import { staggerContainer, fadeIn } from "@/lib/animations";
 import { formatNumber } from "@/lib/utils";
 
 const periods = [
@@ -100,32 +102,32 @@ export default function CartAbandonmentPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <KpiCard
+      <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <motion.div variants={fadeIn}><KpiCard
           label="Carts Created"
           value={isLoading ? "..." : formatNumber(overview?.cartsCreated)}
           icon={<ShoppingCart className="h-4 w-4" />}
           accent="amber"
-        />
-        <KpiCard
+        /></motion.div>
+        <motion.div variants={fadeIn}><KpiCard
           label="Carts Abandoned"
           value={isLoading ? "..." : formatNumber(cartsAbandoned)}
           icon={<X className="h-4 w-4" />}
           accent="red"
-        />
-        <KpiCard
+        /></motion.div>
+        <motion.div variants={fadeIn}><KpiCard
           label="Carts Converted"
           value={isLoading ? "..." : formatNumber(overview?.cartsConverted)}
           icon={<ShoppingCart className="h-4 w-4" />}
           accent="green"
-        />
-        <KpiCard
+        /></motion.div>
+        <motion.div variants={fadeIn}><KpiCard
           label="Abandonment Rate"
           value={isLoading ? "..." : overview?.abandonmentRate != null ? `${overview.abandonmentRate.toFixed(1)}%` : "—"}
           icon={<Percent className="h-4 w-4" />}
           accent="blue"
-        />
-      </div>
+        /></motion.div>
+      </motion.div>
 
       {/* By Tour Table */}
       <Card>
@@ -213,7 +215,12 @@ function KpiCard({
     red: { l: "border-l-red-500", bg: "bg-gradient-to-br from-red-50 to-white", ib: "bg-red-100", ic: "text-red-600" },
   }[accent];
   return (
-    <div className={`rounded-sm border border-border-muted border-l-[3px] ${m.l} ${m.bg} p-4 shadow-2 transition-all hover:shadow-md`}>
+    <motion.div
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      className={`rounded-sm border border-border-muted border-l-[3px] ${m.l} ${m.bg} p-4 shadow-2 transition-all hover:shadow-md`}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-xs font-medium text-text-secondary truncate">{label}</p>
@@ -221,6 +228,6 @@ function KpiCard({
         </div>
         <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${m.ib} ${m.ic} mt-0.5`}>{icon}</div>
       </div>
-    </div>
+    </motion.div>
   );
 }

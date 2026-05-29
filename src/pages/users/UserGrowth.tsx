@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -13,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SectionError } from "@/components/shared/SectionError";
 import { SectionEmpty } from "@/components/shared/SectionEmpty";
 import api from "@/lib/axios";
+import { staggerContainer, fadeIn } from "@/lib/animations";
 import { formatNumber, formatDate } from "@/lib/utils";
 
 const periods = [
@@ -114,8 +116,8 @@ export default function UserGrowthPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <KpiCard
+      <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <motion.div variants={fadeIn}><KpiCard
           label="Total New Users"
           value={isLoading ? "..." : formatNumber(totals.total)}
           icon={<Users className="h-4 w-4" />}
@@ -123,8 +125,8 @@ export default function UserGrowthPage() {
           trend={momChange}
           subtitle={latestMonth ? `${formatNumber(latestMonth.total)} this month` : undefined}
           onClick={() => setDialog({ type: "all" })}
-        />
-        <KpiCard
+        /></motion.div>
+        <motion.div variants={fadeIn}><KpiCard
           label="New Customers"
           value={isLoading ? "..." : formatNumber(totals.customers)}
           icon={<UserPlus className="h-4 w-4" />}
@@ -132,8 +134,8 @@ export default function UserGrowthPage() {
           trend={customerMom}
           subtitle={latestMonth ? `${formatNumber(latestMonth.customers)} this month` : undefined}
           onClick={() => setDialog({ type: "customer" })}
-        />
-        <KpiCard
+        /></motion.div>
+        <motion.div variants={fadeIn}><KpiCard
           label="New Suppliers"
           value={isLoading ? "..." : formatNumber(totals.suppliers)}
           icon={<TrendingUp className="h-4 w-4" />}
@@ -141,15 +143,15 @@ export default function UserGrowthPage() {
           trend={supplierMom}
           subtitle={latestMonth ? `${formatNumber(latestMonth.suppliers)} this month` : undefined}
           onClick={() => setDialog({ type: "supplier" })}
-        />
-        <KpiCard
+        /></motion.div>
+        <motion.div variants={fadeIn}><KpiCard
           label="Avg / Month"
           value={isLoading ? "..." : formatNumber(avgMonthly)}
           icon={<Activity className="h-4 w-4" />}
           accent="green"
           subtitle={growth.length ? `over ${growth.length} months` : undefined}
-        />
-      </div>
+        /></motion.div>
+      </motion.div>
 
       {/* Chart */}
       <Card>
@@ -306,7 +308,10 @@ function KpiCard({
   }[accent];
   const isPos = trend != null && trend >= 0;
   return (
-    <div
+    <motion.div
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
       className={`rounded-sm border border-border-muted border-l-[3px] ${m.l} ${m.bg} p-4 shadow-2 transition-all hover:shadow-md ${onClick ? "cursor-pointer" : ""}`}
       onClick={onClick}
       role={onClick ? "button" : undefined}
@@ -331,6 +336,6 @@ function KpiCard({
         </div>
         <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${m.ib} ${m.ic} mt-0.5`}>{icon}</div>
       </div>
-    </div>
+    </motion.div>
   );
 }

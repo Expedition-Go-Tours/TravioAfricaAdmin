@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -12,6 +13,7 @@ import type { Column } from "@/components/shared/DataTable";
 import { SectionError } from "@/components/shared/SectionError";
 import { SectionEmpty } from "@/components/shared/SectionEmpty";
 import api from "@/lib/axios";
+import { staggerContainer, fadeIn } from "@/lib/animations";
 import { formatCurrency, formatNumber, formatDate } from "@/lib/utils";
 
 const DIST_COLORS = ["#3b82f6", "#40966e", "#d97706", "#d45a0a", "#8b5cf6"];
@@ -60,17 +62,17 @@ export default function CustomerLifetimeValuePage() {
         <h1 className="text-lg font-semibold text-text-primary">Customer Lifetime Value</h1>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        <KpiCard label="Total Customers" value={isLoading ? "..." : formatNumber(data?.data?.overview?.totalCustomers ?? data?.overview?.totalCustomers)} icon={<Users className="h-4 w-4" />} accent="blue" />
+      <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        <motion.div variants={fadeIn}><KpiCard label="Total Customers" value={isLoading ? "..." : formatNumber(data?.data?.overview?.totalCustomers ?? data?.overview?.totalCustomers)} icon={<Users className="h-4 w-4" />} accent="blue" /></motion.div>
 
-        <KpiCard label="Total Bookings" value={isLoading ? "..." : formatNumber(data?.data?.overview?.totalBookings ?? data?.overview?.totalBookings)} icon={<CalendarCheck className="h-4 w-4" />} accent="green" />
+        <motion.div variants={fadeIn}><KpiCard label="Total Bookings" value={isLoading ? "..." : formatNumber(data?.data?.overview?.totalBookings ?? data?.overview?.totalBookings)} icon={<CalendarCheck className="h-4 w-4" />} accent="green" /></motion.div>
 
-        <KpiCard label="Avg Booking Value" value={isLoading ? "..." : formatCurrency(data?.data?.overview?.avgBookingValue ?? data?.overview?.avgBookingValue)} icon={<ShoppingBag className="h-4 w-4" />} accent="amber" />
+        <motion.div variants={fadeIn}><KpiCard label="Avg Booking Value" value={isLoading ? "..." : formatCurrency(data?.data?.overview?.avgBookingValue ?? data?.overview?.avgBookingValue)} icon={<ShoppingBag className="h-4 w-4" />} accent="amber" /></motion.div>
 
-        <KpiCard label="Total Revenue" value={isLoading ? "..." : formatCurrency(data?.data?.overview?.totalRevenue ?? data?.overview?.totalRevenue)} icon={<DollarSign className="h-4 w-4" />} accent="green" />
+        <motion.div variants={fadeIn}><KpiCard label="Total Revenue" value={isLoading ? "..." : formatCurrency(data?.data?.overview?.totalRevenue ?? data?.overview?.totalRevenue)} icon={<DollarSign className="h-4 w-4" />} accent="green" /></motion.div>
 
-        <KpiCard label="Avg CLV" value={isLoading ? "..." : formatCurrency(data?.data?.overview?.avgCLV ?? data?.overview?.avgCLV)} icon={<Repeat className="h-4 w-4" />} accent="blue" />
-      </div>
+        <motion.div variants={fadeIn}><KpiCard label="Avg CLV" value={isLoading ? "..." : formatCurrency(data?.data?.overview?.avgCLV ?? data?.overview?.avgCLV)} icon={<Repeat className="h-4 w-4" />} accent="blue" /></motion.div>
+      </motion.div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         <Card className="lg:col-span-2">
@@ -180,7 +182,12 @@ function KpiCard({ label, value, icon, accent }: { label: string; value: string;
   };
   const a = accentMap[accent];
   return (
-    <div className={`rounded-sm border ${a.border} ${a.bg} p-3.5 shadow-2 transition-all hover:shadow-md`}>
+    <motion.div
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      className={`rounded-sm border ${a.border} ${a.bg} p-3.5 shadow-2 transition-all hover:shadow-md`}
+    >
       <div className="flex items-start justify-between">
         <div className="min-w-0">
           <p className="text-xs text-text-secondary truncate">{label}</p>
@@ -188,6 +195,6 @@ function KpiCard({ label, value, icon, accent }: { label: string; value: string;
         </div>
         <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${a.iconBg} ${a.iconColor}`}>{icon}</div>
       </div>
-    </div>
+    </motion.div>
   );
 }

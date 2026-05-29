@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -13,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SectionError } from "@/components/shared/SectionError";
 import { SectionEmpty } from "@/components/shared/SectionEmpty";
 import api from "@/lib/axios";
+import { staggerContainer, fadeIn } from "@/lib/animations";
 import { formatNumber } from "@/lib/utils";
 
 const periods = [
@@ -111,32 +113,32 @@ export default function ConversionFunnelPage() {
       </div>
 
       {/* Conversion Rate KPI Cards */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <KpiCard
+      <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <motion.div variants={fadeIn}><KpiCard
           label="View to Cart"
           value={isLoadingValue ? "..." : conversionRates?.viewToCart != null ? `${conversionRates.viewToCart.toFixed(1)}%` : "—"}
           icon={<ArrowRight className="h-4 w-4" />}
           accent="blue"
-        />
-        <KpiCard
+        /></motion.div>
+        <motion.div variants={fadeIn}><KpiCard
           label="Cart to Checkout"
           value={isLoadingValue ? "..." : conversionRates?.cartToCheckout != null ? `${conversionRates.cartToCheckout.toFixed(1)}%` : "—"}
           icon={<ArrowRight className="h-4 w-4" />}
           accent="amber"
-        />
-        <KpiCard
+        /></motion.div>
+        <motion.div variants={fadeIn}><KpiCard
           label="Checkout to Complete"
           value={isLoadingValue ? "..." : conversionRates?.checkoutToComplete != null ? `${conversionRates.checkoutToComplete.toFixed(1)}%` : "—"}
           icon={<ArrowRight className="h-4 w-4" />}
           accent="green"
-        />
-        <KpiCard
+        /></motion.div>
+        <motion.div variants={fadeIn}><KpiCard
           label="Overall (View to Book)"
           value={isLoadingValue ? "..." : conversionRates?.overall != null ? `${conversionRates.overall.toFixed(1)}%` : "—"}
           icon={<CheckCircle className="h-4 w-4" />}
           accent="green"
-        />
-      </div>
+        /></motion.div>
+      </motion.div>
 
       {/* Funnel Visualization */}
       <Card>
@@ -250,7 +252,12 @@ function KpiCard({ label, value, icon, accent }: { label: string; value: string;
     amber: { bg: "bg-gradient-to-br from-amber-50 to-white", border: "border-amber-200/40", ib: "bg-amber-100", ic: "text-amber-600" },
   }[accent];
   return (
-    <div className={`rounded-sm border ${m.border} ${m.bg} p-3.5 shadow-2 transition-all hover:shadow-md`}>
+    <motion.div
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      className={`rounded-sm border ${m.border} ${m.bg} p-3.5 shadow-2 transition-all hover:shadow-md`}
+    >
       <div className="flex items-start justify-between">
         <div className="min-w-0">
           <p className="text-xs text-text-secondary truncate">{label}</p>
@@ -258,6 +265,6 @@ function KpiCard({ label, value, icon, accent }: { label: string; value: string;
         </div>
         <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${m.ib} ${m.ic}`}>{icon}</div>
       </div>
-    </div>
+    </motion.div>
   );
 }

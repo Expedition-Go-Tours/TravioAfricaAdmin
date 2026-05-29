@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Search, Map, DollarSign, Star, Eye, TrendingUp, X, ArrowLeft } from "lucide-react";
@@ -12,6 +13,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import api from "@/lib/axios";
+import { staggerContainer, fadeIn, fadeInUp } from "@/lib/animations";
 import { formatCurrency, formatNumber, formatDate } from "@/lib/utils";
 
 interface Tour {
@@ -143,32 +145,32 @@ export default function TourPerformancePage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard
+      <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <motion.div variants={fadeIn}><KpiCard
           label="Total Tours"
           value={isLoading ? "..." : formatNumber(totalCount)}
           icon={<Map className="h-4 w-4" />}
           accent="green"
-        />
-        <KpiCard
+        /></motion.div>
+        <motion.div variants={fadeIn}><KpiCard
           label="Total Revenue"
           value={isLoading ? "..." : formatCurrency(aggregate.revenue)}
           icon={<DollarSign className="h-4 w-4" />}
           accent="blue"
-        />
-        <KpiCard
+        /></motion.div>
+        <motion.div variants={fadeIn}><KpiCard
           label="Total Bookings"
           value={isLoading ? "..." : formatNumber(aggregate.bookings)}
           icon={<TrendingUp className="h-4 w-4" />}
           accent="amber"
-        />
-        <KpiCard
+        /></motion.div>
+        <motion.div variants={fadeIn}><KpiCard
           label="Total Views"
           value={isLoading ? "..." : formatNumber(aggregate.views)}
           icon={<Eye className="h-4 w-4" />}
           accent="green"
-        />
-      </div>
+        /></motion.div>
+      </motion.div>
 
       <Card>
         <CardHeader>
@@ -235,7 +237,12 @@ function KpiCard({ label, value, icon, accent }: { label: string; value: string;
     amber: { l: "border-l-amber-500", bg: "bg-gradient-to-br from-amber-50 to-white", ib: "bg-amber-100", ic: "text-amber-600" },
   }[accent];
   return (
-    <div className={`rounded-sm border border-border-muted border-l-[3px] ${m.l} ${m.bg} p-4 shadow-2 transition-all hover:shadow-md`}>
+    <motion.div
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      className={`rounded-sm border border-border-muted border-l-[3px] ${m.l} ${m.bg} p-4 shadow-2 transition-all hover:shadow-md`}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-xs font-medium text-text-secondary truncate">{label}</p>
@@ -243,6 +250,6 @@ function KpiCard({ label, value, icon, accent }: { label: string; value: string;
         </div>
         <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${m.ib} ${m.ic} mt-0.5`}>{icon}</div>
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -39,10 +40,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { AnimatedNumber } from "@/components/shared/AnimatedNumber";
 import { SectionError } from "@/components/shared/SectionError";
 import { SectionEmpty } from "@/components/shared/SectionEmpty";
 import api from "@/lib/axios";
 import { getAdminSocket } from "@/lib/adminSocket";
+import { staggerContainer, fadeIn, fadeInUp } from "@/lib/animations";
 import { formatCurrency, formatNumber, formatDate, timeAgo, cn } from "@/lib/utils";
 
 interface OverviewData {
@@ -239,10 +242,12 @@ export default function OverviewPage() {
       </div>
 
       {/* KPI Row — green-centric palette grouped by category */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
-        <KpiCard
+      <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+        <motion.div variants={fadeIn}><KpiCard
           label="Revenue Today"
           value={overviewLoading ? "..." : formatCurrency(overview?.revenue?.today?.revenue)}
+          numericValue={overview?.revenue?.today?.revenue ?? undefined}
+          format={formatCurrency}
           icon={<DollarSign className="h-4 w-4" />}
           accent="green"
           trend={calcTrend(
@@ -250,75 +255,89 @@ export default function OverviewPage() {
             overview?.revenue?.yesterday?.revenue ? Number(overview.revenue.yesterday.revenue) : undefined,
             "Revenue"
           )}
-        />
-        <KpiCard
+        /></motion.div>
+        <motion.div variants={fadeIn}><KpiCard
           label="Bookings Today"
           value={overviewLoading ? "..." : formatNumber(overview?.bookings?.today)}
+          numericValue={overview?.bookings?.today ?? undefined}
+          format={formatNumber}
           icon={<CalendarCheck className="h-4 w-4" />}
           accent="green"
           onClick={() => setShowTodayBookings(true)}
           trend={calcTrend(overview?.bookings?.today, overview?.bookings?.yesterday, "Bookings")}
-        />
-        <KpiCard
+        /></motion.div>
+        <motion.div variants={fadeIn}><KpiCard
           label="New Signups"
           value={overviewLoading ? "..." : formatNumber(overview?.signups?.today)}
+          numericValue={overview?.signups?.today ?? undefined}
+          format={formatNumber}
           icon={<UserPlus className="h-4 w-4" />}
           accent="blue"
           onClick={() => setShowNewSignups(true)}
           trend={calcTrend(overview?.signups?.today, overview?.signups?.yesterday, "Signups")}
-        />
-        <KpiCard
+        /></motion.div>
+        <motion.div variants={fadeIn}><KpiCard
           label="Active Users (30d)"
           value={overviewLoading ? "..." : formatNumber(overview?.activeUsersLast30Days)}
+          numericValue={overview?.activeUsersLast30Days ?? undefined}
+          format={formatNumber}
           icon={<Users className="h-4 w-4" />}
           accent="blue"
           onClick={() => setShowActiveUsers(true)}
           trend={calcTrend(overview?.activeUsersLast30Days, overview?.activeUsersPrevious30, "Active Users")}
-        />
-        <KpiCard
+        /></motion.div>
+        <motion.div variants={fadeIn}><KpiCard
           label="Pending Payouts"
           value={overviewLoading ? "..." : formatNumber(payoutSummary?.pending?.count)}
+          numericValue={payoutSummary?.pending?.count ?? undefined}
+          format={formatNumber}
           icon={<Clock className="h-4 w-4" />}
           accent="amber"
           trend={payoutSummary?.pending?.count ? { value: 0, isPositive: true, text: "Awaiting payout" } : undefined}
-        />
-        <KpiCard
+        /></motion.div>
+        <motion.div variants={fadeIn}><KpiCard
           label="Pending Reviews"
           value={overviewLoading ? "..." : formatNumber(pendingReviews?.pagination?.totalCount)}
+          numericValue={pendingReviews?.pagination?.totalCount ?? undefined}
+          format={formatNumber}
           icon={<MessageSquare className="h-4 w-4" />}
           accent="amber"
           trend={pendingReviews?.pagination?.totalCount ? { value: 0, isPositive: true, text: "Awaiting review" } : undefined}
-        />
-        <KpiCard
+        /></motion.div>
+        <motion.div variants={fadeIn}><KpiCard
           label="Pending Suppliers"
           value={overviewLoading ? "..." : formatNumber(pendingSuppliers?.pagination?.totalCount)}
+          numericValue={pendingSuppliers?.pagination?.totalCount ?? undefined}
+          format={formatNumber}
           icon={<Building className="h-4 w-4" />}
           accent="amber"
           trend={pendingSuppliers?.pagination?.totalCount ? { value: 0, isPositive: true, text: "Awaiting approval" } : undefined}
-        />
-      </div>
+        /></motion.div>
+      </motion.div>
 
       {/* Revenue Period Comparison */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {overviewLoading
           ? Array.from({ length: 4 }).map((_, i) => (
-              <Card key={i}>
-                <CardContent className="p-4">
-                  <Skeleton className="mb-2 h-4 w-16" />
-                  <Skeleton className="h-7 w-24" />
-                  <Skeleton className="mt-1.5 h-3 w-20" />
-                </CardContent>
-              </Card>
+              <motion.div variants={fadeIn} key={i}>
+                <Card>
+                  <CardContent className="p-4">
+                    <Skeleton className="mb-2 h-4 w-16" />
+                    <Skeleton className="h-7 w-24" />
+                    <Skeleton className="mt-1.5 h-3 w-20" />
+                  </CardContent>
+                </Card>
+              </motion.div>
             ))
           : (
               <>
-                <RevenuePeriodCard period="Today" data={overview?.revenue?.today} />
-                <RevenuePeriodCard period="This Week" data={overview?.revenue?.thisWeek} />
-                <RevenuePeriodCard period="This Month" data={overview?.revenue?.thisMonth} />
-                <RevenuePeriodCard period="Year to Date" data={overview?.revenue?.ytd} />
+                <motion.div variants={fadeIn}><RevenuePeriodCard period="Today" data={overview?.revenue?.today} /></motion.div>
+                <motion.div variants={fadeIn}><RevenuePeriodCard period="This Week" data={overview?.revenue?.thisWeek} /></motion.div>
+                <motion.div variants={fadeIn}><RevenuePeriodCard period="This Month" data={overview?.revenue?.thisMonth} /></motion.div>
+                <motion.div variants={fadeIn}><RevenuePeriodCard period="Year to Date" data={overview?.revenue?.ytd} /></motion.div>
               </>
             )}
-      </div>
+      </motion.div>
 
       {/* Revenue Trend + Top Tours */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -772,6 +791,8 @@ function KpiCard({
   accent,
   trend,
   onClick,
+  numericValue,
+  format,
 }: {
   label: string;
   value: string;
@@ -779,6 +800,8 @@ function KpiCard({
   accent: "green" | "blue" | "amber";
   trend?: { value: number; isPositive: boolean; text?: string };
   onClick?: () => void;
+  numericValue?: number;
+  format?: (n: number) => string;
 }) {
   const accentMap = {
     green: {
@@ -804,7 +827,10 @@ function KpiCard({
   const a = accentMap[accent];
 
   return (
-    <div
+    <motion.div
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
       className={`rounded-sm border ${a.border} ${a.bg} p-3.5 shadow-2 transition-all hover:shadow-md ${onClick ? "cursor-pointer" : ""}`}
       onClick={onClick}
       role={onClick ? "button" : undefined}
@@ -814,7 +840,7 @@ function KpiCard({
       <div className="flex items-start justify-between">
         <div className="min-w-0">
           <p className="text-xs text-text-secondary truncate">{label}</p>
-          <p className="mt-1 text-lg font-bold text-text-primary leading-tight">{value}</p>
+          <p className="mt-1 text-lg font-bold text-text-primary leading-tight">{numericValue != null ? <AnimatedNumber value={numericValue} format={format} /> : value}</p>
           {trend && (
             <>
               <p className={`mt-1 inline-flex items-center gap-0.5 text-xs font-medium ${trend.isPositive ? "text-green-600" : "text-red-500"}`}>
@@ -831,7 +857,7 @@ function KpiCard({
           {icon}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
