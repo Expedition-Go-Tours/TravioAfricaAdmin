@@ -331,8 +331,8 @@ export default function TourDetailPage() {
                     {tour.itinerary.map((item, idx) => {
                       const entry = item as Record<string, unknown>;
                       const hasTime = "time" in entry || "day" in entry;
-                      const dayNumber = hasTime ? (entry.day ?? entry.time ?? (idx + 1)) : null;
-                      const title = hasTime ? (entry.title || entry.activity || null) : null;
+                      const dayNumber = hasTime ? String(entry.day ?? entry.time ?? (idx + 1)) : null;
+                      const title = hasTime ? String(entry.title || entry.activity || "") : null;
                       const description = (entry.description as string) || null;
                       if (!hasTime && !title && description) {
                         return (

@@ -241,10 +241,10 @@ export default function SearchAnalyticsPage() {
                 <Tooltip content={<ChartTooltip />} cursor={{ stroke: "#dee3e8", strokeDasharray: "3 3" }} />
                 <Legend content={<ChartLegend />} />
                 <ReferenceLine y={0} stroke="#dee3e8" />
-                <Area type="monotone" dataKey="withResults" fill="url(#withResultsGrad)" stroke="none" />
-                <Area type="monotone" dataKey="withoutResults" fill="url(#withoutResultsGrad)" stroke="none" />
-                <Line type="monotone" dataKey="withResults" stroke="#40966e" name="With Results" strokeWidth={2.5} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} animationDuration={800} />
-                <Line type="monotone" dataKey="withoutResults" stroke="#d92626" name="Without Results" strokeWidth={2.5} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} animationDuration={800} />
+                <Area key="area-withResults" type="monotone" dataKey="withResults" fill="url(#withResultsGrad)" stroke="none" />
+                <Area key="area-withoutResults" type="monotone" dataKey="withoutResults" fill="url(#withoutResultsGrad)" stroke="none" />
+                <Line key="line-withResults" type="monotone" dataKey="withResults" stroke="#40966e" name="With Results" strokeWidth={2.5} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} animationDuration={800} />
+                <Line key="line-withoutResults" type="monotone" dataKey="withoutResults" stroke="#d92626" name="Without Results" strokeWidth={2.5} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} animationDuration={800} />
               </ComposedChart>
             </ResponsiveContainer>
           )}

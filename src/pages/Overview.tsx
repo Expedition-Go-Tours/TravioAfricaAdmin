@@ -476,16 +476,16 @@ export default function OverviewPage() {
                       dataKey="value"
                       paddingAngle={2}
                     >
-                      {(overview.bookingStatusDistribution || []).map((entry) => (
-                        <Cell key={entry.status} fill={bookingColors[entry.status || ""] || "#8a9ba8"} />
+                      {(overview.bookingStatusDistribution || []).map((entry, i) => (
+                        <Cell key={entry.status || `unknown-${i}`} fill={bookingColors[entry.status || ""] || "#8a9ba8"} />
                       ))}
                     </Pie>
                     <Tooltip />
                   </RePieChart>
                 </ResponsiveContainer>
                 <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1">
-                  {(overview.bookingStatusDistribution || []).map((d) => (
-                    <span key={d.status} className="inline-flex items-center gap-1.5 text-xs text-text-secondary">
+                  {(overview.bookingStatusDistribution || []).map((d, i) => (
+                    <span key={d.status || `legend-${i}`} className="inline-flex items-center gap-1.5 text-xs text-text-secondary">
                       <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: bookingColors[d.status || ""] || "#8a9ba8" }} />
                       {d.status || "Unknown"}
                     </span>

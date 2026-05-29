@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine,
 } from "recharts";
-import { TrendingUp, Users, UserPlus, ArrowLeft, Calendar, Activity } from "lucide-react";
+import { TrendingUp, Users, UserPlus, ArrowLeft, Calendar, Activity, X, Mail, Shield, Clock } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SectionError } from "@/components/shared/SectionError";
 import { SectionEmpty } from "@/components/shared/SectionEmpty";
 import api from "@/lib/axios";
-import { formatNumber } from "@/lib/utils";
+import { formatNumber, formatDate } from "@/lib/utils";
 
 const periods = [
   { value: "30d", label: "30 days" },
@@ -46,10 +46,21 @@ function formatMonth(v: unknown) {
 export default function UserGrowthPage() {
   const navigate = useNavigate();
   const [period, setPeriod] = useState("1y");
+  const [dialog, setDialog] = useState<{ type: "all" | "customer" | "supplier" } | null>(null);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin", "user-growth", period],
     queryFn: () => api.get(`/admin/analytics/user-growth?period=${period}`).then((r) => r.data),
+  });
+
+  const { data: dialogUsers, isLoading: dialogLoading } = useQuery({
+    queryKey: ["admin", "users", "new", period, dialog?.type],
+    queryFn: async () => {
+      const role = dialog?.type === "all" ? undefined : dialog?.type;
+      const res = await api.get(`/admin/users/new?period=${period}${role ? `&role=${role}` : ""}`);
+      return (res.data?.data?.users || []) as Array<{ id: string; name: string; email: string; photoURL?: string; roles?: string[]; createdAt?: string }>;
+    },
+    enabled: !!dialog,
   });
 
   const growth = data?.data?.growth || [];
@@ -109,18 +120,21 @@ export default function UserGrowthPage() {
           value={isLoading ? "..." : formatNumber(totals.total)}
           icon={<Users className="h-4 w-4" />}
           accent="green"
+          onClick={() => setDialog({ type: "all" })}
         />
         <KpiCard
           label="New Customers"
           value={isLoading ? "..." : formatNumber(totals.customers)}
           icon={<UserPlus className="h-4 w-4" />}
           accent="blue"
+          onClick={() => setDialog({ type: "customer" })}
         />
         <KpiCard
           label="New Suppliers"
           value={isLoading ? "..." : formatNumber(totals.suppliers)}
           icon={<TrendingUp className="h-4 w-4" />}
           accent="amber"
+          onClick={() => setDialog({ type: "supplier" })}
         />
         <KpiCard
           label="Avg / Month"
@@ -226,14 +240,20 @@ export default function UserGrowthPage() {
   );
 }
 
-function KpiCard({ label, value, icon, accent }: { label: string; value: string; icon: React.ReactNode; accent: "green" | "blue" | "amber" }) {
+function KpiCard({ label, value, icon, accent, onClick }: { label: string; value: string; icon: React.ReactNode; accent: "green" | "blue" | "amber"; onClick?: () => void }) {
   const m = {
     green: { bg: "bg-gradient-to-br from-green-50 to-white", border: "border-green-200/40", ib: "bg-green-100", ic: "text-green-600" },
     blue: { bg: "bg-gradient-to-br from-blue-50 to-white", border: "border-blue-200/40", ib: "bg-blue-100", ic: "text-blue-600" },
     amber: { bg: "bg-gradient-to-br from-amber-50 to-white", border: "border-amber-200/40", ib: "bg-amber-100", ic: "text-amber-600" },
   }[accent];
   return (
-    <div className={`rounded-sm border ${m.border} ${m.bg} p-3.5 shadow-2 transition-all hover:shadow-md`}>
+    <div
+      className={`rounded-sm border ${m.border} ${m.bg} p-3.5 shadow-2 transition-all hover:shadow-md ${onClick ? "cursor-pointer" : ""}`}
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => { if (e.key === "Enter") onClick(); } : undefined}
+    >
       <div className="flex items-start justify-between">
         <div className="min-w-0">
           <p className="text-xs text-text-secondary truncate">{label}</p>
