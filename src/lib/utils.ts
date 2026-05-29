@@ -65,7 +65,7 @@ export function timeAgo(value: string | null | undefined): string {
   return `${Math.floor(diffMonth / 12)}y ago`;
 }
 
-export function truncateId(id: string, chars = 8): string {
+export function truncateId(id: string, chars = 12): string {
   return id.length > chars ? id.slice(0, chars) + "..." : id;
 }
 
