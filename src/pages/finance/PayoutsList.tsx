@@ -25,9 +25,10 @@ interface Payout {
   id: string;
   supplier?: { name?: string; id?: string };
   tour?: { title?: string };
+  booking?: { bookingNumber?: string; total?: string; paidAt?: string; tour?: { title?: string } };
   bookingId?: string;
-  amount?: number;
-  commission?: number;
+  amount?: number | string;
+  commissionAmount?: number | string;
   status?: string;
   createdAt?: string;
 }
@@ -129,10 +130,10 @@ export default function PayoutsList() {
   const columns: Column<Payout>[] = [
     { key: "id", header: "ID", render: (r) => <span className="font-mono text-xs text-text-tertiary">{truncateId(r.id)}</span> },
     { key: "supplier", header: "Supplier", render: (r) => <span className="font-medium text-text-primary">{r.supplier?.name || "—"}</span> },
-    { key: "tour", header: "Tour", render: (r) => <span className="text-text-secondary">{r.tour?.title || "—"}</span> },
-    { key: "bookingId", header: "Booking #", render: (r) => <span className="font-mono text-xs text-text-tertiary">{r.bookingId ? truncateId(r.bookingId) : "—"}</span> },
+    { key: "tour", header: "Tour", render: (r) => <span className="text-text-secondary">{r.booking?.tour?.title || r.tour?.title || "—"}</span> },
+    { key: "bookingId", header: "Booking #", render: (r) => <span className="font-mono text-xs text-text-tertiary">{r.booking?.bookingNumber || (r.bookingId ? truncateId(r.bookingId) : "—")}</span> },
     { key: "amount", header: "Amount", render: (r) => <span className="font-semibold text-text-primary">{formatCurrency(r.amount)}</span> },
-    { key: "commission", header: "Commission", render: (r) => <span className="text-text-secondary">{formatCurrency(r.commission)}</span> },
+    { key: "commission", header: "Commission", render: (r) => <span className="text-text-secondary">{formatCurrency(r.commissionAmount ?? r.commission)}</span> },
     { key: "status", header: "Status", render: (r) => <StatusBadge status={r.status || "UNKNOWN"} /> },
     { key: "createdAt", header: "Date", render: (r) => <span className="text-xs text-text-tertiary">{formatDate(r.createdAt)}</span> },
     {
