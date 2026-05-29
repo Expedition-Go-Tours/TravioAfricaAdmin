@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   DollarSign,
   CalendarCheck,
@@ -42,6 +42,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { SectionError } from "@/components/shared/SectionError";
 import { SectionEmpty } from "@/components/shared/SectionEmpty";
 import api from "@/lib/axios";
+import { getAdminSocket } from "@/lib/adminSocket";
 import { formatCurrency, formatNumber, formatDate, timeAgo, cn } from "@/lib/utils";
 
 interface OverviewData {
@@ -170,13 +171,57 @@ export default function OverviewPage() {
     enabled: showNewSignups,
   });
 
-  const calcTrend = (current: number | undefined | null, previous: number | undefined | null): { value: number; isPositive: boolean } | undefined => {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const socket = getAdminSocket();
+
+    const refetchOverview = () => queryClient.invalidateQueries({ queryKey: ["admin", "overview"] });
+    const refetchSignups = () => queryClient.invalidateQueries({ queryKey: ["admin", "users", "new-signups"] });
+    const refetchTodayBookings = () => queryClient.invalidateQueries({ queryKey: ["admin", "bookings", "today"] });
+    const refetchRevenueTrend = () => queryClient.invalidateQueries({ queryKey: ["admin", "revenue-trend"] });
+    const refetchPayoutSummary = () => queryClient.invalidateQueries({ queryKey: ["admin", "payout-summary"] });
+    const refetchPendingReviews = () => queryClient.invalidateQueries({ queryKey: ["admin", "reviews-pending-count"] });
+    const refetchPendingSuppliers = () => queryClient.invalidateQueries({ queryKey: ["admin", "suppliers-pending"] });
+
+    const onBooking = () => { refetchOverview(); refetchTodayBookings(); refetchRevenueTrend(); };
+    const onSignup = () => { refetchSignups(); refetchOverview(); };
+    const onTourChange = () => refetchOverview();
+    const onSupplierApp = () => { refetchOverview(); refetchPendingSuppliers(); };
+    const onSupplierStatus = () => refetchOverview();
+    const onPayout = () => { refetchPayoutSummary(); refetchRevenueTrend(); };
+
+    socket.on("admin:signup", onSignup);
+    socket.on("admin:new-booking", onBooking);
+    socket.on("admin:new-review", refetchOverview);
+    socket.on("admin:new-tour", onTourChange);
+    socket.on("admin:tour-update", onTourChange);
+    socket.on("admin:supplier-application", onSupplierApp);
+    socket.on("admin:supplier-status-change", onSupplierStatus);
+    socket.on("admin:payout-update", onPayout);
+
+    return () => {
+      socket.off("admin:signup", onSignup);
+      socket.off("admin:new-booking", onBooking);
+      socket.off("admin:new-review", refetchOverview);
+      socket.off("admin:new-tour", onTourChange);
+      socket.off("admin:tour-update", onTourChange);
+      socket.off("admin:supplier-application", onSupplierApp);
+      socket.off("admin:supplier-status-change", onSupplierStatus);
+      socket.off("admin:payout-update", onPayout);
+    };
+  }, [queryClient]);
+
+  const calcTrend = (current: number | undefined | null, previous: number | undefined | null, context?: string): { value: number; isPositive: boolean; text?: string } | undefined => {
     const cur = Number(current) || 0;
     if (cur === 0) return undefined;
     const prev = Number(previous) || 0;
-    if (prev === 0) return { value: 0, isPositive: true };
+    if (prev === 0) return { value: 0, isPositive: true, text: context ? `${context} today` : undefined };
     const change = ((cur - prev) / prev) * 100;
-    return { value: Math.abs(Math.round(change)), isPositive: change >= 0 };
+    const rounded = Math.abs(Math.round(change));
+    const direction = change >= 0 ? "more than" : "less than";
+    const period = context === "Active Users" ? "last 30 days" : "yesterday";
+    return { value: rounded, isPositive: change >= 0, text: `${rounded}% ${direction} ${period}` };
   };
 
   return (
@@ -202,7 +247,8 @@ export default function OverviewPage() {
           accent="green"
           trend={calcTrend(
             overview?.revenue?.today?.revenue ? Number(overview.revenue.today.revenue) : undefined,
-            overview?.revenue?.yesterday?.revenue ? Number(overview.revenue.yesterday.revenue) : undefined
+            overview?.revenue?.yesterday?.revenue ? Number(overview.revenue.yesterday.revenue) : undefined,
+            "Revenue"
           )}
         />
         <KpiCard
@@ -211,7 +257,7 @@ export default function OverviewPage() {
           icon={<CalendarCheck className="h-4 w-4" />}
           accent="green"
           onClick={() => setShowTodayBookings(true)}
-          trend={calcTrend(overview?.bookings?.today, overview?.bookings?.yesterday)}
+          trend={calcTrend(overview?.bookings?.today, overview?.bookings?.yesterday, "Bookings")}
         />
         <KpiCard
           label="New Signups"
@@ -219,7 +265,7 @@ export default function OverviewPage() {
           icon={<UserPlus className="h-4 w-4" />}
           accent="blue"
           onClick={() => setShowNewSignups(true)}
-          trend={calcTrend(overview?.signups?.today, overview?.signups?.yesterday)}
+          trend={calcTrend(overview?.signups?.today, overview?.signups?.yesterday, "Signups")}
         />
         <KpiCard
           label="Active Users (30d)"
@@ -227,28 +273,28 @@ export default function OverviewPage() {
           icon={<Users className="h-4 w-4" />}
           accent="blue"
           onClick={() => setShowActiveUsers(true)}
-          trend={calcTrend(overview?.activeUsersLast30Days, overview?.activeUsersPrevious30)}
+          trend={calcTrend(overview?.activeUsersLast30Days, overview?.activeUsersPrevious30, "Active Users")}
         />
         <KpiCard
           label="Pending Payouts"
           value={overviewLoading ? "..." : formatNumber(payoutSummary?.pending?.count)}
           icon={<Clock className="h-4 w-4" />}
           accent="amber"
-          trend={payoutSummary?.pending?.count ? { value: 0, isPositive: true } : undefined}
+          trend={payoutSummary?.pending?.count ? { value: 0, isPositive: true, text: "Awaiting payout" } : undefined}
         />
         <KpiCard
           label="Pending Reviews"
           value={overviewLoading ? "..." : formatNumber(pendingReviews?.pagination?.totalCount)}
           icon={<MessageSquare className="h-4 w-4" />}
           accent="amber"
-          trend={pendingReviews?.pagination?.totalCount ? { value: 0, isPositive: true } : undefined}
+          trend={pendingReviews?.pagination?.totalCount ? { value: 0, isPositive: true, text: "Awaiting review" } : undefined}
         />
         <KpiCard
           label="Pending Suppliers"
           value={overviewLoading ? "..." : formatNumber(pendingSuppliers?.pagination?.totalCount)}
           icon={<Building className="h-4 w-4" />}
           accent="amber"
-          trend={pendingSuppliers?.pagination?.totalCount ? { value: 0, isPositive: true } : undefined}
+          trend={pendingSuppliers?.pagination?.totalCount ? { value: 0, isPositive: true, text: "Awaiting approval" } : undefined}
         />
       </div>
 
@@ -731,7 +777,7 @@ function KpiCard({
   value: string;
   icon: React.ReactNode;
   accent: "green" | "blue" | "amber";
-  trend?: { value: number; isPositive: boolean };
+  trend?: { value: number; isPositive: boolean; text?: string };
   onClick?: () => void;
 }) {
   const accentMap = {
@@ -740,24 +786,18 @@ function KpiCard({
       border: "border-green-200/40",
       iconBg: "bg-green-100",
       iconColor: "text-green-600",
-      trendUp: "text-green-600",
-      trendDown: "text-red-500",
     },
     blue: {
       bg: "bg-gradient-to-br from-blue-50 to-white",
       border: "border-blue-200/40",
       iconBg: "bg-blue-100",
       iconColor: "text-blue-600",
-      trendUp: "text-blue-600",
-      trendDown: "text-red-500",
     },
     amber: {
       bg: "bg-gradient-to-br from-amber-50 to-white",
       border: "border-amber-200/40",
       iconBg: "bg-amber-100",
       iconColor: "text-amber-600",
-      trendUp: "text-amber-600",
-      trendDown: "text-red-500",
     },
   };
 
@@ -776,10 +816,15 @@ function KpiCard({
           <p className="text-xs text-text-secondary truncate">{label}</p>
           <p className="mt-1 text-lg font-bold text-text-primary leading-tight">{value}</p>
           {trend && (
-            <p className={`mt-1 inline-flex items-center gap-0.5 text-xs font-medium ${trend.isPositive ? a.trendUp : a.trendDown}`}>
-              {trend.isPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-              {trend.value > 0 ? `${trend.value}%` : ""}
-            </p>
+            <>
+              <p className={`mt-1 inline-flex items-center gap-0.5 text-xs font-medium ${trend.isPositive ? "text-green-600" : "text-red-500"}`}>
+                {trend.isPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                {trend.value > 0 ? `${trend.isPositive ? "+" : "-"}${trend.value}%` : ""}
+              </p>
+              {trend.text && (
+                <p className={`mt-0.5 text-[10px] leading-tight ${trend.isPositive ? "text-green-600/70" : "text-red-500/70"}`}>{trend.text}</p>
+              )}
+            </>
           )}
         </div>
         <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${a.iconBg} ${a.iconColor}`}>

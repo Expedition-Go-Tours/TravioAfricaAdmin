@@ -234,8 +234,16 @@ export default function SupplierDetailPage() {
         <div className="relative px-6 pb-5 pt-9">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div className="flex items-end gap-4 -mt-8">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-4 border-white bg-green-100 text-xl font-bold text-green-700 shadow-sm">
-                {user?.name?.charAt(0)?.toUpperCase() || "?"}
+              <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-green-100 text-xl font-bold text-green-700 shadow-sm">
+                <span>{user?.name?.charAt(0)?.toUpperCase() || "?"}</span>
+                {user?.photoURL && (
+                  <img
+                    src={user.photoURL}
+                    alt={user?.name || ""}
+                    className="absolute inset-0 h-full w-full object-cover"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                  />
+                )}
               </div>
               <div className="pb-0.5">
                 <div className="flex items-center gap-2.5 flex-wrap">
