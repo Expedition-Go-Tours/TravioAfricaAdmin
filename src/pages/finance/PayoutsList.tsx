@@ -46,6 +46,7 @@ interface Payout {
   commissionAmount?: number | string;
   status?: string;
   createdAt?: string;
+  commission?: number | string;
 }
 
 interface PayoutSummary {
