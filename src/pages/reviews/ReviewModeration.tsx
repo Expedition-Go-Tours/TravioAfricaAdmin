@@ -77,7 +77,10 @@ export default function ReviewModerationPage() {
 
   const rawReviews: Review[] = data?.reviews || data?.data?.reviews || [];
   const pagination = data?.pagination || data?.data?.pagination;
-  const pendingCount = pagination?.totalCount || rawReviews.length;
+  const counts = data?.counts || data?.data?.counts;
+  const pendingCount = counts?.pending ?? pagination?.totalCount ?? rawReviews.length;
+  const flaggedCount = counts?.flagged ?? 0;
+  const moderatedTodayCount = counts?.moderatedToday ?? 0;
 
   const query = searchQuery.toLowerCase().trim();
   const reviews = query
@@ -118,14 +121,14 @@ export default function ReviewModerationPage() {
             <p className="text-xs text-text-secondary font-medium">Flagged</p>
             <AlertTriangle className="h-4 w-4 text-amber-600" />
           </div>
-          <p className="mt-1 text-2xl font-bold text-amber-700">{isLoading ? "..." : "—"}</p>
+          <p className="mt-1 text-2xl font-bold text-amber-700">{isLoading ? "..." : flaggedCount}</p>
         </div>
         <div className="rounded-sm border border-blue-200/40 bg-gradient-to-br from-blue-50 to-white p-4 shadow-2">
           <div className="flex items-center justify-between">
             <p className="text-xs text-text-secondary font-medium">Moderated Today</p>
             <Clock className="h-4 w-4 text-blue-600" />
           </div>
-          <p className="mt-1 text-2xl font-bold text-blue-700">{isLoading ? "..." : "—"}</p>
+          <p className="mt-1 text-2xl font-bold text-blue-700">{isLoading ? "..." : moderatedTodayCount}</p>
         </div>
       </div>
 
