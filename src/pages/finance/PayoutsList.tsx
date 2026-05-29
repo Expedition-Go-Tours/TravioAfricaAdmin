@@ -21,6 +21,14 @@ import { Input } from "@/components/ui/input";
 import api from "@/lib/axios";
 import { formatCurrency, formatDate, truncateId } from "@/lib/utils";
 
+
+interface PayoutMethod {
+  id: string;
+  type?: string;
+  details?: string;
+  isDefault?: boolean;
+}
+
 interface Payout {
   id: string;
   supplier?: {
@@ -36,7 +44,7 @@ interface Payout {
         address?: { city?: string; line1?: string; state?: string; postalCode?: string };
         phoneNumber?: string;
       };
-      payoutInfo?: any;
+      payoutInfo?: Record<string, unknown>;
     };
   };
   tour?: { title?: string };
@@ -315,20 +323,24 @@ export default function PayoutsList() {
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label>Payout Method</Label>
-              {((methodsData?.data?.methods || methodsData?.methods) as any[])?.length ? (
-                <Select value={releaseMethod} onValueChange={setReleaseMethod}>
-                  <SelectTrigger><SelectValue placeholder="Select method" /></SelectTrigger>
-                  <SelectContent>
-                    {methodsData.methods.map((m: { id: string; type?: string; details?: string; isDefault?: boolean }) => (
-                      <SelectItem key={m.id} value={m.id}>
-                        {m.type} {m.details ? `- ${m.details}` : ""} {m.isDefault ? "(Default)" : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <p className="text-sm text-status-rejected">Supplier has no verified payout method</p>
-              )}
+              {
+                (
+                  ((methodsData?.data?.methods || methodsData?.methods) as PayoutMethod[] | undefined)?.length
+                ) ? (
+                  <Select value={releaseMethod} onValueChange={setReleaseMethod}>
+                    <SelectTrigger><SelectValue placeholder="Select method" /></SelectTrigger>
+                    <SelectContent>
+                      {(methodsData?.methods as PayoutMethod[]).map((m) => (
+                        <SelectItem key={m.id} value={m.id}>
+                          {m.type} {m.details ? `- ${m.details}` : ""} {m.isDefault ? "(Default)" : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <p className="text-sm text-status-rejected">Supplier has no verified payout method</p>
+                )
+              }
             </div>
             <div className="space-y-2">
               <Label htmlFor="reference">Reference (optional)</Label>
