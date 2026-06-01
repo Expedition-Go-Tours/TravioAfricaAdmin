@@ -22,7 +22,7 @@ interface Tour {
   status?: string;
   coverPhoto?: string;
   supplier?: { name?: string };
-  bookingCount?: number;
+  totalBookings?: number;
   totalRevenue?: number;
   averageRating?: number;
   reviewCount?: number;
@@ -87,7 +87,7 @@ export default function TourPerformancePage() {
   const aggregate = tours.reduce(
     (acc: { revenue: number; bookings: number; views: number }, t: Tour) => ({
       revenue: acc.revenue + Number(t.totalRevenue || 0),
-      bookings: acc.bookings + Number(t.bookingCount || 0),
+      bookings: acc.bookings + Number(t.totalBookings || 0),
       views: acc.views + Number(t.viewCount || 0),
     }),
     { revenue: 0, bookings: 0, views: 0 },
@@ -118,7 +118,7 @@ export default function TourPerformancePage() {
       ),
     },
     { key: "status", header: "Status", render: (r) => <StatusBadge status={r.status || "UNKNOWN"} /> },
-    { key: "bookingCount", header: "Bookings", sortable: true, render: (r) => <span className="font-semibold text-text-primary">{formatNumber(r.bookingCount)}</span> },
+    { key: "totalBookings", header: "Bookings", sortable: true, render: (r) => <span className="font-semibold text-text-primary">{formatNumber(r.totalBookings)}</span> },
     { key: "totalRevenue", header: "Revenue", sortable: true, render: (r) => <span className="font-semibold text-green-700">{formatCurrency(r.totalRevenue)}</span> },
     { key: "averageRating", header: "Rating", sortable: true, render: (r) => (
       <span className="inline-flex items-center gap-1 text-amber-600">
