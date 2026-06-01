@@ -9,12 +9,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/shared/DataTable";
 import type { Column } from "@/components/shared/DataTable";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -41,7 +46,9 @@ interface Payout {
         legalBusinessName?: string;
         displayName?: string;
         country?: string;
-        address?: { city?: string; line1?: string; state?: string; postalCode?: string };
+        city?: string;
+        phone?: string;
+        address?: string | { city?: string; line1?: string; state?: string; postalCode?: string };
         phoneNumber?: string;
       };
       payoutInfo?: Record<string, unknown>;
@@ -98,6 +105,7 @@ export default function PayoutsList() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "payouts"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "payout-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "overview"] });
       toast.success("Payout approved");
       closeModal();
     },
@@ -112,6 +120,7 @@ export default function PayoutsList() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "payouts"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "payout-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "overview"] });
       toast.success("Payout released");
       closeModal();
     },
@@ -123,6 +132,7 @@ export default function PayoutsList() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "payouts"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "payout-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "overview"] });
       toast.success("Payout marked as failed");
       closeModal();
     },
@@ -293,138 +303,199 @@ export default function PayoutsList() {
       </Card>
 
       {/* Approve Modal */}
-      {actionType === "approve" && actionPayout && (
-        <ConfirmModal
-          open={true}
-          title="Approve Payout"
-          description={
-            <div className="space-y-1">
-              <p>Approve this payout to move it to the release stage.</p>
-              <div className="mt-3 rounded-sm bg-green-50 p-3 text-sm">
-                <div className="flex items-center gap-4 mb-3">
-                  <DollarSign className="h-5 w-5 text-green-600 shrink-0" />
-                  <div>
-                    <p className="font-medium text-green-800">{formatCurrency(actionPayout.amount)}</p>
-                    <p className="text-xs text-green-600">{actionPayout.booking?.tour?.title || actionPayout.tour?.title || "Tour"}</p>
-                  </div>
-                </div>
-                <div className="border-t border-green-200/50 pt-3 space-y-1.5">
-                  <p className="text-xs font-semibold text-green-700 uppercase tracking-wide">Supplier Details</p>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-green-700">
-                    <span className="text-green-500">Legal Name</span>
-                    <span className="font-medium text-right">{actionPayout.supplier?.supplierProfile?.businessInfo?.legalBusinessName || "—"}</span>
-                    <span className="text-green-500">Display Name</span>
-                    <span className="font-medium text-right">{actionPayout.supplier?.supplierProfile?.businessInfo?.displayName || actionPayout.supplier?.name || "—"}</span>
-                    <span className="text-green-500">Country</span>
-                    <span className="font-medium text-right">{actionPayout.supplier?.supplierProfile?.businessInfo?.country || "—"}</span>
-                    <span className="text-green-500">City</span>
-                    <span className="font-medium text-right">{actionPayout.supplier?.supplierProfile?.businessInfo?.address?.city || "—"}</span>
-                    <span className="text-green-500">Phone</span>
-                    <span className="font-medium text-right">{actionPayout.supplier?.supplierProfile?.businessInfo?.phoneNumber || actionPayout.supplier?.phone || "—"}</span>
-                  </div>
-                </div>
+      <Dialog open={actionType === "approve" && !!actionPayout} onOpenChange={(v) => { if (!v && !approveMutation.isPending) closeModal(); }}>
+        <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden border-0 [&>button.absolute]:right-4 [&>button.absolute]:top-4 [&>button.absolute]:flex [&>button.absolute]:h-8 [&>button.absolute]:w-8 [&>button.absolute]:items-center [&>button.absolute]:justify-center [&>button.absolute]:rounded-full [&>button.absolute]:bg-white/30 [&>button.absolute]:text-white [&>button.absolute]:opacity-100 [&>button.absolute]:hover:bg-white/50 [&>button.absolute]:backdrop-blur-sm [&>button.absolute]:shadow-sm">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-green-700 to-green-600 px-6 pt-6 pb-8">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/20 shadow-inner">
+                <CheckCircle className="h-6 w-6 text-white" />
+              </div>
+              <div className="min-w-0">
+                <DialogTitle className="text-lg font-semibold text-white">Approve Payout</DialogTitle>
+                <DialogDescription className="mt-1 text-sm text-green-100">
+                  Approve this payout to move it to the release stage
+                </DialogDescription>
               </div>
             </div>
-          }
-          confirmLabel="Approve"
-          loading={approveMutation.isPending}
-          onConfirm={() => approveMutation.mutate()}
-          onCancel={closeModal}
-        />
-      )}
+          </div>
+
+          {/* Content */}
+          <div className="px-6 py-5 space-y-5">
+            {/* Amount & Tour card */}
+            <div className="rounded-sm border border-green-100 bg-gradient-to-r from-green-50 to-white p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-text-tertiary uppercase tracking-wide">Payout Amount</p>
+                  <p className="text-2xl font-bold text-green-700 mt-0.5">{formatCurrency(actionPayout?.amount)}</p>
+                </div>
+                {(actionPayout?.booking?.tour?.title || actionPayout?.tour?.title) && (
+                  <div className="text-right">
+                    <p className="text-xs text-text-tertiary uppercase tracking-wide">Tour</p>
+                    <p className="text-sm font-medium text-text-primary mt-0.5">{actionPayout.booking?.tour?.title || actionPayout.tour?.title}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Supplier Details */}
+            <div>
+              <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-3">Supplier Details</p>
+              <div className="rounded-sm border border-border-muted divide-y divide-border-muted">
+                {[
+                  { label: "Legal Name", value: actionPayout?.supplier?.supplierProfile?.businessInfo?.legalBusinessName },
+                  { label: "Display Name", value: actionPayout?.supplier?.supplierProfile?.businessInfo?.displayName || actionPayout?.supplier?.name },
+                  { label: "Country", value: actionPayout?.supplier?.supplierProfile?.businessInfo?.country },
+                  { label: "City", value: actionPayout?.supplier?.supplierProfile?.businessInfo?.city || (typeof actionPayout?.supplier?.supplierProfile?.businessInfo?.address === 'string' ? actionPayout?.supplier?.supplierProfile?.businessInfo?.address : actionPayout?.supplier?.supplierProfile?.businessInfo?.address?.city) },
+                  { label: "Phone", value: actionPayout?.supplier?.supplierProfile?.businessInfo?.phone || actionPayout?.supplier?.supplierProfile?.businessInfo?.phoneNumber || actionPayout?.supplier?.phone },
+                ].map((row) => (
+                  <div key={row.label} className="grid grid-cols-2 gap-x-4 px-4 py-2.5">
+                    <span className="text-sm text-text-tertiary">{row.label}</span>
+                    <span className="text-sm font-medium text-text-primary text-right">{row.value || "—"}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-end gap-3 border-t border-border-muted px-6 py-4">
+            <Button variant="outline" onClick={closeModal} disabled={approveMutation.isPending}>
+              Cancel
+            </Button>
+            <Button onClick={() => approveMutation.mutate()} disabled={approveMutation.isPending}>
+              {approveMutation.isPending ? "Approving..." : "Approve"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Release Modal */}
-      {actionType === "release" && actionPayout && (
-        <ConfirmModal
-          open={true}
-          title="Release Payout"
-          description={
-            <div className="space-y-1">
-              <p>Release funds to the supplier. Select a payout method below.</p>
-              <div className="mt-3 flex items-center gap-4 rounded-sm bg-blue-50 p-3 text-sm">
-                <Wallet className="h-5 w-5 text-blue-600" />
+      <Dialog open={actionType === "release" && !!actionPayout} onOpenChange={(v) => { if (!v && !releaseMutation.isPending) closeModal(); }}>
+        <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden border-0 [&>button.absolute]:right-4 [&>button.absolute]:top-4 [&>button.absolute]:flex [&>button.absolute]:h-8 [&>button.absolute]:w-8 [&>button.absolute]:items-center [&>button.absolute]:justify-center [&>button.absolute]:rounded-full [&>button.absolute]:bg-white/30 [&>button.absolute]:text-white [&>button.absolute]:opacity-100 [&>button.absolute]:hover:bg-white/50 [&>button.absolute]:backdrop-blur-sm [&>button.absolute]:shadow-sm">
+          <div className="bg-gradient-to-r from-blue-700 to-blue-600 px-6 pt-6 pb-8">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/20 shadow-inner">
+                <Send className="h-6 w-6 text-white" />
+              </div>
+              <div className="min-w-0">
+                <DialogTitle className="text-lg font-semibold text-white">Release Payout</DialogTitle>
+                <DialogDescription className="mt-1 text-sm text-blue-100">
+                  Release funds to the supplier. Select a payout method below.
+                </DialogDescription>
+              </div>
+            </div>
+          </div>
+
+          <div className="px-6 py-5 space-y-5">
+            <div className="rounded-sm border border-blue-100 bg-gradient-to-r from-blue-50 to-white p-4">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-blue-800">{formatCurrency(actionPayout.amount)}</p>
-                  <p className="text-xs text-blue-600">{actionPayout.supplier?.name || "Supplier"}</p>
+                  <p className="text-xs text-text-tertiary uppercase tracking-wide">Payout Amount</p>
+                  <p className="text-2xl font-bold text-blue-700 mt-0.5">{formatCurrency(actionPayout?.amount)}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-text-tertiary uppercase tracking-wide">Supplier</p>
+                  <p className="text-sm font-medium text-text-primary mt-0.5">{actionPayout?.supplier?.name || "—"}</p>
                 </div>
               </div>
             </div>
-          }
-          confirmLabel="Release"
-          confirmDisabled={!releaseMethod}
-          loading={releaseMutation.isPending}
-          onConfirm={() => releaseMutation.mutate()}
-          onCancel={closeModal}
-        >
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label>Payout Method</Label>
-              {
-                (
-                  ((methodsData?.data?.methods || methodsData?.methods) as PayoutMethod[] | undefined)?.length
-                ) ? (
-                  <Select value={releaseMethod} onValueChange={setReleaseMethod}>
-                    <SelectTrigger><SelectValue placeholder="Select method" /></SelectTrigger>
-                    <SelectContent>
-                      {(methodsData?.methods as PayoutMethod[]).map((m) => (
-                        <SelectItem key={m.id} value={m.id}>
-                          {m.type} {m.details ? `- ${m.details}` : ""} {m.isDefault ? "(Default)" : ""}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <p className="text-sm text-status-rejected">Supplier has no verified payout method</p>
-                )
-              }
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="reference">Reference (optional)</Label>
-              <Input id="reference" value={releaseReference} onChange={(e) => setReleaseReference(e.target.value)} placeholder="Transaction reference..." />
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Payout Method</Label>
+                {(() => {
+                  const methods = (methodsData?.data?.methods || methodsData?.methods || []) as PayoutMethod[];
+                  return methods.length ? (
+                    <Select value={releaseMethod} onValueChange={setReleaseMethod}>
+                      <SelectTrigger><SelectValue placeholder="Select method" /></SelectTrigger>
+                      <SelectContent>
+                        {methods.map((m) => (
+                          <SelectItem key={m.id} value={m.id}>
+                            {m.type} {m.details ? `- ${m.details}` : ""} {m.isDefault ? "(Default)" : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <p className="text-sm text-status-rejected">Supplier has no verified payout method</p>
+                  );
+                })()}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="reference">Reference (optional)</Label>
+                <Input id="reference" value={releaseReference} onChange={(e) => setReleaseReference(e.target.value)} placeholder="Transaction reference..." />
+              </div>
             </div>
           </div>
-        </ConfirmModal>
-      )}
+
+          <div className="flex items-center justify-end gap-3 border-t border-border-muted px-6 py-4">
+            <Button variant="outline" onClick={closeModal} disabled={releaseMutation.isPending}>
+              Cancel
+            </Button>
+            <Button onClick={() => releaseMutation.mutate()} disabled={!releaseMethod || releaseMutation.isPending}>
+              {releaseMutation.isPending ? "Releasing..." : "Release"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Fail Modal */}
-      {actionType === "fail" && actionPayout && (
-        <ConfirmModal
-          open={true}
-          title="Mark Payout as Failed"
-          description={
-            <div className="space-y-1">
-              <p>This will mark the payout as failed. A reason is required.</p>
-              <div className="mt-3 flex items-center gap-4 rounded-sm bg-red-50 p-3 text-sm">
-                <XCircle className="h-5 w-5 text-red-600" />
+      <Dialog open={actionType === "fail" && !!actionPayout} onOpenChange={(v) => { if (!v && !failMutation.isPending) closeModal(); }}>
+        <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden border-0 [&>button.absolute]:right-4 [&>button.absolute]:top-4 [&>button.absolute]:flex [&>button.absolute]:h-8 [&>button.absolute]:w-8 [&>button.absolute]:items-center [&>button.absolute]:justify-center [&>button.absolute]:rounded-full [&>button.absolute]:bg-white/30 [&>button.absolute]:text-white [&>button.absolute]:opacity-100 [&>button.absolute]:hover:bg-white/50 [&>button.absolute]:backdrop-blur-sm [&>button.absolute]:shadow-sm">
+          <div className="bg-gradient-to-r from-red-700 to-red-600 px-6 pt-6 pb-8">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/20 shadow-inner">
+                <XCircle className="h-6 w-6 text-white" />
+              </div>
+              <div className="min-w-0">
+                <DialogTitle className="text-lg font-semibold text-white">Mark Payout as Failed</DialogTitle>
+                <DialogDescription className="mt-1 text-sm text-red-100">
+                  This will mark the payout as failed. A reason is required.
+                </DialogDescription>
+              </div>
+            </div>
+          </div>
+
+          <div className="px-6 py-5 space-y-5">
+            <div className="rounded-sm border border-red-100 bg-gradient-to-r from-red-50 to-white p-4">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-red-800">{formatCurrency(actionPayout.amount)}</p>
-                  <p className="text-xs text-red-600">{actionPayout.supplier?.name || "Supplier"}</p>
+                  <p className="text-xs text-text-tertiary uppercase tracking-wide">Payout Amount</p>
+                  <p className="text-2xl font-bold text-red-700 mt-0.5">{formatCurrency(actionPayout?.amount)}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-text-tertiary uppercase tracking-wide">Supplier</p>
+                  <p className="text-sm font-medium text-text-primary mt-0.5">{actionPayout?.supplier?.name || "—"}</p>
                 </div>
               </div>
             </div>
-          }
-          confirmLabel="Mark as Failed"
-          confirmVariant="destructive"
-          confirmDisabled={failReason.length < 10}
-          loading={failMutation.isPending}
-          onConfirm={() => failMutation.mutate()}
-          onCancel={closeModal}
-        >
-          <div className="space-y-2 py-2">
-            <Label htmlFor="failReason">Reason (required, min 10 chars)</Label>
-            <Textarea
-              id="failReason"
-              value={failReason}
-              onChange={(e) => setFailReason(e.target.value)}
-              placeholder="Enter the reason for failure..."
-              rows={3}
-            />
-            {failReason.length > 0 && failReason.length < 10 && (
-              <p className="text-xs text-status-rejected">Minimum 10 characters</p>
-            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="failReason">Reason (required, min 10 chars)</Label>
+              <Textarea
+                id="failReason"
+                value={failReason}
+                onChange={(e) => setFailReason(e.target.value)}
+                placeholder="Enter the reason for failure..."
+                rows={3}
+              />
+              {failReason.length > 0 && failReason.length < 10 && (
+                <p className="text-xs text-status-rejected">Minimum 10 characters</p>
+              )}
+            </div>
           </div>
-        </ConfirmModal>
-      )}
+
+          <div className="flex items-center justify-end gap-3 border-t border-border-muted px-6 py-4">
+            <Button variant="outline" onClick={closeModal} disabled={failMutation.isPending}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={() => failMutation.mutate()} disabled={failReason.length < 10 || failMutation.isPending}>
+              {failMutation.isPending ? "Failing..." : "Mark as Failed"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

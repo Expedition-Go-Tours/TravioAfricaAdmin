@@ -1,15 +1,14 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
-  ArrowLeft, Map, Star, Eye, Calendar, DollarSign, TrendingUp,
-  ChevronRight, Clock, Users, CheckCircle, XCircle, Shield, BookOpen,
+  ArrowLeft, Map, Star, Eye, Calendar, DollarSign,
+  ChevronRight, Clock, CheckCircle, XCircle, Shield, BookOpen,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { SectionError } from "@/components/shared/SectionError";
-import { Button } from "@/components/ui/button";
 import api from "@/lib/axios";
 import { formatCurrency, formatNumber, formatDate } from "@/lib/utils";
 
@@ -249,8 +248,7 @@ export default function TourDetailPage() {
                     </span>
                   )}
                   {tour.price && (
-                    <span className="inline-flex items-center gap-1 font-semibold text-green-700">
-                      <DollarSign className="h-3.5 w-3.5" />
+                    <span className="font-semibold text-green-700">
                       {formatCurrency(tour.price)}
                     </span>
                   )}

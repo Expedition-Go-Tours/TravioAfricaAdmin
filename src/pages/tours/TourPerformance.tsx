@@ -13,7 +13,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import api from "@/lib/axios";
-import { staggerContainer, fadeIn, fadeInUp } from "@/lib/animations";
+import { staggerContainer, fadeIn } from "@/lib/animations";
 import { formatCurrency, formatNumber, formatDate } from "@/lib/utils";
 
 interface Tour {
@@ -86,9 +86,9 @@ export default function TourPerformancePage() {
 
   const aggregate = tours.reduce(
     (acc: { revenue: number; bookings: number; views: number }, t: Tour) => ({
-      revenue: acc.revenue + (t.totalRevenue || 0),
-      bookings: acc.bookings + (t.bookingCount || 0),
-      views: acc.views + (t.viewCount || 0),
+      revenue: acc.revenue + Number(t.totalRevenue || 0),
+      bookings: acc.bookings + Number(t.bookingCount || 0),
+      views: acc.views + Number(t.viewCount || 0),
     }),
     { revenue: 0, bookings: 0, views: 0 },
   );

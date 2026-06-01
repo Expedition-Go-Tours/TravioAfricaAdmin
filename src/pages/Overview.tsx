@@ -57,7 +57,7 @@ interface OverviewData {
   topTours?: Array<{ id?: string; title?: string; bookingCount?: number; revenue?: number; averageRating?: number; reviewCount?: number }>;
   topSuppliers?: Array<{ id?: string; user?: { name?: string; email?: string }; totalEarnings?: number; totalBookings?: number; averageRating?: number }>;
   bookingStatusDistribution?: Array<{ status?: string; count?: number; }>;
-  eventFeed?: Array<{ message?: string; createdAt?: string }>;
+  eventFeed?: Array<{ message?: string; userName?: string; createdAt?: string }>;
 }
 
 const bookingColors: Record<string, string> = {
@@ -104,6 +104,7 @@ export default function OverviewPage() {
         bookingStatusDistribution: d.bookingStatusDistribution || [],
         eventFeed: (d.eventFeed || []).map((e: Record<string, unknown>) => ({
           message: typeof e.properties === "object" && e.properties ? ((e.properties as Record<string, unknown>).message as string) || (e.name as string) : (e.name as string),
+          userName: (e.userName as string) || null,
           createdAt: e.createdAt as string,
         })),
       } as OverviewData;
@@ -541,7 +542,10 @@ export default function OverviewPage() {
                     </span>
                     <div className="min-w-0">
                       <p className="text-sm text-text-primary leading-snug">{event.message}</p>
-                      <p className="text-xs text-text-tertiary mt-0.5">{timeAgo(event.createdAt)}</p>
+                      <p className="text-xs text-text-tertiary mt-0.5">
+                        {event.userName && <span className="font-medium text-text-secondary">{event.userName} · </span>}
+                        {timeAgo(event.createdAt)}
+                      </p>
                     </div>
                   </div>
                 ))}
