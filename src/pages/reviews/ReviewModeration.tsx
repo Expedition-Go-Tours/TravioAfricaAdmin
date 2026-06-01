@@ -206,17 +206,16 @@ export default function ReviewModerationPage() {
                       </div>
 
                       {review.title && (
-                        <p className="mt-2 text-sm font-semibold text-text-primary">{review.title}</p>
+                        <p className="mt-2 text-base font-semibold text-text-primary">{review.title}</p>
                       )}
 
                       {review.comment && (
-                        <p className="mt-1 text-sm italic text-text-secondary leading-relaxed">"{review.comment}"</p>
+                        <p className="mt-1 text-sm text-text-secondary leading-relaxed">"{review.comment}"</p>
                       )}
 
-                      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-text-tertiary">
-                        <span>— {review.customer?.name || "Anonymous"}</span>
-                        <span>· {review.tour?.title || "Unknown Tour"}</span>
-                        <span>· {review.tour?.supplier?.name || "Unknown Supplier"}</span>
+                      <div className="mt-3 space-y-0.5 text-xs text-text-tertiary">
+                        <p><span className="font-medium text-text-secondary">{review.customer?.name || "Anonymous"}</span> on <span className="font-medium text-text-secondary">{review.tour?.title || "Unknown Tour"}</span></p>
+                        <p>Supplier: {review.tour?.supplier?.name || "Unknown Supplier"}</p>
                       </div>
 
                       {review.photos && review.photos.length > 0 && (
