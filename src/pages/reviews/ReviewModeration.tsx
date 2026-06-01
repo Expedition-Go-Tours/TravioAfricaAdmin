@@ -214,8 +214,8 @@ export default function ReviewModerationPage() {
                       )}
 
                       <div className="mt-3 space-y-0.5 text-xs text-text-tertiary">
-                        <p><span className="font-medium text-text-secondary">{review.customer?.name || "Anonymous"}</span> on <span className="font-medium text-text-secondary">{review.tour?.title || "Unknown Tour"}</span></p>
-                        <p>Supplier: {review.tour?.supplier?.name || "Unknown Supplier"}</p>
+                        <p><span className="font-medium text-green-700">{review.customer?.name || "Anonymous"}</span> on <span className="font-medium text-blue-600">{review.tour?.title || "Unknown Tour"}</span></p>
+                        <p><span className="text-amber-600">Supplier:</span> <span className="font-medium text-amber-700">{review.tour?.supplier?.name || "Unknown Supplier"}</span></p>
                       </div>
 
                       {review.photos && review.photos.length > 0 && (
