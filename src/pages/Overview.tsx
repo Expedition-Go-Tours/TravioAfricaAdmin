@@ -55,7 +55,7 @@ interface OverviewData {
   activeUsersLast30Days?: number;
   activeUsersPrevious30?: number;
   topTours?: Array<{ id?: string; title?: string; bookingCount?: number; revenue?: number; averageRating?: number; reviewCount?: number }>;
-  topSuppliers?: Array<{ id?: string; user?: { name?: string; email?: string }; totalEarnings?: number; totalBookings?: number; averageRating?: number }>;
+  topSuppliers?: Array<{ id?: string; user?: { name?: string; email?: string; photoURL?: string }; totalEarnings?: number; totalBookings?: number; averageRating?: number }>;
   bookingStatusDistribution?: Array<{ status?: string; count?: number; }>;
   eventFeed?: Array<{ message?: string; userName?: string; createdAt?: string }>;
 }
@@ -96,7 +96,7 @@ export default function OverviewPage() {
         })),
         topSuppliers: (d.topSuppliers || []).map((s: Record<string, unknown>) => ({
           id: s.id as string,
-          user: { name: s.name as string, email: s.email as string },
+          user: { name: s.name as string, email: s.email as string, photoURL: s.photoURL as string },
           totalEarnings: (s.totalEarnings as number) || 0,
           totalBookings: (s.totalBookings as number) || 0,
           averageRating: (s.averageRating as number) || 0,
@@ -445,8 +445,11 @@ export default function OverviewPage() {
                       onKeyDown={(e) => { if (e.key === "Enter") navigate(`/admin/suppliers/${sup.id}`); }}
                       tabIndex={0}
                     >
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-100 text-xs font-semibold text-green-700">
-                        {sup.user?.name?.charAt(0) || "S"}
+                      <span className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-400 to-green-600 text-xs font-semibold text-white">
+                        {sup.user?.photoURL ? (
+                          <img src={sup.user.photoURL} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                        ) : null}
+                        <span className={sup.user?.photoURL ? "opacity-0" : ""}>{sup.user?.name?.charAt(0)?.toUpperCase() || "S"}</span>
                       </span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
