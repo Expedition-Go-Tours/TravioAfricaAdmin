@@ -54,7 +54,7 @@ interface OverviewData {
   signups?: { today?: number; yesterday?: number };
   activeUsersLast30Days?: number;
   activeUsersPrevious30?: number;
-  topTours?: Array<{ id?: string; title?: string; bookingCount?: number; revenue?: number; averageRating?: number; reviewCount?: number }>;
+  topTours?: Array<{ id?: string; title?: string; coverPhoto?: string; bookingCount?: number; revenue?: number; averageRating?: number; reviewCount?: number }>;
   topSuppliers?: Array<{ id?: string; user?: { name?: string; email?: string; photoURL?: string }; totalEarnings?: number; totalBookings?: number; averageRating?: number }>;
   bookingStatusDistribution?: Array<{ status?: string; count?: number; }>;
   eventFeed?: Array<{ message?: string; userName?: string; createdAt?: string }>;
@@ -89,6 +89,7 @@ export default function OverviewPage() {
         topTours: (d.topTours || []).map((t: Record<string, unknown>) => ({
           id: t.id as string,
           title: t.title as string,
+          coverPhoto: t.coverPhoto as string,
           bookingCount: (t.totalBookings as number) || 0,
           revenue: (t.totalRevenue as number) || 0,
           averageRating: (t.averageRating as number) || 0,
@@ -393,7 +394,17 @@ export default function OverviewPage() {
                         onKeyDown={(e) => { if (e.key === "Enter") navigate("/admin/tours"); }}
                       >
                         <td className="px-5 py-3.5 text-xs font-medium text-text-tertiary">{idx + 1}</td>
-                        <td className="px-5 py-3.5 font-medium text-text-primary">{tour.title}</td>
+                        <td className="px-5 py-3.5">
+                          <div className="flex items-center gap-3">
+                            <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-400 to-green-600 text-xs font-bold text-white">
+                              <span>{tour.title?.charAt(0)?.toUpperCase() || "T"}</span>
+                              {tour.coverPhoto && (
+                                <img src={tour.coverPhoto} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                              )}
+                            </div>
+                            <span className="font-medium text-text-primary">{tour.title}</span>
+                          </div>
+                        </td>
                         <td className="px-5 py-3.5 text-right text-text-primary">{formatNumber(tour.bookingCount)}</td>
                         <td className="px-5 py-3.5 text-right font-medium text-green-700">{formatCurrency(tour.revenue)}</td>
                         <td className="px-5 py-3.5 text-right">
