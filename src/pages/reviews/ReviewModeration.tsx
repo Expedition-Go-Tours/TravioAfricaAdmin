@@ -24,8 +24,8 @@ interface Review {
   rating?: number;
   title?: string;
   comment?: string;
-  customer?: { name?: string };
-  tour?: { title?: string; supplier?: { name?: string } };
+  customer?: { name?: string; photoURL?: string };
+  tour?: { title?: string; supplier?: { name?: string; photoURL?: string } };
   photos?: string[];
   createdAt?: string;
 }
@@ -213,9 +213,21 @@ export default function ReviewModerationPage() {
                         <p className="mt-1 text-sm text-text-secondary leading-relaxed">"{review.comment}"</p>
                       )}
 
-                      <div className="mt-3 space-y-0.5 text-xs text-text-tertiary">
-                        <p><span className="font-medium text-green-700">{review.customer?.name || "Anonymous"}</span> on <span className="font-medium text-blue-600">{review.tour?.title || "Unknown Tour"}</span></p>
-                        <p><span className="text-amber-600">Supplier:</span> <span className="font-medium text-amber-700">{review.tour?.supplier?.name || "Unknown Supplier"}</span></p>
+                      <div className="mt-3 space-y-1.5 text-xs text-text-tertiary">
+                        <div className="flex items-center gap-2">
+                          <span className="relative flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-400 to-green-600 text-[8px] font-bold text-white">
+                            {review.customer?.photoURL ? <img src={review.customer.photoURL} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} /> : null}
+                            <span className={review.customer?.photoURL ? "opacity-0" : ""}>{review.customer?.name?.charAt(0)?.toUpperCase() || "?"}</span>
+                          </span>
+                          <span><span className="font-medium text-green-700">{review.customer?.name || "Anonymous"}</span> on <span className="font-medium text-blue-600">{review.tour?.title || "Unknown Tour"}</span></span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="relative flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-[8px] font-bold text-white">
+                            {review.tour?.supplier?.photoURL ? <img src={review.tour.supplier.photoURL} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} /> : null}
+                            <span className={review.tour?.supplier?.photoURL ? "opacity-0" : ""}>{review.tour?.supplier?.name?.charAt(0)?.toUpperCase() || "?"}</span>
+                          </span>
+                          <span><span className="text-amber-600">Supplier:</span> <span className="font-medium text-amber-700">{review.tour?.supplier?.name || "Unknown Supplier"}</span></span>
+                        </div>
                       </div>
 
                       {review.photos && review.photos.length > 0 && (
