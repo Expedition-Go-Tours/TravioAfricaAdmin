@@ -57,8 +57,8 @@ export default function ReviewModerationPage() {
   const moderateMutation = useMutation({
     mutationFn: (body: { action: string; reason?: string }) =>
       api.patch(`/reviews/${actionReview?.id}/moderate`, body),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "reviews"] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["admin", "reviews"], refetchType: 'all' });
       queryClient.invalidateQueries({ queryKey: ["admin", "reviews-pending-count"] });
       toast.success(`Review ${actionType}d successfully`);
       setActionReview(null);
