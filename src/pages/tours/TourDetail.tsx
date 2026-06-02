@@ -206,8 +206,8 @@ export default function TourDetailPage() {
       {/* Profile Header */}
       <div className="rounded-sm border border-border bg-white shadow-2">
         {tour.coverPhoto || tour.photos?.[0] ? (
-          <div className="relative h-36 rounded-t-sm overflow-hidden">
-            <img src={tour.coverPhoto || tour.photos![0]} alt="" className="h-full w-full object-cover" />
+          <div className="relative h-36 rounded-t-sm overflow-hidden bg-gradient-to-r from-green-600 to-green-700">
+            <img src={tour.coverPhoto || tour.photos![0]} alt="" className="h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
           </div>
         ) : (
@@ -218,7 +218,7 @@ export default function TourDetailPage() {
             <div className="flex items-center gap-4">
               <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-4 border-white bg-green-100 shadow-sm overflow-hidden">
                 {tour.coverPhoto || tour.photos?.[0] ? (
-                  <img src={tour.coverPhoto || tour.photos![0]} alt="" className="h-full w-full object-cover" />
+                  <img src={tour.coverPhoto || tour.photos![0]} alt="" className="h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                 ) : (
                   <span className="text-xl font-bold text-green-700">{tour.title?.charAt(0)?.toUpperCase() || "?"}</span>
                 )}
