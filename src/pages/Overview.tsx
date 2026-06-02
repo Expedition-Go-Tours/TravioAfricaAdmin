@@ -128,7 +128,8 @@ export default function OverviewPage() {
     queryKey: ["admin", "reviews-pending-count"],
     queryFn: async () => {
       const res = await api.get("/reviews/admin/pending?page=1&limit=1");
-      return res.data.data as { reviews: unknown[]; pagination: { totalCount: number } };
+      const d = res.data.data as { reviews: unknown[]; pagination: { totalCount: number }; counts?: { pending?: number } };
+      return d;
     },
   });
 
@@ -299,12 +300,12 @@ export default function OverviewPage() {
         /></motion.div>
         <motion.div variants={fadeIn}><KpiCard
           label="Pending Reviews"
-          value={overviewLoading ? "..." : formatNumber(pendingReviews?.pagination?.totalCount)}
-          numericValue={pendingReviews?.pagination?.totalCount ?? undefined}
+          value={overviewLoading ? "..." : formatNumber(pendingReviews?.counts?.pending)}
+          numericValue={pendingReviews?.counts?.pending ?? undefined}
           format={formatNumber}
           icon={<MessageSquare className="h-4 w-4" />}
           accent="amber"
-          trend={pendingReviews?.pagination?.totalCount ? { value: 0, isPositive: true, text: "Awaiting review" } : undefined}
+          trend={pendingReviews?.counts?.pending ? { value: 0, isPositive: true, text: "Awaiting review" } : undefined}
         /></motion.div>
         <motion.div variants={fadeIn}><KpiCard
           label="Pending Suppliers"
