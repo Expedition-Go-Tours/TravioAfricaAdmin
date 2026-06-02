@@ -298,7 +298,7 @@ export default function OverviewPage() {
             ))
           : (
               <>
-                <RevenuePeriodCard period="Today" revenue={overview?.revenue?.today?.revenue} commission={overview?.revenue?.today?.commission} payout={overview?.revenue?.today?.supplierPayout} />
+                <RevenuePeriodCard period="Today" revenue={overview?.revenue?.today?.revenue} />
                 <RevenuePeriodCard period="This Week" revenue={overview?.revenue?.thisWeek?.revenue} commission={overview?.revenue?.thisWeek?.commission} payout={overview?.revenue?.thisWeek?.supplierPayout} />
                 <RevenuePeriodCard period="This Month" revenue={overview?.revenue?.thisMonth?.revenue} commission={overview?.revenue?.thisMonth?.commission} payout={overview?.revenue?.thisMonth?.supplierPayout} />
                 <RevenuePeriodCard period="Year to Date" revenue={overview?.revenue?.ytd?.revenue} commission={overview?.revenue?.ytd?.commission} payout={overview?.revenue?.ytd?.supplierPayout} />
