@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Download, CheckCircle, XCircle, Send, Ban, Wallet, DollarSign, Search, X } from "lucide-react";
@@ -81,6 +82,9 @@ export default function PayoutsList() {
   const [failReason, setFailReason] = useState("");
   const [releaseMethod, setReleaseMethod] = useState("");
   const [releaseReference, setReleaseReference] = useState("");
+  const location = useLocation();
+  const navigate = useNavigate();
+  const deepLinkHandled = useRef(false);
   const limit = 20;
 
   const statusParam = statusTab === "All" ? "" : statusTab.toUpperCase();
@@ -204,9 +208,21 @@ export default function PayoutsList() {
     },
   ];
 
-  const payoutsRaw = data?.payouts || data?.data?.payouts || [];
+  const payoutsRaw = useMemo(() => data?.payouts || data?.data?.payouts || [], [data]);
   const pagination = data?.pagination || data?.data?.pagination;
   const summary: PayoutSummary | undefined = data?.data?.summary || data?.summary;
+
+  // Deep link from notification — auto-open approve modal for specific payout
+  useEffect(() => {
+    const payoutId = location.state?.payoutId as string | undefined;
+    if (!payoutId || deepLinkHandled.current || payoutsRaw.length === 0) return;
+    const found = payoutsRaw.find((p: Payout) => p.id === payoutId);
+    if (found) {
+      deepLinkHandled.current = true;
+      navigate(location.pathname, { replace: true, state: {} });
+      setTimeout(() => { setActionPayout(found); setActionType("approve"); }, 0);
+    }
+  }, [payoutsRaw, location.pathname, location.state?.payoutId, navigate]);
 
   // Filter payouts by search query
   const query = searchQuery.toLowerCase().trim();
@@ -248,7 +264,7 @@ export default function PayoutsList() {
       )}
 
       <Card>
-        <CardHeader>
+        <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex gap-2 border-b border-border-muted flex-1">
               {statusTabs.map((tab) => (

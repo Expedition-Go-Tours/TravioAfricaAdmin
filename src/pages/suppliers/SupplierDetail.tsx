@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -21,6 +21,12 @@ import {
   Check,
   EyeOff,
   AlertCircle,
+  BarChart3,
+  List,
+  Eye,
+  DollarSign,
+  Star,
+  BookOpen,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -29,10 +35,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { SectionError } from "@/components/shared/SectionError";
+import { SectionEmpty } from "@/components/shared/SectionEmpty";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import api from "@/lib/axios";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatCurrency, formatNumber } from "@/lib/utils";
 
 interface SupplierData {
   id?: string;
@@ -85,13 +92,42 @@ interface SupplierData {
   updatedAt?: string;
 }
 
+interface SupplierOverview {
+  earnings: number;
+  totalBookings: number;
+  averageRating: number;
+  totalReviews: number;
+  tours: { total: number; active: number; draft: number; paused: number; archived: number };
+  bookings: { total: number; pending: number; confirmed: number; completed: number; cancelled: number };
+}
+
+interface SupplierTour {
+  id: string;
+  title: string;
+  coverPhoto?: string;
+  slug: string;
+  status: string;
+  totalBookings: number;
+  averageRating?: number;
+  reviewCount: number;
+  city?: string;
+  country?: string;
+  createdAt: string;
+}
+
+interface SupplierToursResponse {
+  tours: SupplierTour[];
+  pagination: { currentPage: number; totalPages: number; totalCount: number; hasNextPage: boolean; limit: number };
+}
+
 type ActionType = "approve" | "reject" | "request_info" | "activate" | "suspend" | "reactivate" | "delete";
 
 export default function SupplierDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState("business");
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "overview");
   const [modalAction, setModalAction] = useState<ActionType | null>(null);
   const [reason, setReason] = useState("");
 
@@ -121,6 +157,18 @@ export default function SupplierDetailPage() {
 
   const payoutMethods = payoutData?.methods || [];
 
+  const { data: overview, isLoading: overviewLoading } = useQuery({
+    queryKey: ["admin", "supplier", id, "overview"],
+    queryFn: () => api.get(`/suppliers/admin/${id}/overview`).then((r) => r.data?.data as SupplierOverview),
+    enabled: !!id,
+  });
+
+  const { data: toursData, isLoading: toursLoading } = useQuery({
+    queryKey: ["admin", "supplier", id, "tours"],
+    queryFn: () => api.get(`/suppliers/admin/${id}/tours?limit=50`).then((r) => r.data?.data as SupplierToursResponse),
+    enabled: !!id,
+  });
+
   const reviewMutation = useMutation({
     mutationFn: (body: { action: string; notes?: string }) =>
       api.patch(`/suppliers/admin/applications/${id}/review`, body),
@@ -136,7 +184,7 @@ export default function SupplierDetailPage() {
 
   const toggleMutation = useMutation({
     mutationFn: (body: { suspend: boolean; reason?: string }) =>
-      api.patch(`/suppliers/admin/${userId}/suspend`, body),
+      api.patch(`/suppliers/admin/${id}/suspend`, body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "supplier", id] });
       queryClient.invalidateQueries({ queryKey: ["admin", "suppliers"] });
@@ -148,7 +196,7 @@ export default function SupplierDetailPage() {
   });
 
   const activateMutation = useMutation({
-    mutationFn: () => api.patch(`/suppliers/admin/${userId}/activate`),
+    mutationFn: () => api.patch(`/suppliers/admin/${id}/activate`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "supplier", id] });
       queryClient.invalidateQueries({ queryKey: ["admin", "suppliers"] });
@@ -297,17 +345,115 @@ export default function SupplierDetailPage() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="w-full justify-start overflow-x-auto">
+          <TabsTrigger value="overview"><BarChart3 className="mr-1.5 h-3.5 w-3.5" /> Overview</TabsTrigger>
           <TabsTrigger value="business"><Building2 className="mr-1.5 h-3.5 w-3.5" /> Business</TabsTrigger>
           <TabsTrigger value="operating"><Globe className="mr-1.5 h-3.5 w-3.5" /> Operating</TabsTrigger>
           <TabsTrigger value="representative"><Shield className="mr-1.5 h-3.5 w-3.5" /> Rep</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="payout">Payout</TabsTrigger>
           <TabsTrigger value="compliance">Compliance</TabsTrigger>
+          <TabsTrigger value="tours"><List className="mr-1.5 h-3.5 w-3.5" /> Tours</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="overview">
+          <Card>
+            <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Performance Overview</CardTitle></CardHeader>
+            <CardContent className="p-5">
+              {overviewLoading ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
+                </div>
+              ) : !overview ? (
+                <SectionEmpty message="No overview data available" />
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div className="rounded-sm border border-border bg-card p-4 border-l-2 border-l-green-500/60">
+                      <div className="flex items-center gap-2 mb-1">
+                        <DollarSign className="h-4 w-4 text-green-600" />
+                        <p className="text-xs text-text-secondary">Earnings</p>
+                      </div>
+                      <p className="text-lg font-bold text-text-primary">{formatCurrency(overview.earnings)}</p>
+                    </div>
+                    <div className="rounded-sm border border-border bg-card p-4 border-l-2 border-l-blue-500/60">
+                      <div className="flex items-center gap-2 mb-1">
+                        <BookOpen className="h-4 w-4 text-blue-600" />
+                        <p className="text-xs text-text-secondary">Total Bookings</p>
+                      </div>
+                      <p className="text-lg font-bold text-text-primary">{formatNumber(overview.totalBookings)}</p>
+                    </div>
+                    <div className="rounded-sm border border-border bg-card p-4 border-l-2 border-l-amber-500/60">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Star className="h-4 w-4 text-amber-500" />
+                        <p className="text-xs text-text-secondary">Avg Rating</p>
+                      </div>
+                      <p className="text-lg font-bold text-text-primary">{overview.averageRating.toFixed(1)}</p>
+                    </div>
+                    <div className="rounded-sm border border-border bg-card p-4 border-l-2 border-l-green-500/60">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Eye className="h-4 w-4 text-green-600" />
+                        <p className="text-xs text-text-secondary">Total Tours</p>
+                      </div>
+                      <p className="text-lg font-bold text-text-primary">{overview.tours.total}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <p className="text-sm font-semibold text-text-primary mb-3 border-b border-border pb-2">Tours by Status</p>
+                      <div className="space-y-2">
+                        {[
+                          { label: "Active", value: overview.tours.active, color: "bg-green-500" },
+                          { label: "Draft", value: overview.tours.draft, color: "bg-blue-500" },
+                          { label: "Paused", value: overview.tours.paused, color: "bg-amber-500" },
+                          { label: "Archived", value: overview.tours.archived, color: "bg-gray-500" },
+                        ].map((item) => {
+                          const maxVal = Math.max(overview.tours.total, 1);
+                          return (
+                            <div key={item.label} className="flex items-center gap-3">
+                              <span className="w-16 text-xs text-text-secondary">{item.label}</span>
+                              <div className="flex-1 h-4 rounded-sm bg-surface-muted overflow-hidden">
+                                <div className={`h-full rounded-sm ${item.color} transition-all`} style={{ width: `${(item.value / maxVal) * 100}%` }} />
+                              </div>
+                              <span className="w-8 text-xs text-right text-text-primary font-medium">{item.value}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-semibold text-text-primary mb-3 border-b border-border pb-2">Bookings by Status</p>
+                      <div className="space-y-2">
+                        {[
+                          { label: "Confirmed", value: overview.bookings.confirmed, color: "bg-green-500" },
+                          { label: "Pending", value: overview.bookings.pending, color: "bg-amber-500" },
+                          { label: "Completed", value: overview.bookings.completed, color: "bg-blue-500" },
+                          { label: "Cancelled", value: overview.bookings.cancelled, color: "bg-red-500" },
+                        ].map((item) => {
+                          const maxVal = Math.max(overview.bookings.total, 1);
+                          return (
+                            <div key={item.label} className="flex items-center gap-3">
+                              <span className="w-16 text-xs text-text-secondary">{item.label}</span>
+                              <div className="flex-1 h-4 rounded-sm bg-surface-muted overflow-hidden">
+                                <div className={`h-full rounded-sm ${item.color} transition-all`} style={{ width: `${(item.value / maxVal) * 100}%` }} />
+                              </div>
+                              <span className="w-8 text-xs text-right text-text-primary font-medium">{item.value}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="business">
           <Card>
-            <CardHeader><CardTitle className="text-sm font-semibold text-text-primary">Business Information</CardTitle></CardHeader>
+            <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Business Information</CardTitle></CardHeader>
             <CardContent>
               <DetailTable
                 rows={[
@@ -328,7 +474,7 @@ export default function SupplierDetailPage() {
 
         <TabsContent value="operating">
           <Card>
-            <CardHeader><CardTitle className="text-sm font-semibold text-text-primary">Operating Information</CardTitle></CardHeader>
+            <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Operating Information</CardTitle></CardHeader>
             <CardContent>
               <DetailTable
                 rows={[
@@ -348,7 +494,7 @@ export default function SupplierDetailPage() {
 
         <TabsContent value="representative">
           <Card>
-            <CardHeader><CardTitle className="text-sm font-semibold text-text-primary">Representative Information</CardTitle></CardHeader>
+            <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Representative Information</CardTitle></CardHeader>
             <CardContent>
               <DetailTable
                 rows={[
@@ -366,7 +512,7 @@ export default function SupplierDetailPage() {
 
         <TabsContent value="documents">
           <Card>
-            <CardHeader><CardTitle className="text-sm font-semibold text-text-primary">Business Documents</CardTitle></CardHeader>
+            <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Business Documents</CardTitle></CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {[
@@ -420,7 +566,7 @@ export default function SupplierDetailPage() {
               ))
             ) : (
               <Card>
-                <CardHeader><CardTitle className="text-sm font-semibold text-text-primary">Payout Information</CardTitle></CardHeader>
+                <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Payout Information</CardTitle></CardHeader>
                 <CardContent>
                   <DetailTable
                     rows={[
@@ -440,7 +586,7 @@ export default function SupplierDetailPage() {
 
         <TabsContent value="compliance">
           <Card>
-            <CardHeader><CardTitle className="text-sm font-semibold text-text-primary">Compliance Checklist</CardTitle></CardHeader>
+            <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Compliance Checklist</CardTitle></CardHeader>
             <CardContent>
               <div className="space-y-3">
                 {[
@@ -467,6 +613,71 @@ export default function SupplierDetailPage() {
                   </div>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="tours">
+          <Card>
+            <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Tours ({toursData?.pagination?.totalCount ?? "..."})</CardTitle></CardHeader>
+            <CardContent className="p-0">
+              {toursLoading ? (
+                <div className="p-4 space-y-2">
+                  {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+                </div>
+              ) : !toursData?.tours?.length ? (
+                <SectionEmpty message="No tours" />
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border bg-surface-muted/40">
+                        <th className="px-4 py-2.5 text-left text-xs font-semibold text-text-secondary">Tour</th>
+                        <th className="px-4 py-2.5 text-center text-xs font-semibold text-text-secondary">Status</th>
+                        <th className="px-4 py-2.5 text-center text-xs font-semibold text-text-secondary">Bookings</th>
+                        <th className="px-4 py-2.5 text-center text-xs font-semibold text-text-secondary">Rating</th>
+                        <th className="px-4 py-2.5 text-center text-xs font-semibold text-text-secondary">Location</th>
+                        <th className="px-4 py-2.5 text-right text-xs font-semibold text-text-secondary">Created</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {toursData.tours.map((tour) => (
+                        <tr
+                          key={tour.id}
+                          className="border-b border-border last:border-b-0 cursor-pointer hover:bg-surface-muted/30 transition-colors"
+                          onClick={() => navigate(`/admin/tours/${tour.id}`)}
+                          tabIndex={0}
+                          onKeyDown={(e) => { if (e.key === "Enter") navigate(`/admin/tours/${tour.id}`); }}
+                        >
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-3">
+                              <div className="h-8 w-8 shrink-0 rounded-sm bg-surface-muted overflow-hidden">
+                                {tour.coverPhoto ? (
+                                  <img src={tour.coverPhoto} alt="" className="h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                                ) : (
+                                  <div className="h-full w-full flex items-center justify-center text-xs text-text-tertiary">—</div>
+                                )}
+                              </div>
+                              <span className="font-medium text-text-primary truncate">{tour.title}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <StatusBadge status={tour.status} />
+                          </td>
+                          <td className="px-4 py-3 text-center text-text-primary">{formatNumber(tour.totalBookings)}</td>
+                          <td className="px-4 py-3 text-center text-text-primary">
+                            {tour.averageRating != null ? Number(tour.averageRating).toFixed(1) : "—"}
+                          </td>
+                          <td className="px-4 py-3 text-center text-text-secondary text-xs">
+                            {[tour.city, tour.country].filter(Boolean).join(", ") || "—"}
+                          </td>
+                          <td className="px-4 py-3 text-right text-text-tertiary text-xs">{formatDate(tour.createdAt)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

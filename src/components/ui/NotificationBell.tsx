@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -21,6 +22,16 @@ import { getNotifications, getUnreadCount, markAsRead, markAllAsRead } from "@/s
 import { onAdminNotification } from "@/lib/adminSocket";
 import { timeAgo, cn } from "@/lib/utils";
 
+const notificationRouteMap: Record<string, (data?: Record<string, unknown>) => { path: string; state?: Record<string, unknown> } | null> = {
+  NEW_SUPPLIER_APPLICATION: (data) => data?.supplierId ? { path: `/admin/suppliers/${data.supplierId}` } : null,
+  SUPPLIER_STATUS_CHANGE: (data) => data?.supplierId ? { path: `/admin/suppliers/${data.supplierId}` } : null,
+  REVIEW_NEEDS_MODERATION: (data) => data?.reviewId ? { path: "/admin/reviews", state: { reviewId: data.reviewId } } : null,
+  PAYOUT_NEEDS_APPROVAL: (data) => data?.payoutId ? { path: "/admin/payouts", state: { payoutId: data.payoutId } } : null,
+  PAYOUT_PROCESSED: (data) => data?.payoutId ? { path: "/admin/payouts", state: { payoutId: data.payoutId } } : null,
+  PAYOUT_APPROVED: (data) => data?.payoutId ? { path: "/admin/payouts", state: { payoutId: data.payoutId } } : null,
+  SYSTEM_ALERT: (data) => data?.supplierId ? { path: `/admin/suppliers/${data.supplierId}?tab=payout` } : { path: "/admin" },
+};
+
 const typeConfig: Record<string, { icon: React.ReactNode; color: string }> = {
   BOOKING_CONFIRMED: { icon: <ShoppingBag className="h-3.5 w-3.5" />, color: "text-green-600" },
   BOOKING_CANCELLED: { icon: <XCircle className="h-3.5 w-3.5" />, color: "text-red-500" },
@@ -40,6 +51,7 @@ function getTypeConfig(type: string) {
 }
 
 export function NotificationBell() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -170,6 +182,11 @@ export function NotificationBell() {
                         key={n.id}
                         onClick={() => {
                           if (!n.read) markRead.mutate(n.id);
+                          const result = notificationRouteMap[n.type]?.(n.data);
+                          if (result) {
+                            setOpen(false);
+                            navigate(result.path, { state: result.state });
+                          }
                         }}
                         className={cn(
                           "flex w-full gap-3 px-5 py-3.5 text-left transition-colors hover:bg-green-50/40",

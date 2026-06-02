@@ -49,8 +49,8 @@ export default function RevenueTrendPage() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Monthly Revenue Breakdown</CardTitle>
+        <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
+          <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Monthly Revenue Breakdown</CardTitle>
           <div className="flex gap-4">
             {metrics.map((m) => (
               <label key={m.key} className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer">

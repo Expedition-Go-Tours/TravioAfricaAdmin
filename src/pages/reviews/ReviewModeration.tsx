@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Star, ChevronLeft, ChevronRight, ArrowLeft, Search, X, ThumbsUp, MessageSquare, AlertTriangle, Clock } from "lucide-react";
@@ -35,6 +35,7 @@ const statusFilters = ["All", "Pending", "Approved", "Rejected", "Flagged"];
 
 export default function ReviewModerationPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("Pending");
@@ -42,6 +43,7 @@ export default function ReviewModerationPage() {
   const [actionReview, setActionReview] = useState<Review | null>(null);
   const [actionType, setActionType] = useState<"approve" | "reject" | "flag" | null>(null);
   const [reason, setReason] = useState("");
+  const deepLinkHandled = useRef(false);
   const limit = 20;
 
   const statusParam = statusFilter === "All" ? "" : statusFilter.toUpperCase();
@@ -78,6 +80,18 @@ export default function ReviewModerationPage() {
 
   const rawReviews: Review[] = data?.reviews || data?.data?.reviews || [];
   const pagination = data?.pagination || data?.data?.pagination;
+
+  // Deep link from notification — auto-open approve modal for specific review
+  useEffect(() => {
+    const reviewId = location.state?.reviewId as string | undefined;
+    if (!reviewId || deepLinkHandled.current || rawReviews.length === 0) return;
+    const found = rawReviews.find((r: Review) => r.id === reviewId);
+    if (found) {
+      deepLinkHandled.current = true;
+      navigate(location.pathname, { replace: true, state: {} });
+      setTimeout(() => { setActionReview(found); setActionType("approve"); }, 0);
+    }
+  }, [rawReviews, location.pathname, navigate]);
   const counts = data?.counts || data?.data?.counts;
   const pendingCount = counts?.pending ?? pagination?.totalCount ?? rawReviews.length;
   const flaggedCount = counts?.flagged ?? 0;
@@ -135,7 +149,7 @@ export default function ReviewModerationPage() {
 
       {/* Filters */}
       <Card>
-        <CardHeader>
+        <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
           <div className="flex flex-wrap items-center gap-3 pb-3 border-b border-border-muted">
             <div className="relative flex-1 min-w-[200px] max-w-xs">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" />

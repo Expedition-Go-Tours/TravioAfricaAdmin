@@ -152,7 +152,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
         </button>
       </div>
-      <nav className="flex-1 overflow-y-auto p-2" role="navigation">
+      <nav className="flex-1 overflow-y-auto scrollbar-none p-2" role="navigation">
         {navGroups.map((group) => (
           <motion.div
             key={group.group}

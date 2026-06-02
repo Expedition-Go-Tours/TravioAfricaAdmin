@@ -273,7 +273,7 @@ export default function TourDetailPage() {
           {/* Description */}
           {tour.description && (
             <Card>
-              <CardHeader><CardTitle className="text-sm font-semibold text-text-primary">Description</CardTitle></CardHeader>
+              <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Description</CardTitle></CardHeader>
               <CardContent>
                 <p className="text-sm text-text-secondary leading-relaxed">{tour.description}</p>
               </CardContent>
@@ -307,7 +307,7 @@ export default function TourDetailPage() {
               </Card>
               {tour.highlights && tour.highlights.length > 0 && (
                 <Card className="mt-6">
-                  <CardHeader><CardTitle className="text-sm font-semibold text-text-primary">Highlights</CardTitle></CardHeader>
+                  <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Highlights</CardTitle></CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                       {tour.highlights.map((h, i) => (
@@ -416,7 +416,7 @@ export default function TourDetailPage() {
         <div className="space-y-6">
           {/* Supplier Card */}
           <Card>
-            <CardHeader><CardTitle className="text-sm font-semibold text-text-primary">Supplier</CardTitle></CardHeader>
+            <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Supplier</CardTitle></CardHeader>
             <CardContent>
               {tour.supplier ? (
                 <div className="flex items-center gap-3">
@@ -443,7 +443,7 @@ export default function TourDetailPage() {
 
           {/* Performance Stats */}
           <Card>
-            <CardHeader><CardTitle className="text-sm font-semibold text-text-primary">Performance</CardTitle></CardHeader>
+            <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Performance</CardTitle></CardHeader>
             <CardContent className="p-0">
               <DetailTable
                 rows={[

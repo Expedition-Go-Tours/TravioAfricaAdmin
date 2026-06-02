@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  ArrowLeft,
   DollarSign,
   CalendarCheck,
   UserPlus,
@@ -10,27 +10,13 @@ import {
   Clock,
   MessageSquare,
   Building,
-  TrendingUp,
-  TrendingDown,
-  PieChart,
   Activity,
   ArrowRight,
   Star,
-  ChevronRight,
-  ArrowLeft,
   X,
-  Mail,
-  Calendar,
-  Shield,
 } from "lucide-react";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
   PieChart as RePieChart,
   Pie,
@@ -39,14 +25,11 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { StatusBadge } from "@/components/shared/StatusBadge";
-import { AnimatedNumber } from "@/components/shared/AnimatedNumber";
 import { SectionError } from "@/components/shared/SectionError";
 import { SectionEmpty } from "@/components/shared/SectionEmpty";
 import api from "@/lib/axios";
 import { getAdminSocket } from "@/lib/adminSocket";
-import { staggerContainer, fadeIn, fadeInUp } from "@/lib/animations";
-import { formatCurrency, formatNumber, formatDate, timeAgo, cn } from "@/lib/utils";
+import { formatCurrency, formatNumber, formatDate, timeAgo } from "@/lib/utils";
 
 interface OverviewData {
   revenue?: { today?: { revenue?: number }; yesterday?: { revenue?: number }; thisWeek?: { revenue?: number; commission?: number; supplierPayout?: number }; thisMonth?: { revenue?: number; commission?: number; supplierPayout?: number }; ytd?: { revenue?: number; commission?: number; supplierPayout?: number } };
@@ -232,134 +215,143 @@ export default function OverviewPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button onClick={() => navigate(-1)} className="rounded-sm bg-white p-1.5 shadow-sm hover:ring-2 hover:ring-green-300 transition-all">
-            <ArrowLeft className="h-4 w-4 text-text-primary" />
-          </button>
-          <div>
-            <h1 className="text-xl font-semibold text-text-primary">Dashboard Overview</h1>
-            <p className="text-sm text-text-tertiary mt-0.5">Your business at a glance</p>
-          </div>
+      <div className="flex items-center gap-3">
+        <button onClick={() => navigate(-1)} className="rounded-sm bg-white p-1.5 shadow-sm hover:ring-2 hover:ring-green-300 transition-all">
+          <ArrowLeft className="h-4 w-4 text-text-primary" />
+        </button>
+        <div className="border-l-2 border-l-green-500 pl-3">
+          <h1 className="text-lg font-semibold text-text-primary">Overview</h1>
         </div>
       </div>
 
-      {/* KPI Row — green-centric palette grouped by category */}
-      <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
-        <motion.div variants={fadeIn}><KpiCard
+      {/* KPI Row */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+        <KpiCard
           label="Revenue Today"
           value={overviewLoading ? "..." : formatCurrency(overview?.revenue?.today?.revenue)}
-          numericValue={overview?.revenue?.today?.revenue ?? undefined}
-          format={formatCurrency}
           icon={<DollarSign className="h-4 w-4" />}
-          accent="green"
           trend={calcTrend(
             overview?.revenue?.today?.revenue ? Number(overview.revenue.today.revenue) : undefined,
             overview?.revenue?.yesterday?.revenue ? Number(overview.revenue.yesterday.revenue) : undefined,
             "Revenue"
           )}
-        /></motion.div>
-        <motion.div variants={fadeIn}><KpiCard
+          accent="green"
+        />
+        <KpiCard
           label="Bookings Today"
           value={overviewLoading ? "..." : formatNumber(overview?.bookings?.today)}
-          numericValue={overview?.bookings?.today ?? undefined}
-          format={formatNumber}
           icon={<CalendarCheck className="h-4 w-4" />}
-          accent="green"
           onClick={() => setShowTodayBookings(true)}
           trend={calcTrend(overview?.bookings?.today, overview?.bookings?.yesterday, "Bookings")}
-        /></motion.div>
-        <motion.div variants={fadeIn}><KpiCard
+          accent="green"
+        />
+        <KpiCard
           label="New Signups"
           value={overviewLoading ? "..." : formatNumber(overview?.signups?.today)}
-          numericValue={overview?.signups?.today ?? undefined}
-          format={formatNumber}
           icon={<UserPlus className="h-4 w-4" />}
-          accent="blue"
           onClick={() => setShowNewSignups(true)}
           trend={calcTrend(overview?.signups?.today, overview?.signups?.yesterday, "Signups")}
-        /></motion.div>
-        <motion.div variants={fadeIn}><KpiCard
+          accent="blue"
+        />
+        <KpiCard
           label="Active Users (30d)"
           value={overviewLoading ? "..." : formatNumber(overview?.activeUsersLast30Days)}
-          numericValue={overview?.activeUsersLast30Days ?? undefined}
-          format={formatNumber}
           icon={<Users className="h-4 w-4" />}
-          accent="blue"
           onClick={() => setShowActiveUsers(true)}
           trend={calcTrend(overview?.activeUsersLast30Days, overview?.activeUsersPrevious30, "Active Users")}
-        /></motion.div>
-        <motion.div variants={fadeIn}><KpiCard
+          accent="blue"
+        />
+        <KpiCard
           label="Pending Payouts"
           value={overviewLoading ? "..." : formatNumber(payoutSummary?.pending?.count)}
-          numericValue={payoutSummary?.pending?.count ?? undefined}
-          format={formatNumber}
           icon={<Clock className="h-4 w-4" />}
-          accent="amber"
           trend={payoutSummary?.pending?.count ? { value: 0, isPositive: true, text: "Awaiting payout" } : undefined}
-        /></motion.div>
-        <motion.div variants={fadeIn}><KpiCard
+          accent="amber"
+        />
+        <KpiCard
           label="Pending Reviews"
           value={overviewLoading ? "..." : formatNumber(pendingReviews?.counts?.pending)}
-          numericValue={pendingReviews?.counts?.pending ?? undefined}
-          format={formatNumber}
           icon={<MessageSquare className="h-4 w-4" />}
-          accent="amber"
           trend={pendingReviews?.counts?.pending ? { value: 0, isPositive: true, text: "Awaiting review" } : undefined}
-        /></motion.div>
-        <motion.div variants={fadeIn}><KpiCard
+          accent="amber"
+        />
+        <KpiCard
           label="Pending Suppliers"
           value={overviewLoading ? "..." : formatNumber(pendingSuppliers?.pagination?.totalCount)}
-          numericValue={pendingSuppliers?.pagination?.totalCount ?? undefined}
-          format={formatNumber}
           icon={<Building className="h-4 w-4" />}
-          accent="amber"
           trend={pendingSuppliers?.pagination?.totalCount ? { value: 0, isPositive: true, text: "Awaiting approval" } : undefined}
-        /></motion.div>
-      </motion.div>
+          accent="amber"
+        />
+      </div>
 
       {/* Revenue Period Comparison */}
-      <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {overviewLoading
           ? Array.from({ length: 4 }).map((_, i) => (
-              <motion.div variants={fadeIn} key={i}>
-                <Card>
-                  <CardContent className="p-4">
-                    <Skeleton className="mb-2 h-4 w-16" />
-                    <Skeleton className="h-7 w-24" />
-                    <Skeleton className="mt-1.5 h-3 w-20" />
-                  </CardContent>
-                </Card>
-              </motion.div>
+              <Card key={i}>
+                <CardContent className="p-4">
+                  <Skeleton className="mb-2 h-4 w-16" />
+                  <Skeleton className="h-7 w-24" />
+                  <Skeleton className="mt-1.5 h-3 w-20" />
+                </CardContent>
+              </Card>
             ))
           : (
               <>
-                <motion.div variants={fadeIn}><RevenuePeriodCard period="Today" data={overview?.revenue?.today} /></motion.div>
-                <motion.div variants={fadeIn}><RevenuePeriodCard period="This Week" data={overview?.revenue?.thisWeek} /></motion.div>
-                <motion.div variants={fadeIn}><RevenuePeriodCard period="This Month" data={overview?.revenue?.thisMonth} /></motion.div>
-                <motion.div variants={fadeIn}><RevenuePeriodCard period="Year to Date" data={overview?.revenue?.ytd} /></motion.div>
+                <RevenuePeriodCard period="Today" revenue={overview?.revenue?.today?.revenue} commission={overview?.revenue?.today?.commission} payout={overview?.revenue?.today?.supplierPayout} />
+                <RevenuePeriodCard period="This Week" revenue={overview?.revenue?.thisWeek?.revenue} commission={overview?.revenue?.thisWeek?.commission} payout={overview?.revenue?.thisWeek?.supplierPayout} />
+                <RevenuePeriodCard period="This Month" revenue={overview?.revenue?.thisMonth?.revenue} commission={overview?.revenue?.thisMonth?.commission} payout={overview?.revenue?.thisMonth?.supplierPayout} />
+                <RevenuePeriodCard period="Year to Date" revenue={overview?.revenue?.ytd?.revenue} commission={overview?.revenue?.ytd?.commission} payout={overview?.revenue?.ytd?.supplierPayout} />
               </>
             )}
-      </motion.div>
+      </div>
 
-      {/* Revenue Trend + Top Tours */}
+      {/* Top Suppliers + Top Tours */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-1 overflow-hidden border-0 shadow-sm">
-          <CardHeader className="bg-gradient-to-r from-green-50 to-white border-b border-green-100 border-l-2 border-l-green-500">
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-green-800">
-              <TrendingUp className="h-4 w-4 text-green-600" />
-              Revenue Trend (24mo)
+        {/* Top Suppliers */}
+        <Card className="lg:col-span-1">
+          <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+              Top Suppliers
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <RevenueTrendChartSection />
+          <CardContent className="p-0">
+            {overviewLoading ? (
+              <div className="p-4 space-y-3">
+                {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+              </div>
+            ) : overviewError ? (
+              <SectionError message="Failed to load suppliers" onRetry={() => overviewRefetch()} />
+            ) : !overview?.topSuppliers?.length ? (
+              <SectionEmpty message="No supplier data" />
+            ) : (
+              <div className="divide-y divide-border">
+                {(overview.topSuppliers || []).slice(0, 5).map((sup, idx) => (
+                  <div
+                    key={sup.id || idx}
+                    className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-surface-muted/30 transition-colors"
+                    onClick={() => navigate(`/admin/suppliers/${sup.id}`)}
+                    onKeyDown={(e) => { if (e.key === "Enter") navigate(`/admin/suppliers/${sup.id}`); }}
+                    tabIndex={0}
+                  >
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-100 text-xs font-medium text-green-700">
+                      {sup.user?.name?.charAt(0)?.toUpperCase() || "S"}
+                    </span>
+                    <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
+                      <p className="text-sm text-text-primary truncate">{sup.user?.name || "Unknown"}</p>
+                      <span className="text-sm text-text-secondary shrink-0">{formatCurrency(sup.totalEarnings)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-2 overflow-hidden border-0 shadow-sm">
-          <CardHeader className="bg-gradient-to-r from-amber-50 to-white border-b border-amber-100 border-l-2 border-l-amber-500">
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-amber-800">
-              <Star className="h-4 w-4 text-amber-500" />
+        {/* Top Tours */}
+        <Card className="lg:col-span-2">
+          <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
               Top Tours
             </CardTitle>
           </CardHeader>
@@ -374,47 +366,37 @@ export default function OverviewPage() {
               <SectionEmpty message="No top tours data" />
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm table-fixed">
                   <thead>
-                    <tr className="border-b border-border-muted bg-gradient-to-r from-green-50 to-green-50/80">
-                      <th className="px-5 py-3 text-left text-xs font-semibold tracking-wider text-green-800">#</th>
-                      <th className="px-5 py-3 text-left text-xs font-semibold tracking-wider text-green-800">Tour</th>
-                      <th className="px-5 py-3 text-right text-xs font-semibold tracking-wider text-green-800">Bookings</th>
-                      <th className="px-5 py-3 text-right text-xs font-semibold tracking-wider text-green-800">Revenue</th>
-                      <th className="px-5 py-3 text-right text-xs font-semibold tracking-wider text-green-800">Rating</th>
-                      <th className="px-5 py-3 text-right text-xs font-semibold tracking-wider text-green-800">Reviews</th>
+                    <tr className="border-b border-border bg-surface-muted/40">
+                      <th className="px-4 py-2.5 text-left text-xs font-semibold text-text-secondary" colSpan={2}>Tour</th>
+                      <th className="px-4 py-2.5 text-center text-xs font-semibold text-text-secondary">Bookings</th>
+                      <th className="px-4 py-2.5 text-center text-xs font-semibold text-text-secondary">Revenue</th>
+                      <th className="px-4 py-2.5 text-center text-xs font-semibold text-text-secondary">Rating</th>
+                      <th className="px-4 py-2.5 text-center text-xs font-semibold text-text-secondary">Reviews</th>
                     </tr>
                   </thead>
                   <tbody>
                     {overview.topTours.map((tour, idx) => (
                       <tr
                         key={tour.id || idx}
-                        className="border-b border-border-muted transition-all last:border-b-0 cursor-pointer hover:bg-green-50/40 even:bg-green-50/20"
+                        className="border-b border-border last:border-b-0 cursor-pointer hover:bg-surface-muted/30 transition-colors"
                         onClick={() => navigate("/admin/tours")}
                         tabIndex={0}
                         onKeyDown={(e) => { if (e.key === "Enter") navigate("/admin/tours"); }}
                       >
-                        <td className="px-5 py-3.5 text-xs font-medium text-text-tertiary">{idx + 1}</td>
-                        <td className="px-5 py-3.5">
+                        <td colSpan={2} className="px-4 py-3">
                           <div className="flex items-center gap-3">
-                            <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-400 to-green-600 text-xs font-bold text-white">
-                              <span>{tour.title?.charAt(0)?.toUpperCase() || "T"}</span>
-                              {tour.coverPhoto && (
-                                <img src={tour.coverPhoto} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                              )}
-                            </div>
-                            <span className="font-medium text-text-primary">{tour.title}</span>
+                            <span className="w-5 text-center text-xs font-medium text-text-tertiary shrink-0">{idx + 1}</span>
+                            <span className="font-medium text-text-primary truncate min-w-0">{tour.title}</span>
                           </div>
                         </td>
-                        <td className="px-5 py-3.5 text-right text-text-primary">{formatNumber(tour.bookingCount)}</td>
-                        <td className="px-5 py-3.5 text-right font-medium text-green-700">{formatCurrency(tour.revenue)}</td>
-                        <td className="px-5 py-3.5 text-right">
-                          <span className="inline-flex items-center gap-1 text-amber-600">
-                            <Star className="h-3 w-3 fill-amber-400" />
-                            {tour.averageRating != null ? Number(tour.averageRating).toFixed(1) : "—"}
-                          </span>
+                        <td className="px-4 py-3 text-center text-text-primary text-sm">{formatNumber(tour.bookingCount)}</td>
+                        <td className="px-4 py-3 text-center text-text-primary text-sm">{formatCurrency(tour.revenue)}</td>
+                        <td className="px-4 py-3 text-center text-sm">
+                          {tour.averageRating != null ? Number(tour.averageRating).toFixed(1) : "—"}
                         </td>
-                        <td className="px-5 py-3.5 text-right text-text-primary">{formatNumber(tour.reviewCount)}</td>
+                        <td className="px-4 py-3 text-center text-text-primary text-sm">{formatNumber(tour.reviewCount)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -425,69 +407,12 @@ export default function OverviewPage() {
         </Card>
       </div>
 
-      {/* Bottom Grid: Suppliers, Booking Status, Activity, Payouts */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-4">
-        {/* Top Suppliers */}
-        <Card className="xl:col-span-1 overflow-hidden border-0 shadow-sm">
-          <CardHeader className="bg-gradient-to-r from-green-50 to-white border-b border-green-100 border-l-2 border-l-green-500">
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-green-800">
-              <Building className="h-4 w-4 text-green-600" />
-              Top Suppliers
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            {overviewLoading ? (
-              <div className="p-4 space-y-3">
-                {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
-              </div>
-            ) : overviewError ? (
-              <SectionError message="Failed to load suppliers" onRetry={() => overviewRefetch()} />
-            ) : !overview?.topSuppliers?.length ? (
-              <SectionEmpty message="No supplier data" />
-            ) : (
-              <div className="divide-y divide-border-muted">
-                {(overview.topSuppliers || []).slice(0, 5).map((sup, idx) => {
-                  const maxEarnings = Math.max(...(overview.topSuppliers || []).map((s) => s.totalEarnings || 0));
-                  const pct = maxEarnings ? ((sup.totalEarnings || 0) / maxEarnings) * 100 : 0;
-                  return (
-                    <div
-                      key={sup.id || idx}
-                      className="flex items-center gap-3 px-5 py-3 cursor-pointer transition-colors hover:bg-green-50/40"
-                      onClick={() => navigate(`/admin/suppliers/${sup.id}`)}
-                      onKeyDown={(e) => { if (e.key === "Enter") navigate(`/admin/suppliers/${sup.id}`); }}
-                      tabIndex={0}
-                    >
-                      <span className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-400 to-green-600 text-xs font-semibold text-white">
-                        {sup.user?.photoURL ? (
-                          <img src={sup.user.photoURL} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                        ) : null}
-                        <span className={sup.user?.photoURL ? "opacity-0" : ""}>{sup.user?.name?.charAt(0)?.toUpperCase() || "S"}</span>
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium text-text-primary truncate">{sup.user?.name || "Unknown"}</p>
-                          <ChevronRight className="h-3.5 w-3.5 text-text-tertiary shrink-0" />
-                        </div>
-                        <div className="mt-1 flex items-center gap-2">
-                          <div className="flex-1 h-1.5 rounded-full bg-green-100 overflow-hidden">
-                            <div className="h-full rounded-full bg-gradient-to-r from-green-500 to-green-400" style={{ width: `${pct}%` }} />
-                          </div>
-                          <span className="text-xs font-medium text-green-700 shrink-0">{formatCurrency(sup.totalEarnings)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
+      {/* Bottom Grid: Booking Status, Activity, Payouts */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
         {/* Booking Status */}
-        <Card className="xl:col-span-1 overflow-hidden border-0 shadow-sm">
-          <CardHeader className="bg-gradient-to-r from-green-50 to-white border-b border-green-100 border-l-2 border-l-green-500">
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-green-800">
-              <PieChart className="h-4 w-4 text-green-600" />
+        <Card className="xl:col-span-1">
+          <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
               Booking Status
             </CardTitle>
           </CardHeader>
@@ -532,10 +457,9 @@ export default function OverviewPage() {
         </Card>
 
         {/* Recent Activity */}
-        <Card className="xl:col-span-1 overflow-hidden border-0 shadow-sm">
-          <CardHeader className="bg-gradient-to-r from-green-50 to-white border-b border-green-100 border-l-2 border-l-green-500">
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-green-800">
-              <Activity className="h-4 w-4 text-green-600" />
+        <Card className="xl:col-span-1">
+          <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
               Recent Activity
             </CardTitle>
           </CardHeader>
@@ -549,19 +473,14 @@ export default function OverviewPage() {
             ) : !overview?.eventFeed?.length ? (
               <SectionEmpty message="No recent activity" />
             ) : (
-              <div className="max-h-64 overflow-y-auto divide-y divide-border-muted">
+              <div className="max-h-64 overflow-y-auto divide-y divide-border">
                 {overview.eventFeed.map((event, idx) => (
-                  <div key={idx} className="flex items-start gap-3 px-5 py-3 transition-colors hover:bg-green-50/20">
-                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100">
-                      <Activity className="h-3 w-3 text-green-600" />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-sm text-text-primary leading-snug">{event.message}</p>
-                      <p className="text-xs text-text-tertiary mt-0.5">
-                        {event.userName && <span className="font-medium text-text-secondary">{event.userName} · </span>}
-                        {timeAgo(event.createdAt)}
-                      </p>
-                    </div>
+                  <div key={idx} className="px-4 py-2.5">
+                    <p className="text-sm text-text-primary">{event.message}</p>
+                    <p className="text-xs text-text-tertiary mt-0.5">
+                      {event.userName && <>{event.userName} · </>}
+                      {timeAgo(event.createdAt)}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -570,38 +489,33 @@ export default function OverviewPage() {
         </Card>
 
         {/* Payout Summary */}
-        <Card className="xl:col-span-1 overflow-hidden border-0 shadow-sm">
-          <CardHeader className="bg-gradient-to-r from-amber-50 to-white border-b border-amber-100 border-l-2 border-l-amber-500">
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-amber-800">
-              <DollarSign className="h-4 w-4 text-amber-600" />
+        <Card className="xl:col-span-1">
+          <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
               Payout Summary
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-5">
+          <CardContent className="pt-4 space-y-3">
             {!payoutSummary ? (
-              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-28 w-full" />
             ) : (
-              <div className="space-y-4">
-                <div className="rounded-sm bg-gradient-to-br from-amber-50 to-amber-50/50 border border-amber-200/50 p-3.5">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <Clock className="h-3.5 w-3.5 text-amber-600" />
-                    <p className="text-xs font-medium text-amber-700">Pending</p>
-                  </div>
-                  <p className="text-lg font-bold text-amber-900">{formatNumber(payoutSummary.pending?.count)}</p>
-                  <p className="text-xs text-amber-700/70 mt-0.5">totalling {formatCurrency(payoutSummary.pending?.totalAmount)}</p>
+              <>
+                <div className="flex items-center justify-between border-l-2 border-l-amber-500/60 pl-2 pb-2 border-b border-border">
+                  <span className="text-sm text-text-secondary">Pending</span>
+                  <span className="text-sm font-medium">{formatNumber(payoutSummary.pending?.count)}</span>
                 </div>
-                <div className="rounded-sm bg-gradient-to-br from-green-50 to-green-50/50 border border-green-200/50 p-3.5">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <TrendingUp className="h-3.5 w-3.5 text-green-600" />
-                    <p className="text-xs font-medium text-green-700">Paid This Month</p>
-                  </div>
-                  <p className="text-lg font-bold text-green-900">{formatNumber(payoutSummary.paidThisMonth?.count)}</p>
-                  <p className="text-xs text-green-700/70 mt-0.5">totalling {formatCurrency(payoutSummary.paidThisMonth?.totalAmount)}</p>
+                <div className="flex items-center justify-between border-l-2 border-l-green-500/60 pl-2 pb-2 border-b border-border">
+                  <span className="text-sm text-text-secondary">Paid This Month</span>
+                  <span className="text-sm font-medium">{formatNumber(payoutSummary.paidThisMonth?.count)}</span>
                 </div>
-                <Button variant="outline" size="sm" className="w-full border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800" onClick={() => navigate("/admin/payouts")}>
+                <div className="text-xs text-text-tertiary space-y-1 pt-1">
+                  <div className="flex justify-between"><span>Pending total</span><span>{formatCurrency(payoutSummary.pending?.totalAmount)}</span></div>
+                  <div className="flex justify-between"><span>Paid total</span><span>{formatCurrency(payoutSummary.paidThisMonth?.totalAmount)}</span></div>
+                </div>
+                <Button variant="outline" size="sm" className="w-full" onClick={() => navigate("/admin/payouts")}>
                   View All Payouts <ArrowRight className="ml-1 h-3 w-3" />
                 </Button>
-              </div>
+              </>
             )}
           </CardContent>
         </Card>
@@ -609,19 +523,11 @@ export default function OverviewPage() {
 
       {/* Active Users Dialog */}
       {showActiveUsers && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setShowActiveUsers(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowActiveUsers(false)}>
           <div className="w-full max-w-lg rounded-sm border border-border bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-border-muted bg-gradient-to-r from-blue-50 to-white px-5 py-3.5 border-l-2 border-l-blue-500">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
-                  <Users className="h-4 w-4 text-blue-600" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-semibold text-blue-800">Active Users (30d)</h2>
-                  <p className="text-xs text-text-tertiary">{activeUsersData?.length || 0} users</p>
-                </div>
-              </div>
-              <button onClick={() => setShowActiveUsers(false)} className="rounded-sm p-1 text-text-tertiary hover:bg-surface-muted hover:text-text-primary transition-colors">
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
+              <h2 className="text-sm font-semibold">Active Users (30d)</h2>
+              <button onClick={() => setShowActiveUsers(false)} className="rounded-sm p-1 text-text-tertiary hover:bg-surface-muted transition-colors">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -633,32 +539,15 @@ export default function OverviewPage() {
               ) : !activeUsersData?.length ? (
                 <div className="py-10 text-center text-sm text-text-tertiary">No active users in the last 30 days</div>
               ) : (
-                <div className="divide-y divide-border-muted">
+                <div className="divide-y divide-border">
                   {activeUsersData.map((user) => (
-                    <div key={user.id} className="flex items-start gap-3 px-5 py-3.5 transition-colors hover:bg-blue-50/30">
-                      <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-xs font-bold text-white mt-0.5">
-                        <span>{user.name?.charAt(0)?.toUpperCase() || "?"}</span>
-                        {user.photoURL && (
-                          <img
-                            src={user.photoURL}
-                            alt={user.name || ""}
-                            className="absolute inset-0 h-full w-full object-cover"
-                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                          />
-                        )}
+                    <div key={user.id} className="flex items-start gap-3 px-4 py-2.5">
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-muted text-xs font-medium text-text-secondary mt-0.5">
+                        {user.name?.charAt(0)?.toUpperCase() || "?"}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-text-primary truncate">{user.name || "Unknown"}</p>
-                        <p className="text-xs text-text-tertiary truncate mt-0.5 flex items-center gap-1">
-                          <Mail className="h-3 w-3 shrink-0" />
-                          {user.email || "—"}
-                        </p>
-                        {user.roles && user.roles.length > 0 && (
-                          <p className="text-xs text-text-tertiary truncate mt-0.5 flex items-center gap-1">
-                            <Shield className="h-3 w-3 shrink-0" />
-                            {user.roles.join(", ")}
-                          </p>
-                        )}
+                        <p className="text-sm text-text-primary truncate">{user.name || "Unknown"}</p>
+                        <p className="text-xs text-text-tertiary truncate">{user.email || "—"}</p>
                       </div>
                       {user.lastLoginAt && (
                         <span className="shrink-0 text-xs text-text-tertiary whitespace-nowrap pt-0.5">{formatDate(user.lastLoginAt)}</span>
@@ -674,19 +563,11 @@ export default function OverviewPage() {
 
       {/* Today's Bookings Dialog */}
       {showTodayBookings && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setShowTodayBookings(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowTodayBookings(false)}>
           <div className="w-full max-w-2xl rounded-sm border border-border bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-border-muted bg-gradient-to-r from-green-50 to-white px-5 py-3.5 border-l-2 border-l-green-500">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100">
-                  <CalendarCheck className="h-4 w-4 text-green-600" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-semibold text-green-800">Today's Bookings</h2>
-                  <p className="text-xs text-text-tertiary">{todayBookings?.length || 0} bookings</p>
-                </div>
-              </div>
-              <button onClick={() => setShowTodayBookings(false)} className="rounded-sm p-1 text-text-tertiary hover:bg-surface-muted hover:text-text-primary transition-colors">
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
+              <h2 className="text-sm font-semibold">Today's Bookings</h2>
+              <button onClick={() => setShowTodayBookings(false)} className="rounded-sm p-1 text-text-tertiary hover:bg-surface-muted transition-colors">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -698,30 +579,21 @@ export default function OverviewPage() {
               ) : !todayBookings?.length ? (
                 <div className="py-10 text-center text-sm text-text-tertiary">No bookings today</div>
               ) : (
-                <div className="divide-y divide-border-muted">
+                <div className="divide-y divide-border">
                   {todayBookings.map((booking) => (
-                    <div key={booking.id} className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-green-50/30">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600 text-xs font-bold text-white">
-                        {booking.bookingNumber?.slice(-4) || "?"}
-                      </div>
+                    <div key={booking.id} className="flex items-center gap-4 px-4 py-2.5">
                       <div className="flex-1 min-w-0 grid grid-cols-3 gap-4">
                         <div>
-                          <p className="text-sm font-medium text-text-primary truncate">{booking.customer?.name || "Unknown"}</p>
-                          <p className="text-xs text-text-tertiary truncate mt-0.5">{booking.bookingNumber}</p>
+                          <p className="text-sm text-text-primary truncate">{booking.customer?.name || "Unknown"}</p>
+                          <p className="text-xs text-text-tertiary truncate">{booking.bookingNumber}</p>
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-text-primary truncate">{booking.tour?.title || "—"}</p>
-                          <p className="text-xs text-text-tertiary truncate mt-0.5">
-                            Supplier: {booking.tour?.supplier?.name || "—"}
-                          </p>
+                          <p className="text-sm text-text-primary truncate">{booking.tour?.title || "—"}</p>
+                          <p className="text-xs text-text-tertiary truncate">{booking.tour?.supplier?.name || "—"}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-semibold text-green-700">
-                            {formatCurrency(booking.total)} {booking.currency}
-                          </p>
-                          <p className={`text-xs font-medium mt-0.5 ${booking.status === "CONFIRMED" || booking.status === "COMPLETED" ? "text-green-600" : booking.status === "CANCELLED" ? "text-red-500" : "text-amber-600"}`}>
-                            {booking.status}
-                          </p>
+                          <p className="text-sm text-text-primary">{formatCurrency(booking.total)} {booking.currency}</p>
+                          <p className="text-xs text-text-tertiary mt-0.5">{booking.status}</p>
                         </div>
                       </div>
                     </div>
@@ -735,19 +607,11 @@ export default function OverviewPage() {
 
       {/* New Signups Dialog */}
       {showNewSignups && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setShowNewSignups(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowNewSignups(false)}>
           <div className="w-full max-w-lg rounded-sm border border-border bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-border-muted bg-gradient-to-r from-blue-50 to-white px-5 py-3.5 border-l-2 border-l-blue-500">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
-                  <UserPlus className="h-4 w-4 text-blue-600" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-semibold text-blue-800">New Signups (30d)</h2>
-                  <p className="text-xs text-text-tertiary">{newSignupsData?.length || 0} users</p>
-                </div>
-              </div>
-              <button onClick={() => setShowNewSignups(false)} className="rounded-sm p-1 text-text-tertiary hover:bg-surface-muted hover:text-text-primary transition-colors">
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
+              <h2 className="text-sm font-semibold">New Signups (30d)</h2>
+              <button onClick={() => setShowNewSignups(false)} className="rounded-sm p-1 text-text-tertiary hover:bg-surface-muted transition-colors">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -759,32 +623,15 @@ export default function OverviewPage() {
               ) : !newSignupsData?.length ? (
                 <div className="py-10 text-center text-sm text-text-tertiary">No new signups in the last 30 days</div>
               ) : (
-                <div className="divide-y divide-border-muted">
+                <div className="divide-y divide-border">
                   {newSignupsData.map((user) => (
-                    <div key={user.id} className="flex items-start gap-3 px-5 py-3.5 transition-colors hover:bg-blue-50/30">
-                      <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-xs font-bold text-white mt-0.5">
-                        <span>{user.name?.charAt(0)?.toUpperCase() || "?"}</span>
-                        {user.photoURL && (
-                          <img
-                            src={user.photoURL}
-                            alt={user.name || ""}
-                            className="absolute inset-0 h-full w-full object-cover"
-                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                          />
-                        )}
+                    <div key={user.id} className="flex items-start gap-3 px-4 py-2.5">
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-muted text-xs font-medium text-text-secondary mt-0.5">
+                        {user.name?.charAt(0)?.toUpperCase() || "?"}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-text-primary truncate">{user.name || "Unknown"}</p>
-                        <p className="text-xs text-text-tertiary truncate mt-0.5 flex items-center gap-1">
-                          <Mail className="h-3 w-3 shrink-0" />
-                          {user.email || "—"}
-                        </p>
-                        {user.roles && user.roles.length > 0 && (
-                          <p className="text-xs text-text-tertiary truncate mt-0.5 flex items-center gap-1">
-                            <Shield className="h-3 w-3 shrink-0" />
-                            {user.roles.join(", ")}
-                          </p>
-                        )}
+                        <p className="text-sm text-text-primary truncate">{user.name || "Unknown"}</p>
+                        <p className="text-xs text-text-tertiary truncate">{user.email || "—"}</p>
                       </div>
                       {user.createdAt && (
                         <span className="shrink-0 text-xs text-text-tertiary whitespace-nowrap pt-0.5">{formatDate(user.createdAt)}</span>
@@ -803,148 +650,72 @@ export default function OverviewPage() {
 
 /* ── Sub-components ── */
 
+const accentBorders: Record<string, string> = {
+  green: "border-l-green-500/60",
+  blue: "border-l-blue-500/60",
+  amber: "border-l-amber-500/60",
+};
+
+const accentIconBg: Record<string, string> = {
+  green: "bg-green-100 text-green-700",
+  blue: "bg-blue-100 text-blue-700",
+  amber: "bg-amber-100 text-amber-700",
+};
+
 function KpiCard({
   label,
   value,
   icon,
-  accent,
   trend,
   onClick,
-  numericValue,
-  format,
+  accent = "green",
 }: {
   label: string;
   value: string;
   icon: React.ReactNode;
-  accent: "green" | "blue" | "amber";
   trend?: { value: number; isPositive: boolean; text?: string };
   onClick?: () => void;
-  numericValue?: number;
-  format?: (n: number) => string;
+  accent?: string;
 }) {
-  const accentMap = {
-    green: {
-      bg: "bg-gradient-to-br from-green-50 to-white",
-      border: "border-green-200/40",
-      iconBg: "bg-green-100",
-      iconColor: "text-green-600",
-    },
-    blue: {
-      bg: "bg-gradient-to-br from-blue-50 to-white",
-      border: "border-blue-200/40",
-      iconBg: "bg-blue-100",
-      iconColor: "text-blue-600",
-    },
-    amber: {
-      bg: "bg-gradient-to-br from-amber-50 to-white",
-      border: "border-amber-200/40",
-      iconBg: "bg-amber-100",
-      iconColor: "text-amber-600",
-    },
-  };
-
-  const a = accentMap[accent];
-
   return (
-    <motion.div
-      whileHover={{ y: -2 }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ duration: 0.2, ease: "easeOut" }}
-      className={`rounded-sm border ${a.border} ${a.bg} p-3.5 shadow-2 transition-all hover:shadow-md ${onClick ? "cursor-pointer" : ""}`}
+    <div
+      className={`rounded-sm border border-border bg-card p-3 border-l-2 ${accentBorders[accent] || accentBorders.green} ${onClick ? "cursor-pointer" : ""} transition-colors hover:bg-surface-muted/20`}
       onClick={onClick}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={onClick ? (e) => { if (e.key === "Enter") onClick(); } : undefined}
     >
-      <div className="flex items-start justify-between">
+      <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
           <p className="text-xs text-text-secondary truncate">{label}</p>
-          <p className="mt-1 text-lg font-bold text-text-primary leading-tight">{numericValue != null ? <AnimatedNumber value={numericValue} format={format} /> : value}</p>
-          {trend && (
-            <>
-              <p className={`mt-1 inline-flex items-center gap-0.5 text-xs font-medium ${trend.isPositive ? "text-green-600" : "text-red-500"}`}>
-                {trend.isPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                {trend.value > 0 ? `${trend.isPositive ? "+" : "-"}${trend.value}%` : ""}
-              </p>
-              {trend.text && (
-                <p className={`mt-0.5 text-[10px] leading-tight ${trend.isPositive ? "text-green-600/70" : "text-red-500/70"}`}>{trend.text}</p>
-              )}
-            </>
+          <p className="mt-0.5 text-base font-semibold text-text-primary">{value}</p>
+          {trend && trend.value > 0 && (
+            <p className={`mt-0.5 text-xs ${trend.isPositive ? "text-green-600" : "text-red-500"}`}>
+              {trend.isPositive ? "+" : "-"}{trend.value}%
+            </p>
           )}
         </div>
-        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${a.iconBg} ${a.iconColor}`}>
+        <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${accentIconBg[accent] || accentIconBg.green}`}>
           {icon}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
-function RevenuePeriodCard({ period, data }: { period: string; data?: { revenue?: number; commission?: number; supplierPayout?: number } }) {
+function RevenuePeriodCard({ period, revenue, commission, payout }: { period: string; revenue?: number; commission?: number; payout?: number }) {
   return (
-    <Card className="overflow-hidden border-0 shadow-sm">
-      <CardContent className="p-0">
-        <div className="bg-gradient-to-r from-green-50 to-white px-4 py-3 border-b border-green-100 border-l-2 border-l-green-500">
-          <p className="text-xs font-semibold text-green-800 uppercase tracking-wider">{period}</p>
-        </div>
-        <div className="p-4">
-          <p className="text-xl font-bold text-text-primary">{formatCurrency(data?.revenue)}</p>
-          <div className="mt-2 flex items-center gap-3 text-xs text-text-tertiary border-t border-border-muted pt-2.5">
-            <span className="flex items-center gap-1">
-              <span className="h-2 w-2 rounded-full bg-green-500" />
-              Comm {formatCurrency(data?.commission)}
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="h-2 w-2 rounded-full bg-amber-500" />
-              Payout {formatCurrency(data?.supplierPayout)}
-            </span>
-          </div>
+    <Card>
+      <CardContent className="p-4 border-t-2 border-t-green-500/40">
+        <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">{period}</p>
+        <p className="text-lg font-bold text-text-primary">{formatCurrency(revenue)}</p>
+        <div className="mt-2 flex items-center gap-3 text-xs text-text-tertiary">
+          <span>Comm: {formatCurrency(commission)}</span>
+          <span>Payout: {formatCurrency(payout)}</span>
         </div>
       </CardContent>
     </Card>
   );
 }
 
-function RevenueTrendChartSection() {
-  const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["admin", "revenue-trend"],
-    queryFn: () => api.get("/admin/analytics/revenue-trend").then((r) => r.data),
-  });
 
-  if (isLoading) return <Skeleton className="h-48 w-full" />;
-  if (isError) return <SectionError message="Failed to load trend" onRetry={() => refetch()} />;
-  if (!data?.data?.months?.length) return <SectionEmpty message="No revenue data for the last 24 months" />;
-
-  return (
-    <ResponsiveContainer width="100%" height={250}>
-      <BarChart data={data.data.months.slice(-12)} barGap={2} barCategoryGap="20%">
-        <defs>
-          <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.9} />
-            <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.4} />
-          </linearGradient>
-          <linearGradient id="commissionGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#40966e" stopOpacity={0.9} />
-            <stop offset="100%" stopColor="#40966e" stopOpacity={0.4} />
-          </linearGradient>
-          <linearGradient id="payoutGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#d45a0a" stopOpacity={0.9} />
-            <stop offset="100%" stopColor="#d45a0a" stopOpacity={0.4} />
-          </linearGradient>
-        </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="#dee3e8" strokeOpacity={0.5} />
-        <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#8a9ba8" }} axisLine={{ stroke: "#dee3e8" }} tickLine={false} />
-        <YAxis tick={{ fontSize: 11, fill: "#8a9ba8" }} axisLine={false} tickLine={false} />
-        <Tooltip
-          contentStyle={{ borderRadius: 8, border: "1px solid #dee3e8", boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}
-        />
-        <Legend
-          formatter={(value: string) => <span className="text-xs text-text-secondary">{value}</span>}
-        />
-        <Bar dataKey="revenue" fill="url(#revenueGrad)" name="Revenue" radius={[3, 3, 0, 0]} maxBarSize={32} />
-        <Bar dataKey="commission" fill="url(#commissionGrad)" name="Commission" radius={[3, 3, 0, 0]} maxBarSize={32} />
-        <Bar dataKey="supplierPayout" fill="url(#payoutGrad)" name="Supplier Payout" radius={[3, 3, 0, 0]} maxBarSize={32} />
-      </BarChart>
-    </ResponsiveContainer>
-  );
-}

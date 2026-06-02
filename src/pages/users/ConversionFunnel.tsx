@@ -142,7 +142,7 @@ export default function ConversionFunnelPage() {
 
       {/* Funnel Visualization */}
       <Card>
-        <CardHeader>
+        <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
           <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
             <Users className="h-4 w-4 text-blue-600" />
             User Journey Funnel
@@ -203,7 +203,7 @@ export default function ConversionFunnelPage() {
 
       {/* Daily Trend Chart */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-row items-center justify-between border-b border-border pb-3 border-l-2 border-l-green-500/60">
           <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
             <TrendingUp className="h-4 w-4 text-green-600" />
             Daily Event Trend
