@@ -114,9 +114,9 @@ export default function SupplierDetailPage() {
   const userId = user?.id || id;
 
   const { data: payoutData, isLoading: payoutLoading } = useQuery({
-    queryKey: ["admin", "payout-methods", "supplier", userId],
-    queryFn: () => api.get(`/payout-methods/admin/suppliers/${userId}`).then((r) => r.data?.data),
-    enabled: !!userId,
+    queryKey: ["admin", "payout-methods", "supplier", user?.id],
+    queryFn: () => api.get(`/payout-methods/admin/suppliers/${user?.id}`).then((r) => r.data?.data),
+    enabled: !!user?.id,
   });
 
   const payoutMethods = payoutData?.methods || [];
