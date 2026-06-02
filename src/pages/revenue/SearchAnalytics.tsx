@@ -33,6 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable } from "@/components/shared/DataTable";
 import type { Column } from "@/components/shared/DataTable";
@@ -82,6 +83,8 @@ const ChartLegend = ({ payload }: { payload?: { dataKey: string; color: string; 
 export default function SearchAnalyticsPage() {
   const navigate = useNavigate();
   const [period, setPeriod] = useState("30d");
+  const [showAllTop, setShowAllTop] = useState(false);
+  const [showAllZero, setShowAllZero] = useState(false);
 
   const { data: raw, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin", "search", period],
@@ -257,15 +260,22 @@ export default function SearchAnalyticsPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
-              <TrendingUp className="h-4 w-4 text-green-600" />
-              Top Queries
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+                <TrendingUp className="h-4 w-4 text-green-600" />
+                Top Queries
+              </CardTitle>
+              {!isLoading && !isError && (raw?.topQueries?.length || 0) > 10 && (
+                <Button variant="ghost" size="sm" className="text-xs text-green-600 hover:text-green-700" onClick={() => setShowAllTop(!showAllTop)}>
+                  {showAllTop ? "Show Less" : `View All (${raw?.topQueries?.length})`}
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="p-0">
             <DataTable
               columns={topQueryColumns}
-              data={raw?.topQueries || []}
+              data={showAllTop ? (raw?.topQueries || []) : (raw?.topQueries || []).slice(0, 10)}
               loading={isLoading}
               error={isError ? "Failed to load queries" : null}
               emptyMessage="No search query data"
@@ -276,15 +286,22 @@ export default function SearchAnalyticsPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
-              <FileX className="h-4 w-4 text-amber-500" />
-              Zero-Result Queries
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+                <FileX className="h-4 w-4 text-amber-500" />
+                Zero-Result Queries
+              </CardTitle>
+              {!isLoading && !isError && (raw?.zeroResultQueries?.length || 0) > 10 && (
+                <Button variant="ghost" size="sm" className="text-xs text-amber-600 hover:text-amber-700" onClick={() => setShowAllZero(!showAllZero)}>
+                  {showAllZero ? "Show Less" : `View All (${raw?.zeroResultQueries?.length})`}
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="p-0">
             <DataTable
               columns={zeroResultColumns}
-              data={raw?.zeroResultQueries || []}
+              data={showAllZero ? (raw?.zeroResultQueries || []) : (raw?.zeroResultQueries || []).slice(0, 10)}
               loading={isLoading}
               error={isError ? "Failed to load zero-result queries" : null}
               emptyMessage="No zero-result queries found"
