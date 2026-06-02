@@ -92,13 +92,23 @@ interface SupplierData {
   updatedAt?: string;
 }
 
+interface TourCommission {
+  id: string;
+  title: string;
+  bookings: number;
+  commission: number;
+  revenue: number;
+}
+
 interface SupplierOverview {
   earnings: number;
   totalBookings: number;
+  totalCommission: number;
   averageRating: number;
   totalReviews: number;
   tours: { total: number; active: number; draft: number; paused: number; archived: number };
   bookings: { total: number; pending: number; confirmed: number; completed: number; cancelled: number };
+  tourCommissions: TourCommission[];
 }
 
 interface SupplierTour {
@@ -396,6 +406,13 @@ export default function SupplierDetailPage() {
                       </div>
                       <p className="text-lg font-bold text-text-primary">{overview.tours.total}</p>
                     </div>
+                    <div className="rounded-sm border border-border bg-card p-4 border-l-2 border-l-amber-500/60">
+                      <div className="flex items-center gap-2 mb-1">
+                        <DollarSign className="h-4 w-4 text-amber-500" />
+                        <p className="text-xs text-text-secondary">Commission Earned</p>
+                      </div>
+                      <p className="text-lg font-bold text-text-primary">{formatCurrency(overview.totalCommission)}</p>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -445,6 +462,34 @@ export default function SupplierDetailPage() {
                       </div>
                     </div>
                   </div>
+
+                  {overview.tourCommissions.length > 0 && (
+                    <div className="mt-6">
+                      <p className="text-sm font-semibold text-text-primary mb-3 border-b border-border pb-2">Commission per Tour</p>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b border-border bg-surface-muted/40">
+                              <th className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">Tour</th>
+                              <th className="px-3 py-2 text-center text-xs font-semibold text-text-secondary">Bookings</th>
+                              <th className="px-3 py-2 text-right text-xs font-semibold text-text-secondary">Revenue</th>
+                              <th className="px-3 py-2 text-right text-xs font-semibold text-text-secondary">Commission</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {overview.tourCommissions.map((tc) => (
+                              <tr key={tc.id} className="border-b border-border last:border-b-0 hover:bg-surface-muted/30 transition-colors">
+                                <td className="px-3 py-2 text-text-primary font-medium truncate max-w-[200px]">{tc.title}</td>
+                                <td className="px-3 py-2 text-center text-text-primary">{tc.bookings}</td>
+                                <td className="px-3 py-2 text-right text-text-primary">{formatCurrency(tc.revenue)}</td>
+                                <td className="px-3 py-2 text-right text-text-primary font-medium text-green-700">{formatCurrency(tc.commission)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </CardContent>
