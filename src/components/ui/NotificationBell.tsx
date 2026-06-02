@@ -181,12 +181,12 @@ export function NotificationBell() {
                         </span>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
-                            <p className={cn("truncate text-sm", n.read ? "text-text-secondary" : "text-text-primary font-medium")}>
+                            <p className={cn("text-sm break-words", n.read ? "text-text-secondary" : "text-text-primary font-medium")}>
                               {n.title}
                             </p>
                             {!n.read && <span className="shrink-0 h-2 w-2 rounded-full bg-green-500" />}
                           </div>
-                          <p className="mt-0.5 truncate text-xs text-text-tertiary">{n.message}</p>
+                          <p className="mt-0.5 text-xs text-text-tertiary break-words leading-relaxed">{n.message}</p>
                           <p className="mt-1 text-[10px] text-text-tertiary/60">{timeAgo(n.createdAt)}</p>
                         </div>
                         <ChevronRight className="mt-1 h-3.5 w-3.5 shrink-0 text-text-tertiary/30" />
