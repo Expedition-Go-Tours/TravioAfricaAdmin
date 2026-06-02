@@ -18,10 +18,18 @@ import { formatCurrency, formatNumber, formatDate } from "@/lib/utils";
 
 const DIST_COLORS = ["#3b82f6", "#40966e", "#d97706", "#d45a0a", "#8b5cf6"];
 
+const BOOKING_LABELS: Record<string, string> = {
+  "1": "1 Booking",
+  "2": "2 Bookings",
+  "3": "3 Bookings",
+  "4": "4 Bookings",
+  "5+": "5+ Bookings",
+};
+
 interface CLVData {
   overview?: { totalCustomers?: number; totalBookings?: number; avgBookingValue?: number; totalRevenue?: number; avgCLV?: number };
   repeatRate?: { percent?: number; avgBookingsPerCustomer?: number };
-  distribution?: Array<{ range?: string; count?: number }>;
+  distribution?: Array<{ bookingCount?: string; customers?: number; percentage?: number }>;
   topCustomers?: Array<{ id?: string; name?: string; email?: string; totalBookings?: number; totalSpent?: number; avgBookingValue?: number; lastBookingDate?: string }>;
   cohorts?: Array<{ month?: string; users?: number; bookings?: number; revenue?: number; bookingsPerUser?: number; revenuePerUser?: number }>;
 }
@@ -84,11 +92,11 @@ export default function CustomerLifetimeValuePage() {
               <SectionError message="Failed to load repeat rate" onRetry={() => refetch()} />
             ) : (
               <div className="text-center py-2">
-                <p className="text-4xl font-bold text-text-primary">{data?.repeatRate?.percent?.toFixed(1) || "0"}%</p>
+                <p className="text-4xl font-bold text-text-primary">{(data?.data?.repeatRate?.repeatRate ?? data?.repeatRate?.repeatRate)?.toFixed(1) || "0"}%</p>
                 <p className="text-sm text-text-secondary mt-1">of customers book more than once</p>
                 <div className="mt-4 inline-flex items-center gap-2 rounded-sm bg-green-50 px-4 py-2 text-sm">
                   <ShoppingBag className="h-4 w-4 text-green-600" />
-                  <span className="text-text-secondary">Avg <strong className="text-green-700">{data?.repeatRate?.avgBookingsPerCustomer?.toFixed(2) || "0"}</strong> bookings per customer</span>
+                  <span className="text-text-secondary">Avg <strong className="text-green-700">{(data?.data?.repeatRate?.avgBookingsPerCustomer ?? data?.repeatRate?.avgBookingsPerCustomer)?.toFixed(2) || "0"}</strong> bookings per customer</span>
                 </div>
               </div>
             )}
@@ -96,7 +104,16 @@ export default function CustomerLifetimeValuePage() {
         </Card>
 
         <Card className="lg:col-span-3">
-          <CardHeader><CardTitle className="text-sm font-semibold text-text-primary">Booking Distribution</CardTitle></CardHeader>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold text-text-primary">Booking Distribution</CardTitle>
+              {!isLoading && !isError && chartData.length > 0 && (
+                <span className="text-xs text-text-tertiary">
+                  {chartData.reduce((s: number, d: any) => s + (d.customers || 0), 0).toLocaleString()} total customers
+                </span>
+              )}
+            </div>
+          </CardHeader>
           <CardContent>
             {isLoading ? (
               <Skeleton className="h-56 w-full" />
@@ -105,25 +122,47 @@ export default function CustomerLifetimeValuePage() {
             ) : !chartData.length ? (
               <SectionEmpty message="No distribution data" />
             ) : (
-              <div className="flex flex-col items-center sm:flex-row sm:items-start sm:justify-center gap-6">
-                <ResponsiveContainer width="100%" height={220} className="max-w-[260px]">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+                <ResponsiveContainer width="100%" height={200} className="max-w-[220px] shrink-0">
                   <PieChart>
-                    <Pie data={chartData} dataKey="count" nameKey="range" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={2}>
+                    <Pie data={chartData} dataKey="customers" nameKey="bookingCount" cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={3}>
                       {chartData.map((_: any, idx: number) => (
                         <Cell key={idx} fill={DIST_COLORS[idx % DIST_COLORS.length]} stroke="transparent" />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value: any) => [formatNumber(Number(value)), "Customers"]} />
+                    <Tooltip
+                      formatter={(value: any, _name: any, entry: any) => [
+                        `${formatNumber(Number(value))} (${entry.payload.percentage?.toFixed(1) || "0"}%)`,
+                        BOOKING_LABELS[entry.payload.bookingCount as string] || entry.payload.bookingCount,
+                      ]}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
-                <div className="space-y-2 self-center">
-                  {chartData.map((entry: any, idx: number) => (
-                    <div key={entry.range} className="flex items-center gap-2 text-sm">
-                      <span className="h-3 w-3 rounded-sm shrink-0" style={{ backgroundColor: DIST_COLORS[idx % DIST_COLORS.length] }} />
-                      <span className="text-text-secondary">{entry.range || "—"}</span>
-                      <span className="font-semibold text-text-primary">{formatNumber(entry.count)}</span>
-                    </div>
-                  ))}
+                <div className="flex-1 space-y-3 w-full">
+                  {chartData.map((entry: any, idx: number) => {
+                    const total = chartData.reduce((s: number, d: any) => s + (d.customers || 0), 0);
+                    const pct = entry.percentage ?? (total > 0 ? (entry.customers / total) * 100 : 0);
+                    return (
+                      <div key={entry.bookingCount}>
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2 text-sm">
+                            <span className="h-2.5 w-2.5 rounded-sm shrink-0" style={{ backgroundColor: DIST_COLORS[idx % DIST_COLORS.length] }} />
+                            <span className="font-medium text-text-primary">{BOOKING_LABELS[entry.bookingCount as string] || entry.bookingCount}</span>
+                          </div>
+                          <div className="flex items-center gap-3 text-xs">
+                            <span className="font-semibold text-text-primary tabular-nums">{formatNumber(entry.customers)}</span>
+                            <span className="text-text-tertiary tabular-nums w-10 text-right">{pct.toFixed(1)}%</span>
+                          </div>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-surface-muted overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{ width: `${pct}%`, backgroundColor: DIST_COLORS[idx % DIST_COLORS.length] }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

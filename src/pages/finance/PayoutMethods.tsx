@@ -129,7 +129,7 @@ export default function PayoutMethodsPage() {
     { key: "email", header: "Email", render: (r) => r.email || r.user?.email || "—" },
     { key: "status", header: "Status", render: (r) => <StatusBadge status={r.supplierProfile?.status || r.status || "UNKNOWN"} /> },
     { key: "methodsCount", header: "Methods Count", render: (r) => String(r.payoutMethods?.length ?? r.methodsCount ?? 0) },
-    { key: "defaultMethod", header: "Default Method", render: (r) => r.payoutMethods?.find((m: PayoutMethod) => m.isDefault)?.type?.replace(/_/g, " ") || r.defaultMethod || "—" },
+    { key: "defaultMethod", header: "Default Method", render: (r) => r.payoutMethods?.find((m: PayoutMethod) => m.isDefault)?.type?.replace(/_/g, " ") || r.defaultMethod || <span className="text-text-tertiary italic">Not provided yet</span> },
     {
       key: "actions",
       header: "Actions",
