@@ -463,7 +463,7 @@ export default function SupplierDetailPage() {
                     </div>
                   </div>
 
-                  {overview.tourCommissions.length > 0 && (
+                  {(overview.tourCommissions || []).length > 0 && (
                     <div className="mt-6">
                       <p className="text-sm font-semibold text-text-primary mb-3 border-b border-border pb-2">Commission per Tour</p>
                       <div className="overflow-x-auto">
@@ -477,7 +477,7 @@ export default function SupplierDetailPage() {
                             </tr>
                           </thead>
                           <tbody>
-                            {overview.tourCommissions.map((tc) => (
+                            {(overview.tourCommissions || []).map((tc) => (
                               <tr key={tc.id} className="border-b border-border last:border-b-0 hover:bg-surface-muted/30 transition-colors">
                                 <td className="px-3 py-2 text-text-primary font-medium truncate max-w-[200px]">{tc.title}</td>
                                 <td className="px-3 py-2 text-center text-text-primary">{tc.bookings}</td>
