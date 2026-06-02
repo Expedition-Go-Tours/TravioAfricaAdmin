@@ -58,7 +58,7 @@ export default function ReviewModerationPage() {
     mutationFn: (body: { action: string; reason?: string }) =>
       api.patch(`/reviews/${actionReview?.id}/moderate`, body),
     onSuccess: () => {
-      queryClient.removeQueries({ queryKey: ["admin", "reviews"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "reviews"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "reviews-pending-count"] });
       toast.success(`Review ${actionType}d successfully`);
       setActionReview(null);
