@@ -28,6 +28,7 @@ interface Review {
   tour?: { title?: string; supplier?: { name?: string; photoURL?: string } };
   photos?: string[];
   createdAt?: string;
+  status?: string;
 }
 
 const statusFilters = ["All", "Pending", "Approved", "Rejected", "Flagged"];
@@ -58,7 +59,7 @@ export default function ReviewModerationPage() {
     mutationFn: (body: { action: string; reason?: string }) =>
       api.patch(`/reviews/${actionReview?.id}/moderate`, body),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "reviews"] });
+      queryClient.refetchQueries({ queryKey: ["admin", "reviews"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "reviews-pending-count"] });
       toast.success(`Review ${actionType}d successfully`);
       setActionReview(null);
@@ -244,30 +245,42 @@ export default function ReviewModerationPage() {
                       )}
 
                       <div className="mt-4 flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="default"
-                          className="bg-green-600 hover:bg-green-700 text-white"
-                          onClick={() => { setActionReview(review); setActionType("approve"); setReason(""); }}
-                        >
-                          Approve
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="border-red-300 text-red-600 hover:bg-red-50"
-                          onClick={() => { setActionReview(review); setActionType("reject"); setReason(""); }}
-                        >
-                          Reject
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="border-amber-300 text-amber-600 hover:bg-amber-50"
-                          onClick={() => { setActionReview(review); setActionType("flag"); setReason(""); }}
-                        >
-                          Flag
-                        </Button>
+                        {(review.status === "PENDING" || !review.status) ? (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="default"
+                              className="bg-green-600 hover:bg-green-700 text-white"
+                              onClick={() => { setActionReview(review); setActionType("approve"); setReason(""); }}
+                            >
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-red-300 text-red-600 hover:bg-red-50"
+                              onClick={() => { setActionReview(review); setActionType("reject"); setReason(""); }}
+                            >
+                              Reject
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-amber-300 text-amber-600 hover:bg-amber-50"
+                              onClick={() => { setActionReview(review); setActionType("flag"); setReason(""); }}
+                            >
+                              Flag
+                            </Button>
+                          </>
+                        ) : (
+                          <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
+                            review.status === "APPROVED" ? "bg-green-100 text-green-700" :
+                            review.status === "REJECTED" ? "bg-red-100 text-red-700" :
+                            "bg-amber-100 text-amber-700"
+                          }`}>
+                            {review.status}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </Card>
