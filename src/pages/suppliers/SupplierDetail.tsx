@@ -36,6 +36,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { SectionError } from "@/components/shared/SectionError";
 import { SectionEmpty } from "@/components/shared/SectionEmpty";
+import { SafeImage } from "@/components/shared/SafeImage";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import api from "@/lib/axios";
@@ -294,12 +295,11 @@ export default function SupplierDetailPage() {
             <div className="flex items-end gap-4 -mt-8">
               <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-green-100 text-xl font-bold text-green-700 shadow-sm">
                 <span>{user?.name?.charAt(0)?.toUpperCase() || "?"}</span>
-                {user?.photoURL && (
-                  <img
+                  {user?.photoURL && (
+                  <SafeImage
                     src={user.photoURL}
                     alt={user?.name || ""}
                     className="absolute inset-0 h-full w-full object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                   />
                 )}
               </div>
@@ -698,7 +698,7 @@ export default function SupplierDetailPage() {
                             <div className="flex items-center gap-3">
                               <div className="h-8 w-8 shrink-0 rounded-sm bg-surface-muted overflow-hidden">
                                 {tour.coverPhoto ? (
-                                  <img src={tour.coverPhoto} alt="" className="h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                                  <SafeImage src={tour.coverPhoto} alt="" className="h-full w-full object-cover" />
                                 ) : (
                                   <div className="h-full w-full flex items-center justify-center text-xs text-text-tertiary">—</div>
                                 )}
