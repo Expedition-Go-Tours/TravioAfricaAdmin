@@ -132,29 +132,19 @@ export function ChatWindow({
 
   const scrollToBottom = useCallback((force = false) => {
     if (force || isNearBottom()) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      messagesEndRef.current?.scrollIntoView({ behavior: force ? "auto" : "smooth" });
     }
   }, [isNearBottom]);
 
   const prevConvIdRef = useRef<string | null>(null);
-  const justChangedRef = useRef(false);
 
   useEffect(() => {
     if (conversation?.id && prevConvIdRef.current !== conversation?.id) {
       prevConvIdRef.current = conversation?.id;
-      justChangedRef.current = true;
-    }
-  }, [conversation?.id]);
-
-  useEffect(() => {
-    if (justChangedRef.current && messages.length > 0) {
-      justChangedRef.current = false;
       requestAnimationFrame(() => scrollToBottom(true));
-    } else if (messages.length > prevMsgCountRef.current) {
-      scrollToBottom();
     }
     prevMsgCountRef.current = messages.length;
-  }, [messages.length, scrollToBottom]);
+  }, [messages.length, conversation?.id, scrollToBottom]);
 
   const handleScroll = useCallback(() => {
     const el = messagesContainerRef.current;
