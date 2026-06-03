@@ -78,7 +78,6 @@ export function NewConversationDialog({
     if (open) {
       setQuery("");
       setFocusedIndex(-1);
-      setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [open]);
 
@@ -145,6 +144,7 @@ export function NewConversationDialog({
           <input
             ref={inputRef}
             placeholder="Search suppliers by name or email..."
+            autoComplete="off"
             onChange={handleSearchChange}
             onKeyDown={handleKeyDown}
             className="w-full rounded-lg border border-border/60 bg-green-50/20 py-2 pl-9 pr-9 text-sm text-text-primary placeholder:text-text-tertiary focus-visible:outline-none focus-visible:border-green-400 focus-visible:bg-white transition-colors"
