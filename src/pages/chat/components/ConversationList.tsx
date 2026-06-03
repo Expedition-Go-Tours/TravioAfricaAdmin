@@ -52,7 +52,11 @@ export function ConversationList({
           (p) => p.user.roles && !p.user.roles.includes('admin')
         )?.user || conv.participants?.[0]?.user;
         const name = conv.title || otherUser?.name || otherUser?.email || "Unknown";
-        const roleLabel = conv.type === "SUPPLIER_ADMIN" ? "Supplier" : "Customer";
+        const roleLabel = otherUser?.roles?.includes('supplier')
+          ? "Supplier"
+          : otherUser?.roles?.includes('customer')
+            ? "Customer"
+            : "User";
         const lastMsg = conv.messages?.[0];
         const preview = lastMsg
           ? lastMsg.content.length > 50

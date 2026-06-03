@@ -245,11 +245,15 @@ export function ChatWindow({
             </p>
             <span className={cn(
               "shrink-0 rounded-full px-1.5 py-[1px] text-[10px] font-medium leading-normal",
-              conversation.type === "SUPPLIER_ADMIN"
+              otherParticipant?.roles?.includes('supplier')
                 ? "bg-blue-50 text-blue-600"
                 : "bg-purple-50 text-purple-600"
             )}>
-              {conversation.type === "SUPPLIER_ADMIN" ? "Supplier" : "Customer"}
+              {otherParticipant?.roles?.includes('supplier')
+                ? "Supplier"
+                : otherParticipant?.roles?.includes('customer')
+                  ? "Customer"
+                  : "User"}
             </span>
           </div>
           {typingUser ? (
