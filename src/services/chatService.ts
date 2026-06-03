@@ -7,6 +7,7 @@ export interface ChatUser {
   photoURL?: string;
   lastLoginAt?: string | null;
   firebaseUid?: string | null;
+  roles?: string[];
 }
 
 export interface ConversationParticipant {
