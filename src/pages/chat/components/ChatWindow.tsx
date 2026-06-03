@@ -200,9 +200,9 @@ export function ChatWindow({
     (p) => p.user.roles && !p.user.roles.includes('admin')
   )?.userId || conversation?.participants?.[0]?.userId;
   const headerName =
-    conversation?.title ||
     otherParticipant?.name ||
     otherParticipant?.email ||
+    conversation?.title ||
     "Chat";
 
   if (!conversation) {
