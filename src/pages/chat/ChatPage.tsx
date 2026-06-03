@@ -73,8 +73,9 @@ export default function ChatPage() {
     if (selectedConv) {
       selectedIdRef.current = selectedConv.id;
       loadMessages(selectedConv.id);
-      markConversationAsRead(selectedConv.id).catch(() => {});
-      queryClient.invalidateQueries({ queryKey: ["chat", "conversations"] });
+      markConversationAsRead(selectedConv.id).then(() => {
+        queryClient.invalidateQueries({ queryKey: ["chat", "conversations"] });
+      }).catch(() => {});
     }
   }, [selectedConv?.id, loadMessages, queryClient]);
 
