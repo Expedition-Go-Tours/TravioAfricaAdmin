@@ -68,7 +68,21 @@ export function MessageBubble({
               : "bg-white text-text-primary border border-border/50 rounded-[18px] rounded-bl-[4px]"
           )}
         >
-          <span className="whitespace-pre-wrap break-words">{message.content}</span>
+          {message.attachmentUrl && (
+            <div className="-mx-3.5 -mt-2 mb-2 overflow-hidden rounded-t-[18px]">
+              <img
+                src={message.attachmentUrl}
+                alt=""
+                className="max-w-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
+            </div>
+          )}
+          {message.content && (
+            <span className="whitespace-pre-wrap break-words">{message.content}</span>
+          )}
           <div
             className={cn(
               "mt-1 flex items-center gap-1",
