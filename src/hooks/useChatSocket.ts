@@ -93,5 +93,15 @@ export function useChatSocket(conversationId: string | null) {
     [socket]
   );
 
-  return { onNewMessage, onTyping, onMarkRead, onDelivered, emitTyping, emitMarkRead };
+  const emitDelivered = useCallback(
+    (convId: string, messageIds: string[]) => {
+      socket.emit("chat:delivered", {
+        conversationId: convId,
+        messageIds,
+      });
+    },
+    [socket]
+  );
+
+  return { onNewMessage, onTyping, onMarkRead, onDelivered, emitTyping, emitMarkRead, emitDelivered };
 }

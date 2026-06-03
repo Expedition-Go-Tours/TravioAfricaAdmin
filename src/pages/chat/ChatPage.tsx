@@ -49,7 +49,7 @@ export default function ChatPage() {
     return unsub;
   }, []);
 
-  const { onNewMessage, onMarkRead, onDelivered } = useChatSocket(selectedConv?.id || null);
+  const { onNewMessage, onMarkRead, onDelivered, emitDelivered } = useChatSocket(selectedConv?.id || null);
 
   const {
     data: conversations = [],
@@ -92,6 +92,7 @@ export default function ChatPage() {
       if (convId === selectedIdRef.current) {
         setMessages((prev) => {
           if (prev.some((m) => m.id === message.id)) return prev;
+          emitDelivered(convId, [message.id]);
           return sortMessages([...prev, message]);
         });
         setMessageStatuses((prev) => ({ ...prev, [message.id]: "sent" }));
@@ -100,7 +101,7 @@ export default function ChatPage() {
       invalidateConvs();
     });
     return unsubMsg;
-  }, [onNewMessage, invalidateConvs]);
+  }, [onNewMessage, invalidateConvs, emitDelivered]);
 
   useEffect(() => {
     const unsubRead = onMarkRead(({ conversationId }) => {
