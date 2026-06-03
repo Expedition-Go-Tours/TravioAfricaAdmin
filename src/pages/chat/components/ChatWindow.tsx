@@ -137,10 +137,18 @@ export function ChatWindow({
   }, [isNearBottom]);
 
   const prevConvIdRef = useRef<string | null>(null);
+  const pendingScrollRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (conversation?.id && prevConvIdRef.current !== conversation?.id) {
       prevConvIdRef.current = conversation?.id;
+      pendingScrollRef.current = conversation?.id;
+    }
+  }, [conversation?.id]);
+
+  useEffect(() => {
+    if (pendingScrollRef.current === conversation?.id && messages.length > 0) {
+      pendingScrollRef.current = null;
       requestAnimationFrame(() => scrollToBottom(true));
     }
     prevMsgCountRef.current = messages.length;
