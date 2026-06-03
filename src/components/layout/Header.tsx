@@ -20,6 +20,7 @@ const breadcrumbMap: Record<string, string> = {
   payouts: "Payouts",
   "payout-methods": "Payout Methods",
   reviews: "Review Moderation",
+  chat: "Messages",
 };
 
 export function Header() {

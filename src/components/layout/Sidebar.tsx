@@ -27,6 +27,7 @@ import {
   Activity,
   UserCog,
   Target,
+  MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fadeInLeft, listItem } from "@/lib/animations";
@@ -76,6 +77,7 @@ const navGroups: { group: string; items: NavItem[] }[] = [
       { label: "Suppliers", path: "/admin/suppliers", icon: <UserPlus className="h-4 w-4" /> },
       { label: "Active Suppliers", path: "/admin/suppliers/active", icon: <UserCheck className="h-4 w-4" /> },
       { label: "Reviews", path: "/admin/reviews", icon: <Star className="h-4 w-4" /> },
+      { label: "Messages", path: "/admin/chat", icon: <MessageSquare className="h-4 w-4" /> },
     ],
   },
   {
