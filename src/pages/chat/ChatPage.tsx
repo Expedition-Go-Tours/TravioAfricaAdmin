@@ -92,11 +92,15 @@ export default function ChatPage() {
     setMessages(sortMessages(result.messages || []));
     setHasMore(!!result.nextCursor);
     const statuses: Record<string, MessageStatus> = {};
+    const otherParticipant = selectedConv?.participants?.find(
+      (p) => p.user.roles && !p.user.roles.includes('admin')
+    );
+    const lastReadAt = otherParticipant?.lastReadAt ? new Date(otherParticipant.lastReadAt).getTime() : 0;
     for (const msg of result.messages || []) {
-      statuses[msg.id] = "sent";
+      statuses[msg.id] = new Date(msg.createdAt).getTime() <= lastReadAt ? "read" : "sent";
     }
     setMessageStatuses(statuses);
-  }, []);
+  }, [selectedConv]);
 
   useEffect(() => {
     if (selectedConv) {
@@ -202,9 +206,13 @@ export default function ChatPage() {
         const result = await getMessages(selectedConv.id, oldestDate);
         setMessages((prev) => sortMessages([...(result.messages || []), ...prev]));
         setHasMore(!!result.nextCursor);
+        const otherParticipant = selectedConv?.participants?.find(
+          (p) => p.user.roles && !p.user.roles.includes('admin')
+        );
+        const lastReadAt = otherParticipant?.lastReadAt ? new Date(otherParticipant.lastReadAt).getTime() : 0;
         const statuses: Record<string, MessageStatus> = {};
         for (const msg of result.messages || []) {
-          statuses[msg.id] = "sent";
+          statuses[msg.id] = new Date(msg.createdAt).getTime() <= lastReadAt ? "read" : "sent";
         }
         setMessageStatuses((prev) => ({ ...prev, ...statuses }));
       }
