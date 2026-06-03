@@ -43,7 +43,7 @@ export default function ChatPage() {
   const invalidateConvs = useCallback(() => {
     if (invalidateTimerRef.current) clearTimeout(invalidateTimerRef.current);
     invalidateTimerRef.current = setTimeout(() => {
-      invalidateConvs();
+      queryClient.invalidateQueries({ queryKey: ["chat", "conversations"] });
     }, 500);
   }, [queryClient]);
 
