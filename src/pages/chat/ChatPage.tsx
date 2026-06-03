@@ -49,7 +49,7 @@ export default function ChatPage() {
     return unsub;
   }, []);
 
-  const { onNewMessage, onMarkRead } = useChatSocket(selectedConv?.id || null);
+  const { onNewMessage, onMarkRead, onDelivered } = useChatSocket(selectedConv?.id || null);
 
   const {
     data: conversations = [],
@@ -90,15 +90,17 @@ export default function ChatPage() {
   useEffect(() => {
     const unsubMsg = onNewMessage((message, convId) => {
       if (convId === selectedIdRef.current) {
-        setMessages((prev) => sortMessages([...prev, message]));
-        if (message.senderId !== currentUserId) {
-          markConversationAsRead(convId).catch(() => {});
-        }
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === message.id)) return prev;
+          return sortMessages([...prev, message]);
+        });
+        setMessageStatuses((prev) => ({ ...prev, [message.id]: "sent" }));
+        markConversationAsRead(convId).catch(() => {});
       }
       invalidateConvs();
     });
     return unsubMsg;
-  }, [onNewMessage, invalidateConvs, currentUserId]);
+  }, [onNewMessage, invalidateConvs]);
 
   useEffect(() => {
     const unsubRead = onMarkRead(({ conversationId }) => {
@@ -116,6 +118,23 @@ export default function ChatPage() {
     });
     return unsubRead;
   }, [onMarkRead]);
+
+  useEffect(() => {
+    const unsubDelivered = onDelivered(({ conversationId, messageIds }) => {
+      if (conversationId === selectedIdRef.current) {
+        setMessageStatuses((prev) => {
+          const next = { ...prev };
+          for (const id of messageIds) {
+            if (next[id] === "sent") {
+              next[id] = "delivered";
+            }
+          }
+          return next;
+        });
+      }
+    });
+    return unsubDelivered;
+  }, [onDelivered]);
 
   const handleSelect = useCallback((conv: Conversation) => {
     setSelectedConv(conv);

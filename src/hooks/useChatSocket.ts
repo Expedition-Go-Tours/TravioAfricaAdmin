@@ -19,6 +19,12 @@ interface MarkReadEvent {
   readAt: string;
 }
 
+interface DeliveredEvent {
+  conversationId: string;
+  messageIds: string[];
+  deliveredTo?: string;
+}
+
 export function useChatSocket(conversationId: string | null) {
   const socket = getAdminSocket();
 
@@ -63,6 +69,16 @@ export function useChatSocket(conversationId: string | null) {
     [socket]
   );
 
+  const onDelivered = useCallback(
+    (cb: (data: DeliveredEvent) => void) => {
+      socket.on("chat:delivered", cb);
+      return () => {
+        socket.off("chat:delivered", cb);
+      };
+    },
+    [socket]
+  );
+
   const emitTyping = useCallback(
     (convId: string) => {
       socket.emit("chat:typing", { conversationId: convId });
@@ -77,5 +93,5 @@ export function useChatSocket(conversationId: string | null) {
     [socket]
   );
 
-  return { onNewMessage, onTyping, onMarkRead, emitTyping, emitMarkRead };
+  return { onNewMessage, onTyping, onMarkRead, onDelivered, emitTyping, emitMarkRead };
 }
