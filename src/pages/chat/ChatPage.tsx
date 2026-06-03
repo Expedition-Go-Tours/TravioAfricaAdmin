@@ -33,6 +33,14 @@ export default function ChatPage() {
   const [newDialogOpen, setNewDialogOpen] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const selectedIdRef = useRef<string | null>(null);
+  const invalidateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const invalidateConvs = useCallback(() => {
+    if (invalidateTimerRef.current) clearTimeout(invalidateTimerRef.current);
+    invalidateTimerRef.current = setTimeout(() => {
+      invalidateConvs();
+    }, 500);
+  }, [queryClient]);
 
   useEffect(() => {
     const unsub = auth.onAuthStateChanged((user) => {
@@ -74,10 +82,10 @@ export default function ChatPage() {
       selectedIdRef.current = selectedConv.id;
       loadMessages(selectedConv.id);
       markConversationAsRead(selectedConv.id).then(() => {
-        queryClient.invalidateQueries({ queryKey: ["chat", "conversations"] });
-      }).catch(() => {});
+      invalidateConvs();
+    }).catch(() => {});
     }
-  }, [selectedConv?.id, loadMessages, queryClient]);
+  }, [selectedConv?.id, loadMessages, invalidateConvs]);
 
   useEffect(() => {
     const unsubMsg = onNewMessage((message, convId) => {
@@ -87,10 +95,10 @@ export default function ChatPage() {
           markConversationAsRead(convId).catch(() => {});
         }
       }
-      queryClient.invalidateQueries({ queryKey: ["chat", "conversations"] });
+      invalidateConvs();
     });
     return unsubMsg;
-  }, [onNewMessage, queryClient, currentUserId]);
+  }, [onNewMessage, invalidateConvs, currentUserId]);
 
   useEffect(() => {
     const unsubRead = onMarkRead(({ conversationId }) => {
@@ -129,7 +137,7 @@ export default function ChatPage() {
           next[msg.id] = "sent";
           return next;
         });
-        queryClient.invalidateQueries({ queryKey: ["chat", "conversations"] });
+        invalidateConvs();
       } catch {
         toast.error("Failed to send message");
         setMessageStatuses((prev) => {
@@ -141,7 +149,7 @@ export default function ChatPage() {
         setSending(false);
       }
     },
-    [selectedConv, queryClient]
+    [selectedConv, invalidateConvs]
   );
 
   const handleLoadMore = useCallback(async () => {
@@ -170,14 +178,14 @@ export default function ChatPage() {
     async (recipientId: string) => {
       try {
         const conv = await getOrCreateConversation(recipientId);
-        queryClient.invalidateQueries({ queryKey: ["chat", "conversations"] });
+        invalidateConvs();
         setSelectedConv(conv);
         setNewDialogOpen(false);
       } catch {
         toast.error("Failed to start conversation");
       }
     },
-    [queryClient]
+    [invalidateConvs]
   );
 
   const handleViewProfile = useCallback(

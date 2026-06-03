@@ -59,7 +59,6 @@ export function NotificationBell() {
   const { data: unreadCount = 0 } = useQuery({
     queryKey: ["admin-notifications", "unread-count"],
     queryFn: getUnreadCount,
-    refetchInterval: 30_000,
   });
 
   const { data: dropdown, isLoading } = useQuery({
