@@ -284,7 +284,7 @@ export function ChatWindow({
                 await onDeleteConversation();
               }
             }}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-text-tertiary opacity-0 transition-all hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-text-tertiary transition-all hover:bg-red-50 hover:text-red-500"
             title="Delete conversation"
           >
             <Trash2 className="h-4 w-4" />
