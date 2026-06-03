@@ -48,7 +48,9 @@ export function ConversationList({
       {conversations.map((conv) => {
         const otherUser = conv.participants?.find(
           (p) => p.user.name === conv.title
-        )?.user || conv.participants?.[0]?.user || conv.participants?.[1]?.user;
+        )?.user || conv.participants?.find(
+          (p) => p.user.roles && !p.user.roles.includes('admin')
+        )?.user || conv.participants?.[0]?.user;
         const name = conv.title || otherUser?.name || otherUser?.email || "Unknown";
         const roleLabel = conv.type === "SUPPLIER_ADMIN" ? "Supplier" : "Customer";
         const lastMsg = conv.messages?.[0];

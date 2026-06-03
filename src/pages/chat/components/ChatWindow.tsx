@@ -194,10 +194,10 @@ export function ChatWindow({
   }, [conversation?.id, onSendMessage]);
 
   const otherParticipant = conversation?.participants?.find(
-    (p) => currentUserId ? p.user.firebaseUid !== currentUserId : p.user.name === conversation?.title
+    (p) => p.user.roles && !p.user.roles.includes('admin')
   )?.user || conversation?.participants?.[0]?.user;
   const otherParticipantId = conversation?.participants?.find(
-    (p) => currentUserId ? p.user.firebaseUid !== currentUserId : p.user.name === conversation?.title
+    (p) => p.user.roles && !p.user.roles.includes('admin')
   )?.userId || conversation?.participants?.[0]?.userId;
   const headerName =
     conversation?.title ||
