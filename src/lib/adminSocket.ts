@@ -11,7 +11,6 @@ export function getAdminSocket(): Socket {
     const token = localStorage.getItem("firebaseToken");
     socket = io(SOCKET_URL, {
       auth: { userId: "admin", role: "admin", token },
-      transports: ["websocket", "polling"],
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 3000,
