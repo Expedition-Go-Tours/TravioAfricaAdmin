@@ -7,6 +7,7 @@ import {
   Bell,
   CheckCheck,
   X,
+  MessageSquare,
   ShoppingBag,
   XCircle,
   CreditCard,
@@ -30,6 +31,7 @@ const notificationRouteMap: Record<string, (data?: Record<string, unknown>) => {
   PAYOUT_PROCESSED: (data) => data?.payoutId ? { path: "/admin/payouts", state: { payoutId: data.payoutId } } : null,
   PAYOUT_APPROVED: (data) => data?.payoutId ? { path: "/admin/payouts", state: { payoutId: data.payoutId } } : null,
   SYSTEM_ALERT: (data) => data?.supplierId ? { path: `/admin/suppliers/${data.supplierId}?tab=payout` } : { path: "/admin" },
+  NEW_MESSAGE: (data) => data?.conversationId ? { path: "/admin/chat", state: { conversationId: data.conversationId } } : null,
 };
 
 const typeConfig: Record<string, { icon: React.ReactNode; color: string }> = {
@@ -44,6 +46,7 @@ const typeConfig: Record<string, { icon: React.ReactNode; color: string }> = {
   SUPPLIER_REJECTED: { icon: <UserX className="h-3.5 w-3.5" />, color: "text-red-500" },
   NEW_SUPPLIER_APPLICATION: { icon: <UserCheck className="h-3.5 w-3.5" />, color: "text-amber-600" },
   SYSTEM_ALERT: { icon: <AlertTriangle className="h-3.5 w-3.5" />, color: "text-red-500" },
+  NEW_MESSAGE: { icon: <MessageSquare className="h-3.5 w-3.5" />, color: "text-green-600" },
 };
 
 function getTypeConfig(type: string) {

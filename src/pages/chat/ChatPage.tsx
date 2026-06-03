@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { auth } from "@/lib/firebase";
@@ -23,6 +23,7 @@ import type { MessageStatus } from "./components/MessageBubble";
 
 export default function ChatPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const [selectedConv, setSelectedConv] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -34,6 +35,7 @@ export default function ChatPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const selectedIdRef = useRef<string | null>(null);
   const invalidateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const selectByNotificationRef = useRef<string | null>(null);
 
   const invalidateConvs = useCallback(() => {
     if (invalidateTimerRef.current) clearTimeout(invalidateTimerRef.current);
@@ -49,6 +51,14 @@ export default function ChatPage() {
     return unsub;
   }, []);
 
+  useEffect(() => {
+    const convId = (location.state as { conversationId?: string })?.conversationId;
+    if (convId) {
+      selectByNotificationRef.current = convId;
+      navigate(location.pathname, { replace: true });
+    }
+  }, []);
+
   const { onNewMessage, onMarkRead, onDelivered, emitDelivered } = useChatSocket(selectedConv?.id || null);
 
   const {
@@ -60,6 +70,17 @@ export default function ChatPage() {
     queryKey: ["chat", "conversations"],
     queryFn: getConversations,
   });
+
+  useEffect(() => {
+    const convId = selectByNotificationRef.current;
+    if (convId && conversations.length > 0) {
+      const conv = conversations.find((c: Conversation) => c.id === convId);
+      if (conv) {
+        selectByNotificationRef.current = null;
+        setSelectedConv(conv);
+      }
+    }
+  }, [conversations]);
 
   const sortMessages = (msgs: Message[]) =>
     [...msgs].sort(
