@@ -102,3 +102,26 @@ export async function uploadChatImage(file: File): Promise<{ url: string; type: 
   });
   return res.data.data as { url: string; type: string };
 }
+
+export async function updateMessage(
+  conversationId: string,
+  messageId: string,
+  content: string
+): Promise<Message> {
+  const res = await api.put(
+    `/chat/conversations/${conversationId}/messages/${messageId}`,
+    { content }
+  );
+  return res.data.data.message as Message;
+}
+
+export async function deleteMessage(
+  conversationId: string,
+  messageId: string
+): Promise<void> {
+  await api.delete(`/chat/conversations/${conversationId}/messages/${messageId}`);
+}
+
+export async function deleteConversation(conversationId: string): Promise<void> {
+  await api.delete(`/chat/conversations/${conversationId}`);
+}

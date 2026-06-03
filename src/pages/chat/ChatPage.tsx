@@ -16,6 +16,9 @@ import {
   sendMessage,
   markConversationAsRead,
   getOrCreateConversation,
+  updateMessage,
+  deleteMessage,
+  deleteConversation,
   type Conversation,
   type Message,
 } from "@/services/chatService";
@@ -237,6 +240,42 @@ export default function ChatPage() {
     [invalidateConvs]
   );
 
+  const handleEditMessage = useCallback(
+    async (messageId: string, content: string) => {
+      if (!selectedConv) return;
+      const updated = await updateMessage(selectedConv.id, messageId, content);
+      setMessages((prev) =>
+        prev.map((m) => (m.id === messageId ? { ...m, content: updated.content, editedAt: updated.editedAt } : m))
+      );
+    },
+    [selectedConv]
+  );
+
+  const handleDeleteMessage = useCallback(
+    async (messageId: string) => {
+      if (!selectedConv) return;
+      await deleteMessage(selectedConv.id, messageId);
+      setMessages((prev) => prev.filter((m) => m.id !== messageId));
+      setMessageStatuses((prev) => {
+        const next = { ...prev };
+        delete next[messageId];
+        return next;
+      });
+      invalidateConvs();
+    },
+    [selectedConv, invalidateConvs]
+  );
+
+  const handleDeleteConversation = useCallback(async () => {
+    if (!selectedConv) return;
+    await deleteConversation(selectedConv.id);
+    setSelectedConv(null);
+    setMessages([]);
+    setMessageStatuses({});
+    invalidateConvs();
+    toast.success("Conversation deleted");
+  }, [selectedConv, invalidateConvs]);
+
   const handleViewProfile = useCallback(
     (userId: string) => {
       navigate(`/admin/suppliers/${userId}`);
@@ -285,6 +324,9 @@ export default function ChatPage() {
               sending={sending}
               currentUserId={currentUserId}
               onViewProfile={handleViewProfile}
+              onEditMessage={handleEditMessage}
+              onDeleteMessage={handleDeleteMessage}
+              onDeleteConversation={handleDeleteConversation}
             />
       </div>
 

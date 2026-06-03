@@ -1,6 +1,6 @@
 ﻿import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, ChevronDown, Paperclip, ChevronRight } from "lucide-react";
+import { Send, ChevronDown, Paperclip, ChevronRight, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { MessageBubble, type MessageStatus } from "./MessageBubble";
@@ -19,6 +19,9 @@ interface ChatWindowProps {
   sending: boolean;
   currentUserId: string | null;
   onViewProfile?: (userId: string) => void;
+  onEditMessage?: (messageId: string, content: string) => Promise<void>;
+  onDeleteMessage?: (messageId: string) => Promise<void>;
+  onDeleteConversation?: () => Promise<void>;
 }
 
 function formatDateSeparator(dateStr: string) {
@@ -91,6 +94,9 @@ export function ChatWindow({
   sending,
   currentUserId,
   onViewProfile,
+  onEditMessage,
+  onDeleteMessage,
+  onDeleteConversation,
 }: ChatWindowProps) {
   const [input, setInput] = useState("");
   const [typingUser, setTypingUser] = useState<string | null>(null);
@@ -224,49 +230,66 @@ export function ChatWindow({
   return (
     <div className="flex h-full flex-col">
       <div
-        className="group flex items-center gap-3 border-b border-border/50 bg-white px-5 py-3 cursor-pointer transition-all duration-200 hover:shadow-sm"
-        onClick={() => otherParticipant?.id && onViewProfile?.(otherParticipant.id)}
+        className="group flex items-center gap-3 border-b border-border/50 bg-white px-5 py-3"
       >
-        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-400 to-green-600 text-sm font-bold text-white shadow-sm">
-          <span>{headerName.charAt(0).toUpperCase()}</span>
-          {otherParticipant?.photoURL && (
-            <img
-              src={otherParticipant.photoURL}
-              alt=""
-              className="absolute inset-0 h-full w-full object-cover"
-              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-            />
-          )}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <p className="truncate text-sm font-semibold text-text-primary">
-              {headerName}
-            </p>
-            <span className={cn(
-              "shrink-0 rounded-full px-1.5 py-[1px] text-[10px] font-medium leading-normal",
-              otherParticipant?.roles?.includes('supplier')
-                ? "bg-blue-50 text-blue-600"
-                : "bg-purple-50 text-purple-600"
-            )}>
-              {otherParticipant?.roles?.includes('supplier')
-                ? "Supplier"
-                : otherParticipant?.roles?.includes('customer')
-                  ? "Customer"
-                  : "User"}
-            </span>
+        <div
+          className="flex cursor-pointer items-center gap-3 flex-1 min-w-0"
+          onClick={() => otherParticipant?.id && onViewProfile?.(otherParticipant.id)}
+        >
+          <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-400 to-green-600 text-sm font-bold text-white shadow-sm">
+            <span>{headerName.charAt(0).toUpperCase()}</span>
+            {otherParticipant?.photoURL && (
+              <img
+                src={otherParticipant.photoURL}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+              />
+            )}
           </div>
-          {typingUser ? (
-            <p className="text-xs text-green-600">
-              <span className="inline-flex gap-0.5">
-                typing<span className="animate-bounce delay-0">.</span><span className="animate-bounce delay-150">.</span><span className="animate-bounce delay-300">.</span>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <p className="truncate text-sm font-semibold text-text-primary">
+                {headerName}
+              </p>
+              <span className={cn(
+                "shrink-0 rounded-full px-1.5 py-[1px] text-[10px] font-medium leading-normal",
+                otherParticipant?.roles?.includes('supplier')
+                  ? "bg-blue-50 text-blue-600"
+                  : "bg-purple-50 text-purple-600"
+              )}>
+                {otherParticipant?.roles?.includes('supplier')
+                  ? "Supplier"
+                  : otherParticipant?.roles?.includes('customer')
+                    ? "Customer"
+                    : "User"}
               </span>
-            </p>
-          ) : (
-            <p className="text-xs text-text-tertiary">{formatLastSeen(otherParticipant?.lastLoginAt)}</p>
-          )}
+            </div>
+            {typingUser ? (
+              <p className="text-xs text-green-600">
+                <span className="inline-flex gap-0.5">
+                  typing<span className="animate-bounce delay-0">.</span><span className="animate-bounce delay-150">.</span><span className="animate-bounce delay-300">.</span>
+                </span>
+              </p>
+            ) : (
+              <p className="text-xs text-text-tertiary">{formatLastSeen(otherParticipant?.lastLoginAt)}</p>
+            )}
+          </div>
+          <ChevronRight className="h-4 w-4 shrink-0 text-text-tertiary transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-green-600" />
         </div>
-        <ChevronRight className="h-4 w-4 shrink-0 text-text-tertiary transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-green-600" />
+        {onDeleteConversation && (
+          <button
+            onClick={async () => {
+              if (window.confirm("Delete this entire conversation? This cannot be undone.")) {
+                await onDeleteConversation();
+              }
+            }}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-text-tertiary opacity-0 transition-all hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
+            title="Delete conversation"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       <div
@@ -322,6 +345,8 @@ export function ChatWindow({
                       showAvatar={showAvatar && !isOwn}
                       senderAvatar={isOwn ? undefined : (msg.sender?.photoURL || otherParticipant?.photoURL)}
                       senderName={isOwn ? "Admin" : headerName}
+                      onEdit={isOwn ? onEditMessage : undefined}
+                      onDelete={onDeleteMessage}
                     />
                   </div>
                 </div>

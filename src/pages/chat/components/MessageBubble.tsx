@@ -1,4 +1,5 @@
-﻿import { Check, CheckCheck, Loader2 } from "lucide-react";
+﻿import { useState, useRef, useEffect } from "react";
+import { Check, CheckCheck, Loader2, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Message } from "@/services/chatService";
 
@@ -11,6 +12,8 @@ interface MessageBubbleProps {
   showAvatar?: boolean;
   senderAvatar?: string;
   senderName?: string;
+  onEdit?: (messageId: string, newContent: string) => Promise<void>;
+  onDelete?: (messageId: string) => Promise<void>;
 }
 
 function formatMessageTime(dateStr: string) {
@@ -36,9 +39,81 @@ export function MessageBubble({
   showAvatar = true,
   senderAvatar,
   senderName,
+  onEdit,
+  onDelete,
 }: MessageBubbleProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editValue, setEditValue] = useState(message.content);
+  const [saving, setSaving] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const editInputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    if (menuOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [menuOpen]);
+
+  useEffect(() => {
+    if (editing && editInputRef.current) {
+      editInputRef.current.focus();
+      editInputRef.current.setSelectionRange(
+        editInputRef.current.value.length,
+        editInputRef.current.value.length
+      );
+    }
+  }, [editing]);
+
+  const handleEdit = () => {
+    setMenuOpen(false);
+    setEditValue(message.content);
+    setEditing(true);
+  };
+
+  const handleDelete = () => {
+    setMenuOpen(false);
+    onDelete?.(message.id);
+  };
+
+  const handleSaveEdit = async () => {
+    const trimmed = editValue.trim();
+    if (!trimmed || trimmed === message.content) {
+      setEditing(false);
+      return;
+    }
+    setSaving(true);
+    try {
+      await onEdit?.(message.id, trimmed);
+      setEditing(false);
+    } catch {
+      setEditing(false);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditing(false);
+    setEditValue(message.content);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSaveEdit();
+    }
+    if (e.key === "Escape") {
+      handleCancelEdit();
+    }
+  };
+
   return (
-    <div className={cn("flex gap-2", isOwn ? "flex-row-reverse" : "flex-row")}>
+    <div className={cn("group flex gap-2", isOwn ? "flex-row-reverse" : "flex-row")}>
       {isOwn ? (
         <div className="w-8 shrink-0" />
       ) : showAvatar ? (
@@ -68,40 +143,115 @@ export function MessageBubble({
               : "bg-white text-text-primary border border-border/50 rounded-[18px] rounded-bl-[4px]"
           )}
         >
-          {message.attachmentUrl && (
-            <div className="-mx-3.5 -mt-2 mb-2 overflow-hidden rounded-t-[18px]">
-              <img
-                src={message.attachmentUrl}
-                alt=""
-                className="max-w-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = "none";
-                }}
+          {editing ? (
+            <div className="flex flex-col gap-2">
+              <textarea
+                ref={editInputRef}
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="w-full resize-none rounded-lg border border-green-400 bg-white px-3 py-2 text-sm text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 scrollbar-none"
+                rows={3}
+                disabled={saving}
               />
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={handleCancelEdit}
+                  disabled={saving}
+                  className="rounded-full px-3 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveEdit}
+                  disabled={saving || !editValue.trim()}
+                  className="rounded-full bg-green-700 px-3 py-1 text-xs font-medium text-white hover:bg-green-800 transition-colors disabled:opacity-50"
+                >
+                  {saving ? "Saving..." : "Save"}
+                </button>
+              </div>
             </div>
-          )}
-          {message.content && (
-            <span className="whitespace-pre-wrap break-words">{message.content}</span>
-          )}
-          <div
-            className={cn(
-              "mt-1 flex items-center gap-1",
-              isOwn ? "justify-end" : "justify-start"
-            )}
-          >
-            <span
-              className={cn(
-                "text-[10px] leading-none",
-                isOwn ? "text-white/70" : "text-text-tertiary"
+          ) : (
+            <>
+              {message.attachmentUrl && (
+                <div className={cn("-mx-3.5 -mt-2 mb-2 overflow-hidden", message.content ? "rounded-t-[18px]" : "rounded-[18px]")}>
+                  <img
+                    src={message.attachmentUrl}
+                    alt=""
+                    className="max-w-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = "none";
+                    }}
+                  />
+                </div>
               )}
+              {message.content && (
+                <span className="whitespace-pre-wrap break-words">{message.content}</span>
+              )}
+              {message.editedAt && (
+                <span className={cn("ml-1 text-[10px]", isOwn ? "text-white/50" : "text-text-tertiary")}>
+                  (edited)
+                </span>
+              )}
+              <div
+                className={cn(
+                  "mt-1 flex items-center gap-1",
+                  isOwn ? "justify-end" : "justify-start"
+                )}
+              >
+                <span
+                  className={cn(
+                    "text-[10px] leading-none",
+                    isOwn ? "text-white/70" : "text-text-tertiary"
+                  )}
+                >
+                  {formatMessageTime(message.createdAt)}
+                </span>
+                {isOwn && status && (
+                  <span className="flex">{statusIcon[status]}</span>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
+        {isOwn && !editing && (onEdit || onDelete) && (
+          <div className="relative mt-0.5" ref={menuRef}>
+            <button
+              onClick={() => setMenuOpen((p) => !p)}
+              className="flex h-6 w-6 items-center justify-center rounded-full text-text-tertiary opacity-0 transition-all group-hover:opacity-100 hover:bg-green-100 hover:text-green-700"
             >
-              {formatMessageTime(message.createdAt)}
-            </span>
-            {isOwn && status && (
-              <span className="flex">{statusIcon[status]}</span>
+              <MoreVertical className="h-3.5 w-3.5" />
+            </button>
+            {menuOpen && (
+              <div
+                className={cn(
+                  "absolute z-50 min-w-[120px] overflow-hidden rounded-lg border border-border/50 bg-white py-1 shadow-lg",
+                  isOwn ? "right-0" : "left-0"
+                )}
+              >
+                {onEdit && (
+                  <button
+                    onClick={handleEdit}
+                    className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-text-primary hover:bg-green-50 transition-colors"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    Edit
+                  </button>
+                )}
+                {onDelete && (
+                  <button
+                    onClick={handleDelete}
+                    className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Delete
+                  </button>
+                )}
+              </div>
             )}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
