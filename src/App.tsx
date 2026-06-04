@@ -58,7 +58,7 @@ export default function App() {
             <Route path="payouts" element={<PayoutsTabPage />} />
             <Route path="payout-methods" element={<PayoutMethodsPage />} />
             <Route path="reviews" element={<ReviewModerationPage />} />
-            <Route path="chat" element={<ChatPage />} />
+            <Route path="chat/:type" element={<ChatPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/admin/overview" replace />} />
         </Routes>

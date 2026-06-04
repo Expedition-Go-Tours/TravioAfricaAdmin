@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { auth } from "@/lib/firebase";
@@ -28,6 +28,7 @@ export default function ChatPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
+  const { type } = useParams<{ type: "suppliers" | "customers" }>();
   const [selectedConv, setSelectedConv] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [messageStatuses, setMessageStatuses] = useState<Record<string, MessageStatus>>({});
@@ -39,6 +40,7 @@ export default function ChatPage() {
   const selectedIdRef = useRef<string | null>(null);
   const invalidateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const selectByNotificationRef = useRef<string | null>(null);
+  const conversationType = type === "suppliers" ? "SUPPLIER_ADMIN" : "USER_SUPPORT" as const;
 
   const invalidateConvs = useCallback(() => {
     if (invalidateTimerRef.current) clearTimeout(invalidateTimerRef.current);
@@ -65,13 +67,22 @@ export default function ChatPage() {
   const { onNewMessage, onMarkRead, onDelivered, emitDelivered } = useChatSocket(selectedConv?.id || null);
 
   const {
-    data: conversations = [],
+    data: allConversations = [],
     isLoading: convsLoading,
     isError: convsError,
     refetch: refetchConvs,
   } = useQuery({
     queryKey: ["chat", "conversations"],
     queryFn: getConversations,
+  });
+
+  const conversations = allConversations.filter((c: Conversation) => {
+    const otherUser = c.participants?.find(
+      (p) => p.user.roles && !p.user.roles.includes('admin')
+    )?.user;
+    if (!otherUser?.roles) return false;
+    if (type === "suppliers") return otherUser.roles.includes('supplier');
+    return otherUser.roles.includes('customer') && !otherUser.roles.includes('supplier');
   });
 
   useEffect(() => {
@@ -229,7 +240,7 @@ export default function ChatPage() {
   const handleNewConversation = useCallback(
     async (recipientId: string) => {
       try {
-        const conv = await getOrCreateConversation(recipientId);
+        const conv = await getOrCreateConversation(recipientId, conversationType);
         invalidateConvs();
         setSelectedConv(conv);
         setNewDialogOpen(false);
@@ -237,7 +248,7 @@ export default function ChatPage() {
         toast.error("Failed to start conversation");
       }
     },
-    [invalidateConvs]
+    [invalidateConvs, conversationType]
   );
 
   const handleEditMessage = useCallback(
@@ -278,16 +289,22 @@ export default function ChatPage() {
 
   const handleViewProfile = useCallback(
     (userId: string) => {
-      navigate(`/admin/suppliers/${userId}`);
+      if (type === "suppliers") {
+        navigate(`/admin/suppliers/${userId}`);
+      } else {
+        toast.info("Customer profile coming soon");
+      }
     },
-    [navigate]
+    [navigate, type]
   );
 
   return (
     <div className="-m-6 flex h-[calc(100vh-72px)] overflow-hidden">
       <div className="flex w-[380px] shrink-0 flex-col border-r border-border/50 bg-white">
         <div className="flex items-center justify-between border-b border-border/50 px-5 py-4">
-          <h1 className="text-base font-bold text-text-primary">Messages</h1>
+          <h1 className="text-base font-bold text-text-primary">
+            {type === "suppliers" ? "Supplier Messages" : "Customer Support"}
+          </h1>
           <Button
             size="sm"
             variant="ghost"
@@ -307,6 +324,7 @@ export default function ChatPage() {
               selectedId={selectedConv?.id || null}
               onSelect={handleSelect}
               loading={convsLoading}
+              chatType={type}
             />
           )}
         </div>
@@ -327,6 +345,7 @@ export default function ChatPage() {
               onEditMessage={handleEditMessage}
               onDeleteMessage={handleDeleteMessage}
               onDeleteConversation={handleDeleteConversation}
+              chatType={type}
             />
       </div>
 
@@ -334,6 +353,7 @@ export default function ChatPage() {
         open={newDialogOpen}
         onOpenChange={setNewDialogOpen}
         onSelect={(recipientId) => handleNewConversation(recipientId)}
+        chatType={type}
       />
     </div>
   );

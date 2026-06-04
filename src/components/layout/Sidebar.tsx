@@ -19,6 +19,7 @@ import {
   Wallet,
   Star,
   PanelLeftClose,
+  Building,
   PanelLeftOpen,
   ChevronDown,
   ChevronRight,
@@ -63,6 +64,7 @@ const navGroups: { group: string; items: NavItem[] }[] = [
         label: "Users",
         icon: <Users className="h-4 w-4" />,
         children: [
+          { label: "Customer Support", path: "/admin/chat/customers", icon: <MessageSquare className="h-4 w-4" /> },
           { label: "User Growth", path: "/admin/user-growth", icon: <UserCog className="h-4 w-4" /> },
           { label: "CLV", path: "/admin/clv", icon: <DollarSign className="h-4 w-4" /> },
           { label: "Conversion Funnel", path: "/admin/funnel", icon: <Target className="h-4 w-4" /> },
@@ -77,7 +79,7 @@ const navGroups: { group: string; items: NavItem[] }[] = [
       { label: "Suppliers", path: "/admin/suppliers", icon: <UserPlus className="h-4 w-4" /> },
       { label: "Active Suppliers", path: "/admin/suppliers/active", icon: <UserCheck className="h-4 w-4" /> },
       { label: "Reviews", path: "/admin/reviews", icon: <Star className="h-4 w-4" /> },
-      { label: "Messages", path: "/admin/chat", icon: <MessageSquare className="h-4 w-4" /> },
+      { label: "Supplier Messages", path: "/admin/chat/suppliers", icon: <Building className="h-4 w-4" /> },
     ],
   },
   {

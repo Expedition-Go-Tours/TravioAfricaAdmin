@@ -52,8 +52,8 @@ export async function getConversations(): Promise<Conversation[]> {
   return res.data.data?.conversations || [];
 }
 
-export async function getOrCreateConversation(recipientId: string): Promise<Conversation> {
-  const res = await api.post("/chat/conversations", { recipientId });
+export async function getOrCreateConversation(recipientId: string, type?: string): Promise<Conversation> {
+  const res = await api.post("/chat/conversations", { recipientId, type });
   return res.data.data.conversation;
 }
 
@@ -124,4 +124,12 @@ export async function deleteMessage(
 
 export async function deleteConversation(conversationId: string): Promise<void> {
   await api.delete(`/chat/conversations/${conversationId}`);
+}
+
+export async function searchUsers(query: string, role?: string) {
+  const params = new URLSearchParams();
+  if (query) params.set("q", query);
+  if (role) params.set("role", role);
+  const res = await api.get(`/admin/users/search?${params.toString()}`);
+  return res.data.data.users as ChatUser[];
 }

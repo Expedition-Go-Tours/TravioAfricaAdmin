@@ -62,14 +62,15 @@ export default function OverviewPage() {
     queryKey: ["admin", "overview"],
     queryFn: async () => {
       const res = await api.get("/admin/analytics/overview");
-      const d = res.data.data;
+      const d = res.data?.data as Record<string, unknown> | undefined;
+      const overview = (d?.overview as Record<string, unknown>) || {};
       return {
-        revenue: d.overview?.revenue,
-        bookings: d.overview?.bookings,
-        signups: d.overview?.signups,
-        activeUsersLast30Days: d.overview?.activeUsersLast30Days,
-        activeUsersPrevious30: d.overview?.activeUsersPrevious30,
-        topTours: (d.topTours || []).map((t: Record<string, unknown>) => ({
+        revenue: (overview?.revenue as Record<string, unknown>) || {},
+        bookings: (overview?.bookings as Record<string, unknown>) || {},
+        signups: (overview?.signups as Record<string, unknown>) || {},
+        activeUsersLast30Days: (overview?.activeUsersLast30Days as number) || 0,
+        activeUsersPrevious30: (overview?.activeUsersPrevious30 as number) || 0,
+        topTours: ((d?.topTours as Array<Record<string, unknown>>) || []).map((t) => ({
           id: t.id as string,
           title: t.title as string,
           coverPhoto: t.coverPhoto as string,
@@ -78,15 +79,15 @@ export default function OverviewPage() {
           averageRating: (t.averageRating as number) || 0,
           reviewCount: (t.reviewCount as number) || 0,
         })),
-        topSuppliers: (d.topSuppliers || []).map((s: Record<string, unknown>) => ({
+        topSuppliers: ((d?.topSuppliers as Array<Record<string, unknown>>) || []).map((s) => ({
           id: s.id as string,
           user: { name: s.name as string, email: s.email as string, photoURL: s.photoURL as string },
           totalEarnings: (s.totalEarnings as number) || 0,
           totalBookings: (s.totalBookings as number) || 0,
           averageRating: (s.averageRating as number) || 0,
         })),
-        bookingStatusDistribution: d.bookingStatusDistribution || [],
-        eventFeed: (d.eventFeed || []).map((e: Record<string, unknown>) => ({
+        bookingStatusDistribution: (d?.bookingStatusDistribution as Array<Record<string, unknown>>) || [],
+        eventFeed: ((d?.eventFeed as Array<Record<string, unknown>>) || []).map((e) => ({
           message: typeof e.properties === "object" && e.properties ? ((e.properties as Record<string, unknown>).message as string) || (e.name as string) : (e.name as string),
           userName: (e.userName as string) || null,
           createdAt: e.createdAt as string,
@@ -99,10 +100,10 @@ export default function OverviewPage() {
     queryKey: ["admin", "payout-summary"],
     queryFn: async () => {
       const res = await api.get("/payouts/admin/summary");
-      const d = res.data.data;
+      const d = res.data?.data as { pending?: { count: number; total: number }; paidThisMonth?: { count: number; total: string } } | undefined;
       return {
-        pending: { count: d.pending?.count ?? 0, totalAmount: d.pending?.total ?? 0 },
-        paidThisMonth: { count: d.paidThisMonth?.count ?? 0, totalAmount: d.paidThisMonth?.total ?? 0 },
+        pending: { count: d?.pending?.count ?? 0, totalAmount: d?.pending?.total ?? 0 },
+        paidThisMonth: { count: d?.paidThisMonth?.count ?? 0, totalAmount: d?.paidThisMonth?.total ?? "0" },
       };
     },
   });
@@ -111,8 +112,8 @@ export default function OverviewPage() {
     queryKey: ["admin", "reviews-pending-count"],
     queryFn: async () => {
       const res = await api.get("/reviews/admin/pending?page=1&limit=1");
-      const d = res.data.data as { reviews: unknown[]; pagination: { totalCount: number }; counts?: { pending?: number } };
-      return d;
+      const d = res.data?.data as { reviews: unknown[]; pagination: { totalCount: number }; counts?: { pending?: number } } | undefined;
+      return d ?? { reviews: [], pagination: { totalCount: 0 } };
     },
   });
 
@@ -120,7 +121,7 @@ export default function OverviewPage() {
     queryKey: ["admin", "suppliers-pending"],
     queryFn: async () => {
       const res = await api.get("/suppliers/admin/applications?status=PENDING&page=1&limit=1");
-      return res.data.data as { applications: unknown[]; pagination: { totalCount: number } };
+      return (res.data?.data as { applications: unknown[]; pagination: { totalCount: number } } | undefined) ?? { applications: [], pagination: { totalCount: 0 } };
     },
   });
 

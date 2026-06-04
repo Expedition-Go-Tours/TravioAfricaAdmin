@@ -22,6 +22,7 @@ interface ChatWindowProps {
   onEditMessage?: (messageId: string, content: string) => Promise<void>;
   onDeleteMessage?: (messageId: string) => Promise<void>;
   onDeleteConversation?: () => Promise<void>;
+  chatType?: "suppliers" | "customers";
 }
 
 function formatDateSeparator(dateStr: string) {
@@ -83,6 +84,23 @@ function formatLastSeen(dateStr: string | null | undefined): string {
   return `last seen ${date} at ${time}`;
 }
 
+const accent = (type: "suppliers" | "customers") => ({
+  bg: type === "suppliers" ? "green" : "blue",
+  bg30: type === "suppliers" ? "bg-green-50/30" : "bg-blue-50/30",
+  bg50: type === "suppliers" ? "bg-green-50" : "bg-blue-50",
+  text: type === "suppliers" ? "text-green-600" : "text-blue-600",
+  text400: type === "suppliers" ? "text-green-400" : "text-blue-400",
+  text700: type === "suppliers" ? "text-green-700" : "text-blue-700",
+  border: type === "suppliers" ? "focus-visible:border-green-400" : "focus-visible:border-blue-400",
+  gradient: type === "suppliers" ? "from-green-400 to-green-600" : "from-blue-400 to-blue-600",
+  hover: type === "suppliers" ? "hover:bg-green-50" : "hover:bg-blue-50",
+  hoverText: type === "suppliers" ? "hover:text-green-600" : "hover:text-blue-600",
+  hoverText700: type === "suppliers" ? "hover:text-green-700" : "hover:text-blue-700",
+  button: type === "suppliers" ? "bg-green-600 hover:bg-green-700" : "bg-blue-600 hover:bg-blue-700",
+  scrollBg: type === "suppliers" ? "hover:bg-green-50" : "hover:bg-blue-50",
+  loadMore: type === "suppliers" ? "hover:bg-green-50 text-green-600" : "hover:bg-blue-50 text-blue-600",
+});
+
 export function ChatWindow({
   conversation,
   messages,
@@ -97,7 +115,9 @@ export function ChatWindow({
   onEditMessage,
   onDeleteMessage,
   onDeleteConversation,
+  chatType = "suppliers",
 }: ChatWindowProps) {
+  const a = accent(chatType);
   const [input, setInput] = useState("");
   const [typingUser, setTypingUser] = useState<string | null>(null);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
@@ -224,9 +244,9 @@ export function ChatWindow({
 
   if (!conversation) {
     return (
-      <div className="flex h-full flex-col items-center justify-center bg-green-50/30 text-center">
+      <div className={cn("flex h-full flex-col items-center justify-center text-center", a.bg30)}>
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm">
-          <Send className="h-6 w-6 text-green-400" />
+          <Send className={cn("h-6 w-6", a.text400)} />
         </div>
         <p className="mt-4 text-sm font-medium text-text-secondary">
           Select a conversation
@@ -247,7 +267,7 @@ export function ChatWindow({
           className="flex cursor-pointer items-center gap-3 flex-1 min-w-0"
           onClick={() => otherParticipant?.id && onViewProfile?.(otherParticipant.id)}
         >
-          <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-400 to-green-600 text-sm font-bold text-white shadow-sm">
+          <div className={cn("relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br text-sm font-bold text-white shadow-sm", a.gradient)}>
             <span>{headerName.charAt(0).toUpperCase()}</span>
             {otherParticipant?.photoURL && (
               <img
@@ -277,7 +297,7 @@ export function ChatWindow({
               </span>
             </div>
             {typingUser ? (
-              <p className="text-xs text-green-600">
+              <p className={cn("text-xs", a.text)}>
                 <span className="inline-flex gap-0.5">
                   typing<span className="animate-bounce delay-0">.</span><span className="animate-bounce delay-150">.</span><span className="animate-bounce delay-300">.</span>
                 </span>
@@ -286,7 +306,7 @@ export function ChatWindow({
               <p className="text-xs text-text-tertiary">{formatLastSeen(otherParticipant?.lastLoginAt)}</p>
             )}
           </div>
-          <ChevronRight className="h-4 w-4 shrink-0 text-text-tertiary transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-green-600" />
+          <ChevronRight className={cn("h-4 w-4 shrink-0 text-text-tertiary transition-all duration-200 group-hover:translate-x-0.5", chatType === "suppliers" ? "group-hover:text-green-600" : "group-hover:text-blue-600")} />
         </div>
         {onDeleteConversation && (
           <button
@@ -306,7 +326,7 @@ export function ChatWindow({
       <div
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto scrollbar-none bg-green-50/30"
+        className={cn("flex-1 overflow-y-auto scrollbar-none", a.bg30)}
       >
         <div className="px-4 py-3">
           {hasMore && (
@@ -314,7 +334,7 @@ export function ChatWindow({
               <button
                 onClick={onLoadMore}
                 disabled={loadingMore}
-                className="rounded-full bg-white px-4 py-1.5 text-xs text-green-600 shadow-sm hover:bg-green-50 disabled:opacity-50 transition-colors"
+                className={cn("rounded-full bg-white px-4 py-1.5 text-xs shadow-sm disabled:opacity-50 transition-colors", a.loadMore)}
               >
                 {loadingMore ? "Loading..." : "Load older messages"}
               </button>
@@ -375,7 +395,7 @@ export function ChatWindow({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={() => scrollToBottom(true)}
-            className="absolute bottom-20 right-8 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-lg border border-border/50 hover:bg-green-50 transition-colors"
+            className={cn("absolute bottom-20 right-8 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-lg border border-border/50 transition-colors", a.scrollBg)}
           >
             <ChevronDown className="h-4 w-4 text-text-primary" />
           </motion.button>
@@ -386,7 +406,7 @@ export function ChatWindow({
         <div className="flex items-end gap-2">
           <button
             onClick={handleAttachmentClick}
-            className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full text-text-tertiary hover:text-green-600 hover:bg-green-50 transition-colors"
+            className={cn("flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full text-text-tertiary transition-colors", a.hoverText, a.hover)}
           >
             <Paperclip className="h-5 w-5" />
           </button>
@@ -405,14 +425,14 @@ export function ChatWindow({
               placeholder="Type a message..."
               rows={1}
               disabled={sending}
-              className="w-full resize-none rounded-2xl border border-border/70 bg-green-50/30 px-4 py-2.5 text-sm text-text-primary placeholder:text-text-tertiary focus-visible:outline-none focus-visible:border-green-400 focus-visible:bg-white transition-colors disabled:cursor-not-allowed disabled:opacity-50 scrollbar-none"
+              className={cn("w-full resize-none rounded-2xl border border-border/70 px-4 py-2.5 text-sm text-text-primary placeholder:text-text-tertiary focus-visible:outline-none focus-visible:bg-white transition-colors disabled:cursor-not-allowed disabled:opacity-50 scrollbar-none", a.bg30, a.border)}
               style={{ maxHeight: "120px" }}
             />
           </div>
           <button
             onClick={handleSend}
             disabled={!input.trim() || sending}
-            className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-green-600 text-white transition-all hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+            className={cn("flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm hover:shadow-md", a.button)}
           >
             <Send className="h-[18px] w-[18px]" />
           </button>

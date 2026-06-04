@@ -1,5 +1,5 @@
-﻿import { useState, useRef, useEffect } from "react";
-import { Check, CheckCheck, Loader2, MoreVertical, Pencil, Trash2 } from "lucide-react";
+﻿import { useState, useRef, useEffect, useCallback } from "react";
+import { Check, CheckCheck, Loader2, MoreVertical, Pencil, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Message } from "@/services/chatService";
 
@@ -46,8 +46,18 @@ export function MessageBubble({
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(message.content);
   const [saving, setSaving] = useState(false);
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const editInputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (!fullscreenImage) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setFullscreenImage(null);
+    };
+    document.addEventListener("keydown", handleEsc);
+    return () => document.removeEventListener("keydown", handleEsc);
+  }, [fullscreenImage]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -134,7 +144,7 @@ export function MessageBubble({
         <div className="w-8 shrink-0" />
       )}
 
-      <div className={cn("flex max-w-[75%] flex-col", isOwn ? "items-end" : "items-start")}>
+      <div className={cn("flex max-w-[68%] flex-col min-w-0", isOwn ? "items-end" : "items-start")}>
         <div
           className={cn(
             "relative px-3.5 py-2 text-sm leading-relaxed shadow-sm",
@@ -174,11 +184,12 @@ export function MessageBubble({
           ) : (
             <>
               {message.attachmentUrl && (
-                <div className={cn("-mx-3.5 -mt-2 mb-2 overflow-hidden", message.content ? "rounded-t-[18px]" : "rounded-[18px]")}>
+                <div className={cn("-mx-3.5 -mt-2 cursor-pointer border border-black/10", message.content ? "rounded-t-[18px] mb-1" : "rounded-[18px]")}>
                   <img
                     src={message.attachmentUrl}
                     alt=""
-                    className="max-w-full object-cover"
+                    className="max-h-72 w-full object-cover hover:scale-105 transition-transform duration-200"
+                    onClick={() => setFullscreenImage(message.attachmentUrl!)}
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = "none";
                     }}
@@ -186,7 +197,7 @@ export function MessageBubble({
                 </div>
               )}
               {message.content && (
-                <span className="whitespace-pre-wrap break-words">{message.content}</span>
+                <span className="whitespace-pre-wrap break-all">{message.content}</span>
               )}
               {message.editedAt && (
                 <span className={cn("ml-1 text-[10px]", isOwn ? "text-white/50" : "text-text-tertiary")}>
@@ -253,6 +264,26 @@ export function MessageBubble({
           </div>
         )}
       </div>
+
+      {fullscreenImage && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4"
+          onClick={() => setFullscreenImage(null)}
+        >
+          <button
+            onClick={() => setFullscreenImage(null)}
+            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm transition-colors hover:bg-white/30"
+          >
+            <X className="h-5 w-5" />
+          </button>
+          <img
+            src={fullscreenImage}
+            alt=""
+            className="max-h-full max-w-full rounded-lg object-contain shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 }
