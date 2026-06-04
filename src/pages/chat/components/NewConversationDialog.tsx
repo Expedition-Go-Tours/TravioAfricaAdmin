@@ -121,7 +121,7 @@ export function NewConversationDialog({
         "Unknown"
       );
     }
-    return item.name || item.email || "Unknown";
+    return (item as ChatUser).name || (item as ChatUser).email || "Unknown";
   };
 
   const handleSearchChange = useCallback(
