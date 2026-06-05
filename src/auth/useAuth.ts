@@ -8,10 +8,6 @@ export function useAuth() {
   const [error, setError] = useState<string | null>(null);
 
   const verifyAdmin = useCallback(async (token: string) => {
-    // Remove stale token so axios interceptor doesn't override our explicit header
-    const staleToken = localStorage.getItem("firebaseToken");
-    if (staleToken) localStorage.removeItem("firebaseToken");
-
     try {
       await api.get("/admin/analytics/overview", {
         headers: { Authorization: `Bearer ${token}` },
