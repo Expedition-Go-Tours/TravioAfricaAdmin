@@ -31,7 +31,7 @@ const notificationRouteMap: Record<string, (data?: Record<string, unknown>) => {
   PAYOUT_PROCESSED: (data) => data?.payoutId ? { path: "/admin/payouts", state: { payoutId: data.payoutId } } : null,
   PAYOUT_APPROVED: (data) => data?.payoutId ? { path: "/admin/payouts", state: { payoutId: data.payoutId } } : null,
   SYSTEM_ALERT: (data) => data?.supplierId ? { path: `/admin/suppliers/${data.supplierId}?tab=payout` } : { path: "/admin" },
-  NEW_MESSAGE: (data) => data?.conversationId ? { path: "/admin/chat", state: { conversationId: data.conversationId } } : null,
+  NEW_MESSAGE: (data) => data?.conversationId ? { path: `/admin/chat/${data.chatType || "suppliers"}`, state: { conversationId: data.conversationId } } : null,
 };
 
 const typeConfig: Record<string, { icon: React.ReactNode; color: string }> = {

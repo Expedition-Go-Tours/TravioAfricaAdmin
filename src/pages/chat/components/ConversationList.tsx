@@ -132,11 +132,9 @@ export function ConversationList({
           <div className="divide-y divide-border/50">
             {displayed.map((conv) => {
               const otherUser = conv.participants?.find(
-                (p) => p.user.name === conv.title
-              )?.user || conv.participants?.find(
                 (p) => p.user.roles && !p.user.roles.includes('admin')
               )?.user || conv.participants?.[0]?.user;
-              const name = conv.title || otherUser?.name || otherUser?.email || "Unknown";
+              const name = otherUser?.name || otherUser?.email || conv.title || "Unknown";
               const roleLabel = otherUser?.roles?.includes('supplier')
                 ? "Supplier"
                 : otherUser?.roles?.includes('customer')

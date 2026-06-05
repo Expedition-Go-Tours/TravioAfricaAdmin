@@ -184,7 +184,7 @@ export function MessageBubble({
           ) : (
             <>
               {message.attachmentUrl && (
-                <div className={cn("-mx-3.5 -mt-2 cursor-pointer border border-black/10", message.content ? "rounded-t-[18px] mb-1" : "rounded-[18px]")}>
+                <div className={cn("-mx-3.5 -mt-2 cursor-pointer border border-black/10 overflow-hidden", message.content ? "rounded-t-[18px] mb-1" : "rounded-[18px]")}>
                   <img
                     src={message.attachmentUrl}
                     alt=""

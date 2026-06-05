@@ -60,7 +60,7 @@ export default function ChatPage() {
     const convId = (location.state as { conversationId?: string })?.conversationId;
     if (convId) {
       selectByNotificationRef.current = convId;
-      navigate(location.pathname, { replace: true });
+      window.history.replaceState({}, "");
     }
   }, []);
 
