@@ -1,7 +1,6 @@
 import { io, Socket } from "socket.io-client";
 
 const SOCKET_URL = import.meta.env.VITE_API_URL?.replace("/api", "") || "";
-const ADMIN_ROOM = "admin-room";
 const ADMIN_NOTIFICATION_EVENT = "admin-notification";
 
 let socket: Socket | null = null;
@@ -28,7 +27,6 @@ export function disconnectAdminSocket(): void {
 
 export function onAdminNotification(callback: (notification: Record<string, unknown>) => void): () => void {
   const s = getAdminSocket();
-  s.emit("join", ADMIN_ROOM);
   s.on(ADMIN_NOTIFICATION_EVENT, callback);
   return () => {
     s.off(ADMIN_NOTIFICATION_EVENT, callback);

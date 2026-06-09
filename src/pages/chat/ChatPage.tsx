@@ -87,14 +87,15 @@ export default function ChatPage() {
 
   useEffect(() => {
     const convId = selectByNotificationRef.current;
-    if (convId && conversations.length > 0) {
-      const conv = conversations.find((c: Conversation) => c.id === convId);
+    if (convId && allConversations.length > 0) {
+      const conv = conversations.find((c: Conversation) => c.id === convId)
+        || allConversations.find((c: Conversation) => c.id === convId);
       if (conv) {
         selectByNotificationRef.current = null;
         setSelectedConv(conv);
       }
     }
-  }, [conversations]);
+  }, [conversations, allConversations]);
 
   const sortMessages = (msgs: Message[]) =>
     [...msgs].sort(
@@ -121,8 +122,9 @@ export default function ChatPage() {
       selectedIdRef.current = selectedConv.id;
       loadMessages(selectedConv.id);
       markConversationAsRead(selectedConv.id).then(() => {
-      invalidateConvs();
-    }).catch(() => {});
+        invalidateConvs();
+        queryClient.invalidateQueries({ queryKey: ["admin-notifications"] });
+      }).catch(() => {});
     }
   }, [selectedConv?.id, loadMessages, invalidateConvs]);
 
@@ -135,7 +137,9 @@ export default function ChatPage() {
           return sortMessages([...prev, message]);
         });
         setMessageStatuses((prev) => ({ ...prev, [message.id]: "sent" }));
-        markConversationAsRead(convId).catch(() => {});
+        markConversationAsRead(convId).then(() => {
+          queryClient.invalidateQueries({ queryKey: ["admin-notifications"] });
+        }).catch(() => {});
       }
       invalidateConvs();
     });
@@ -189,7 +193,10 @@ export default function ChatPage() {
       setMessageStatuses((prev) => ({ ...prev, [tempId]: "sending" }));
       try {
         const msg = await sendMessage(selectedConv.id, content, attachment);
-        setMessages((prev) => sortMessages([...prev, msg]));
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === msg.id)) return prev;
+          return sortMessages([...prev, msg]);
+        });
         setMessageStatuses((prev) => {
           const next = { ...prev };
           delete next[tempId];

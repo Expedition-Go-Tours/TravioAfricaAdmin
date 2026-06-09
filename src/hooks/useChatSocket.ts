@@ -30,9 +30,9 @@ export function useChatSocket(conversationId: string | null) {
 
   useEffect(() => {
     if (!conversationId) return;
-    socket.emit("chat:join", conversationId);
+    socket.emit("chat:join", { conversationId });
     return () => {
-      socket.emit("chat:leave", conversationId);
+      socket.emit("chat:leave", { conversationId });
     };
   }, [conversationId, socket]);
 

@@ -1,5 +1,6 @@
 import axios from "axios";
 import { toast } from "sonner";
+import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
 const api = axios.create({
@@ -82,8 +83,27 @@ api.interceptors.response.use(
     } else if (error.request) {
       toast.error("Network error. Check connection.");
     }
+
+    if (error.response?.status === 401 && window.location.pathname !== "/admin/login") {
+      localStorage.removeItem("firebaseToken");
+      localStorage.removeItem("userRole");
+      window.location.href = "/admin/login";
+    }
+
     return Promise.reject(error);
   },
 );
+
+let wasAuthenticated = false;
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    wasAuthenticated = true;
+  } else if (wasAuthenticated) {
+    wasAuthenticated = false;
+    localStorage.removeItem("firebaseToken");
+    localStorage.removeItem("userRole");
+    window.location.href = "/admin/login";
+  }
+});
 
 export default api;
