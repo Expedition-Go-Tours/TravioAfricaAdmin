@@ -90,7 +90,7 @@ export function RolesTab() {
       queryClient.invalidateQueries({ queryKey: ["admin", "roles"] });
       closeEditor();
     },
-    onError: (err: unknown) => toast.error(err?.response?.data?.message || "Failed to create role"),
+    onError: (err: Error) => toast.error((err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to create role"),
   });
 
   const updateMutation = useMutation({
@@ -101,7 +101,7 @@ export function RolesTab() {
       queryClient.invalidateQueries({ queryKey: ["admin", "roles"] });
       closeEditor();
     },
-    onError: (err: unknown) => toast.error(err?.response?.data?.message || "Failed to update role"),
+    onError: (err: Error) => toast.error((err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to update role"),
   });
 
   const deleteMutation = useMutation({
@@ -111,7 +111,7 @@ export function RolesTab() {
       queryClient.invalidateQueries({ queryKey: ["admin", "roles"] });
       setShowDelete(null);
     },
-    onError: (err: unknown) => toast.error(err?.response?.data?.message || "Failed to delete role"),
+    onError: (err: Error) => toast.error((err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to delete role"),
   });
 
   function openEditor(role: AdminRole | null) {

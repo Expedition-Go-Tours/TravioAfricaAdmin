@@ -74,7 +74,8 @@ export function AdminUsersTab() {
   const [newRoleId, setNewRoleId] = useState("");
   const [addDone, setAddDone] = useState(false);
   const [revokeDone, setRevokeDone] = useState(false);
-  const searchTimer = useRef<ReturnType<typeof setTimeout>>();
+  const queryClient = useQueryClient();
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { data: admins, isLoading } = useQuery({
     queryKey: ["admin", "admin-users"],
@@ -93,7 +94,7 @@ export function AdminUsersTab() {
       toast.success("Admin role updated");
       queryClient.invalidateQueries({ queryKey: ["admin", "admin-users"] });
     },
-    onError: (err: unknown) => toast.error(err?.response?.data?.message || "Failed to update role"),
+    onError: (err: Error) => toast.error((err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to update role"),
   });
 
   const revokeMutation = useMutation({
@@ -103,7 +104,7 @@ export function AdminUsersTab() {
       queryClient.invalidateQueries({ queryKey: ["admin", "admin-users"] });
       setRevokeDone(true);
     },
-    onError: (err: unknown) => toast.error(err?.response?.data?.message || "Failed to revoke access"),
+    onError: (err: Error) => toast.error((err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to revoke access"),
   });
 
   const addMutation = useMutation({
@@ -114,7 +115,7 @@ export function AdminUsersTab() {
       queryClient.invalidateQueries({ queryKey: ["admin", "admin-users"] });
       setAddDone(true);
     },
-    onError: (err: unknown) => toast.error(err?.response?.data?.message || "Failed to add admin"),
+    onError: (err: Error) => toast.error((err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to add admin"),
   });
 
   useEffect(() => {

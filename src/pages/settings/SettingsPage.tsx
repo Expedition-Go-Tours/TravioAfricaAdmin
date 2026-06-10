@@ -22,11 +22,11 @@ const TABS = [
 
 const tabVariants = {
   initial: { opacity: 0, y: 12 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
-  exit: { opacity: 0, y: -8, transition: { duration: 0.2, ease: "easeIn" } },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" as const } },
+  exit: { opacity: 0, y: -8, transition: { duration: 0.2, ease: "easeIn" as const } },
 };
 
-function TabFallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
+function TabFallback({ error, resetErrorBoundary }: { error: unknown; resetErrorBoundary: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center rounded-sm border border-border-muted bg-white px-6 py-12 text-center">
       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-50 mb-4">
@@ -34,7 +34,7 @@ function TabFallback({ error, resetErrorBoundary }: { error: Error; resetErrorBo
       </div>
       <h3 className="text-base font-semibold text-text-primary mb-1">Something went wrong</h3>
       <p className="text-sm text-text-secondary mb-6 max-w-md">
-        {error.message || "An unexpected error occurred while rendering this section."}
+        {(error instanceof Error ? error.message : "An unexpected error occurred while rendering this section.")}
       </p>
       <Button variant="outline" size="sm" onClick={resetErrorBoundary} className="gap-2">
         <RefreshCw className="h-4 w-4" /> Try Again
