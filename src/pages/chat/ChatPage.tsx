@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { auth } from "@/lib/firebase";
@@ -28,7 +28,7 @@ export default function ChatPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
-  const { type } = useParams<{ type: "suppliers" | "customers" }>();
+  const type = (location.pathname.endsWith('/suppliers') ? 'suppliers' : 'customers') as 'suppliers' | 'customers';
   const [selectedConv, setSelectedConv] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [messageStatuses, setMessageStatuses] = useState<Record<string, MessageStatus>>({});

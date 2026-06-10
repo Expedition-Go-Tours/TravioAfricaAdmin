@@ -63,11 +63,11 @@ function getNavGroups(can: (key: string) => boolean): { group: string; items: Na
             { label: "Cart Abandonment", path: "/admin/cart-abandonment", icon: <ShoppingCart className="h-4 w-4" /> },
           ],
         }] : []),
-        ...(can('users.view') || can('chat.access') ? [{
+        ...(can('users.view') || can('chat.customers') ? [{
           label: "Users",
           icon: <Users className="h-4 w-4" />,
           children: [
-            ...(can('chat.access') ? [{ label: "Customer Support", path: "/admin/chat/customers", icon: <MessageSquare className="h-4 w-4" /> }] : []),
+            ...(can('chat.customers') ? [{ label: "Customer Support", path: "/admin/chat/customers", icon: <MessageSquare className="h-4 w-4" /> }] : []),
             ...(can('users.view') ? [{ label: "User Growth", path: "/admin/user-growth", icon: <UserCog className="h-4 w-4" /> }] : []),
             ...(can('users.view') ? [{ label: "CLV", path: "/admin/clv", icon: <DollarSign className="h-4 w-4" /> }] : []),
             ...(can('users.view') ? [{ label: "Conversion Funnel", path: "/admin/funnel", icon: <Target className="h-4 w-4" /> }] : []),
@@ -76,13 +76,13 @@ function getNavGroups(can: (key: string) => boolean): { group: string; items: Na
         ...(can('tours.view') ? [{ label: "Tours", path: "/admin/tours", icon: <Map className="h-4 w-4" /> }] : []),
       ].filter((i) => !i.children || i.children.length > 0),
     },
-    ...(can('suppliers.view') || can('reviews.view') || can('chat.access') ? [{
+    ...(can('suppliers.view') || can('reviews.view') || can('chat.suppliers') ? [{
       group: "Management",
       items: [
         ...(can('suppliers.view') ? [{ label: "Suppliers", path: "/admin/suppliers", icon: <UserPlus className="h-4 w-4" /> }] : []),
         ...(can('suppliers.view') ? [{ label: "Active Suppliers", path: "/admin/suppliers/active", icon: <UserCheck className="h-4 w-4" /> }] : []),
         ...(can('reviews.view') ? [{ label: "Reviews", path: "/admin/reviews", icon: <Star className="h-4 w-4" /> }] : []),
-        ...(can('chat.access') ? [{ label: "Supplier Messages", path: "/admin/chat/suppliers", icon: <Building className="h-4 w-4" /> }] : []),
+        ...(can('chat.suppliers') ? [{ label: "Supplier Messages", path: "/admin/chat/suppliers", icon: <Building className="h-4 w-4" /> }] : []),
       ],
     }] : []),
     ...(can('payouts.view') || can('payout-methods.view') ? [{

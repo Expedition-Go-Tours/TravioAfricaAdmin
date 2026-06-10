@@ -60,7 +60,8 @@ export default function App() {
             <Route path="payouts" element={<PayoutsTabPage />} />
             <Route path="payout-methods" element={<PayoutMethodsPage />} />
             <Route path="reviews" element={<ReviewModerationPage />} />
-            <Route path="chat/:type" element={<PermissionRoute permission="chat.access"><ChatPage /></PermissionRoute>} />
+            <Route path="chat/suppliers" element={<PermissionRoute permission="chat.suppliers"><ChatPage /></PermissionRoute>} />
+            <Route path="chat/customers" element={<PermissionRoute permission="chat.customers"><ChatPage /></PermissionRoute>} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/admin/overview" replace />} />

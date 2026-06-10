@@ -60,7 +60,8 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  const canChat = hasPermission('chat.access');
+  const canSupplierChat = hasPermission('chat.suppliers');
+  const canCustomerChat = hasPermission('chat.customers');
 
   const { data: rawUnreadCount = 0 } = useQuery({
     queryKey: ["admin-notifications", "unread-count"],
@@ -73,11 +74,15 @@ export function NotificationBell() {
     enabled: open,
   });
 
-  const notifications = (dropdown?.notifications || []).filter(
-    (n) => n.type !== 'NEW_MESSAGE' || canChat,
-  );
+  const notifications = (dropdown?.notifications || []).filter((n) => {
+    if (n.type !== 'NEW_MESSAGE') return true;
+    const chatType = n.data?.chatType as string | undefined;
+    if (chatType === 'suppliers') return canSupplierChat;
+    if (chatType === 'customers') return canCustomerChat;
+    return canSupplierChat || canCustomerChat;
+  });
 
-  const unreadCount = canChat
+  const unreadCount = (canSupplierChat || canCustomerChat)
     ? rawUnreadCount
     : notifications.filter((n) => !n.read).length;
 
