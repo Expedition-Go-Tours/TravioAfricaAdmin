@@ -24,6 +24,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { usePermission } from "@/hooks/usePermission";
 import api from "@/lib/axios";
 import { formatCurrency, formatDate, truncateId } from "@/lib/utils";
 
@@ -74,6 +75,7 @@ const statusTabs = ["All", "Pending", "Approved", "Processing", "Paid", "Failed"
 
 export default function PayoutsList() {
   const queryClient = useQueryClient();
+  const { can } = usePermission();
   const [page, setPage] = useState(1);
   const [statusTab, setStatusTab] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
@@ -182,12 +184,12 @@ export default function PayoutsList() {
         const status = r.status;
         return (
           <div className="flex gap-1">
-            {status === "PENDING" && (
+            {status === "PENDING" && can('payouts.approve') && (
               <Button size="sm" variant="outline" className="gap-1" onClick={(e) => { e.stopPropagation(); setActionPayout(r); setActionType("approve"); }}>
                 <CheckCircle className="h-3.5 w-3.5" /> Approve
               </Button>
             )}
-            {status === "APPROVED" && (
+            {status === "APPROVED" && can('payouts.approve') && (
               <>
                 <Button size="sm" variant="default" className="gap-1" onClick={(e) => { e.stopPropagation(); setActionPayout(r); setActionType("release"); }}>
                   <Send className="h-3.5 w-3.5" /> Release
@@ -197,7 +199,7 @@ export default function PayoutsList() {
                 </Button>
               </>
             )}
-            {status === "PROCESSING" && (
+            {status === "PROCESSING" && can('payouts.approve') && (
               <Button size="sm" variant="destructive" className="gap-1" onClick={(e) => { e.stopPropagation(); setActionPayout(r); setActionType("fail"); }}>
                 <Ban className="h-3.5 w-3.5" /> Fail
               </Button>
@@ -299,9 +301,11 @@ export default function PayoutsList() {
                 </button>
               )}
             </div>
-            <Button variant="outline" size="sm" onClick={handleExport} className="gap-1.5">
-              <Download className="h-4 w-4" /> Export CSV
-            </Button>
+            {can('payouts.export') && (
+              <Button variant="outline" size="sm" onClick={handleExport} className="gap-1.5">
+                <Download className="h-4 w-4" /> Export CSV
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>

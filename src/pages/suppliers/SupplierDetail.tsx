@@ -39,6 +39,7 @@ import { SectionEmpty } from "@/components/shared/SectionEmpty";
 import { SafeImage } from "@/components/shared/SafeImage";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { usePermission } from "@/hooks/usePermission";
 import api from "@/lib/axios";
 import { formatDate, formatCurrency, formatNumber } from "@/lib/utils";
 
@@ -137,6 +138,7 @@ export default function SupplierDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { can } = usePermission();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "overview");
   const [modalAction, setModalAction] = useState<ActionType | null>(null);
@@ -245,14 +247,14 @@ export default function SupplierDetailPage() {
     const s = status;
     if (["PENDING", "UNDER_REVIEW"].includes(s)) {
       return [
-        { label: "Approve", action: "approve" as ActionType, icon: <CheckCircle className="h-3.5 w-3.5" />, variant: "default" as const },
-        { label: "Reject", action: "reject" as ActionType, icon: <XCircle className="h-3.5 w-3.5" />, variant: "destructive" as const },
-        { label: "Request Info", action: "request_info" as ActionType, icon: <AlertTriangle className="h-3.5 w-3.5" />, variant: "outline" as const },
+        ...(can('suppliers.approve') ? [{ label: "Approve", action: "approve" as ActionType, icon: <CheckCircle className="h-3.5 w-3.5" />, variant: "default" as const }] : []),
+        ...(can('suppliers.approve') ? [{ label: "Reject", action: "reject" as ActionType, icon: <XCircle className="h-3.5 w-3.5" />, variant: "destructive" as const }] : []),
+        ...(can('suppliers.approve') ? [{ label: "Request Info", action: "request_info" as ActionType, icon: <AlertTriangle className="h-3.5 w-3.5" />, variant: "outline" as const }] : []),
       ];
     }
-    if (s === "APPROVED") return [{ label: "Activate", action: "activate" as ActionType, icon: <CheckCircle className="h-3.5 w-3.5" />, variant: "default" as const }];
-    if (s === "ACTIVE") return [{ label: "Suspend", action: "suspend" as ActionType, icon: <AlertTriangle className="h-3.5 w-3.5" />, variant: "destructive" as const }];
-    if (s === "SUSPENDED") return [{ label: "Reactivate", action: "reactivate" as ActionType, icon: <CheckCircle className="h-3.5 w-3.5" />, variant: "default" as const }];
+    if (s === "APPROVED" && can('suppliers.approve')) return [{ label: "Activate", action: "activate" as ActionType, icon: <CheckCircle className="h-3.5 w-3.5" />, variant: "default" as const }];
+    if (s === "ACTIVE" && can('suppliers.suspend')) return [{ label: "Suspend", action: "suspend" as ActionType, icon: <AlertTriangle className="h-3.5 w-3.5" />, variant: "destructive" as const }];
+    if (s === "SUSPENDED" && can('suppliers.suspend')) return [{ label: "Reactivate", action: "reactivate" as ActionType, icon: <CheckCircle className="h-3.5 w-3.5" />, variant: "default" as const }];
     return [];
   };
 
@@ -729,19 +731,21 @@ export default function SupplierDetailPage() {
       </Tabs>
 
       {/* Delete User — subtle, at bottom */}
-      <div className="flex items-center justify-between rounded-sm border border-border-muted px-5 py-3">
-        <div>
-          <p className="text-sm font-medium text-text-primary">Danger Zone</p>
-          <p className="text-xs text-text-tertiary">Permanently delete this user and all associated data</p>
+      {can('suppliers.delete') && (
+        <div className="flex items-center justify-between rounded-sm border border-border-muted px-5 py-3">
+          <div>
+            <p className="text-sm font-medium text-text-primary">Danger Zone</p>
+            <p className="text-xs text-text-tertiary">Permanently delete this user and all associated data</p>
+          </div>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setModalAction("delete" as ActionType)}
+          >
+            <Trash2 className="mr-1.5 h-3.5 w-3.5" /> Delete User
+          </Button>
         </div>
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={() => setModalAction("delete" as ActionType)}
-        >
-          <Trash2 className="mr-1.5 h-3.5 w-3.5" /> Delete User
-        </Button>
-      </div>
+      )}
 
       {/* Action Modal */}
       {modalAction && modalAction !== "delete" && (

@@ -68,6 +68,8 @@ api.interceptors.response.use(
           processQueue(refreshError, null);
           localStorage.removeItem("firebaseToken");
           localStorage.removeItem("userRole");
+          localStorage.removeItem("adminRoleId");
+          localStorage.removeItem("adminRole");
           window.location.href = "/admin/login";
           return Promise.reject(refreshError);
         } finally {
@@ -87,6 +89,8 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && window.location.pathname !== "/admin/login") {
       localStorage.removeItem("firebaseToken");
       localStorage.removeItem("userRole");
+      localStorage.removeItem("adminRoleId");
+      localStorage.removeItem("adminRole");
       window.location.href = "/admin/login";
     }
 
@@ -102,6 +106,8 @@ onAuthStateChanged(auth, (user) => {
     wasAuthenticated = false;
     localStorage.removeItem("firebaseToken");
     localStorage.removeItem("userRole");
+    localStorage.removeItem("adminRoleId");
+    localStorage.removeItem("adminRole");
     window.location.href = "/admin/login";
   }
 });

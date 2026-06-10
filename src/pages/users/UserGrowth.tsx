@@ -252,6 +252,7 @@ export default function UserGrowthPage() {
                             src={u.photoURL}
                             alt={u.name || ""}
                             className="absolute inset-0 h-full w-full object-cover"
+                            loading="lazy"
                             onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                           />
                         )}

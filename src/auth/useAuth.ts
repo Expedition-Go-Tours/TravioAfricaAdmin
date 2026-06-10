@@ -3,6 +3,30 @@ import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 
 import { auth } from "@/lib/firebase";
 import api from "@/lib/axios";
 
+interface AdminRoleData {
+  id: string;
+  name: string;
+  permissions: string[];
+}
+
+async function fetchAdminRole() {
+  try {
+    const res = await api.get("/admin/me");
+    const userData = res.data?.data;
+    if (userData?.adminRoleId) {
+      localStorage.setItem("adminRoleId", userData.adminRoleId);
+    }
+    const rolesRes = await api.get("/admin/roles");
+    const roles: AdminRoleData[] = rolesRes.data?.data || [];
+    const match = roles.find((r) => r.id === userData?.adminRoleId);
+    if (match) {
+      localStorage.setItem("adminRole", JSON.stringify(match));
+    }
+  } catch {
+    // non-critical
+  }
+}
+
 export function useAuth() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +52,12 @@ export function useAuth() {
     }
   }, []);
 
+  const postLogin = useCallback(async (token: string) => {
+    localStorage.setItem("firebaseToken", token);
+    localStorage.setItem("userRole", "admin");
+    await fetchAdminRole();
+  }, []);
+
   const login = useCallback(async (email: string, password: string) => {
     setLoading(true);
     setError(null);
@@ -37,8 +67,7 @@ export function useAuth() {
 
       const ok = await verifyAdmin(token);
       if (ok) {
-        localStorage.setItem("firebaseToken", token);
-        localStorage.setItem("userRole", "admin");
+        await postLogin(token);
       }
       return ok;
     } catch (firebaseErr: unknown) {
@@ -58,7 +87,7 @@ export function useAuth() {
     } finally {
       setLoading(false);
     }
-  }, [verifyAdmin]);
+  }, [verifyAdmin, postLogin]);
 
   const loginWithGoogle = useCallback(async () => {
     setLoading(true);
@@ -70,8 +99,7 @@ export function useAuth() {
 
       const ok = await verifyAdmin(token);
       if (ok) {
-        localStorage.setItem("firebaseToken", token);
-        localStorage.setItem("userRole", "admin");
+        await postLogin(token);
       }
       return ok;
     } catch (firebaseErr: unknown) {
@@ -91,11 +119,13 @@ export function useAuth() {
     } finally {
       setLoading(false);
     }
-  }, [verifyAdmin]);
+  }, [verifyAdmin, postLogin]);
 
   const logout = useCallback(() => {
     localStorage.removeItem("firebaseToken");
     localStorage.removeItem("userRole");
+    localStorage.removeItem("adminRoleId");
+    localStorage.removeItem("adminRole");
     auth.signOut();
     window.location.href = "/admin/login";
   }, []);

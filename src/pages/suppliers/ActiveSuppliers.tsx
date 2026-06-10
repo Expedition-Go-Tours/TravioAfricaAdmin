@@ -12,6 +12,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { usePermission } from "@/hooks/usePermission";
 import api from "@/lib/axios";
 import { formatDate } from "@/lib/utils";
 
@@ -26,6 +27,7 @@ interface Supplier {
 export default function ActiveSuppliersPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { can } = usePermission();
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [actionTarget, setActionTarget] = useState<{ id: string; userId: string; name: string; action: "suspend" | "reactivate" } | null>(null);
@@ -68,6 +70,7 @@ export default function ActiveSuppliersPage() {
                   src={r.user.photoURL}
                   alt={name}
                   className="absolute inset-0 h-full w-full object-cover"
+                  loading="lazy"
                   onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                 />
               )}
@@ -89,22 +92,24 @@ export default function ActiveSuppliersPage() {
           <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); navigate(`/admin/suppliers/${r.id}`); }}>
             View
           </Button>
-          <Button
-            size="sm"
-            variant={r.status === "ACTIVE" ? "destructive" : "default"}
-            onClick={(e) => {
-              e.stopPropagation();
-              setActionTarget({
-                id: r.id,
-                userId: r.id,
-                name: r.user?.name || "Unknown",
-                action: r.status === "ACTIVE" ? "suspend" : "reactivate",
-              });
-              setSuspendReason("");
-            }}
-          >
-            {r.status === "ACTIVE" ? "Suspend" : "Reactivate"}
-          </Button>
+          {can('suppliers.suspend') && (
+            <Button
+              size="sm"
+              variant={r.status === "ACTIVE" ? "destructive" : "default"}
+              onClick={(e) => {
+                e.stopPropagation();
+                setActionTarget({
+                  id: r.id,
+                  userId: r.id,
+                  name: r.user?.name || "Unknown",
+                  action: r.status === "ACTIVE" ? "suspend" : "reactivate",
+                });
+                setSuspendReason("");
+              }}
+            >
+              {r.status === "ACTIVE" ? "Suspend" : "Reactivate"}
+            </Button>
+          )}
         </div>
       ),
     },

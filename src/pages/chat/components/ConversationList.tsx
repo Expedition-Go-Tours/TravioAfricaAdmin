@@ -176,6 +176,7 @@ export function ConversationList({
                         src={otherUser.photoURL}
                         alt=""
                         className="absolute inset-0 h-full w-full object-cover"
+                        loading="lazy"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                       />
                     )}

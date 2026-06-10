@@ -16,6 +16,7 @@ import { SectionError } from "@/components/shared/SectionError";
 import { SectionEmpty } from "@/components/shared/SectionEmpty";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { usePermission } from "@/hooks/usePermission";
 import api from "@/lib/axios";
 import { timeAgo } from "@/lib/utils";
 
@@ -37,6 +38,7 @@ export default function ReviewModerationPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
+  const { can } = usePermission();
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("Pending");
   const [searchQuery, setSearchQuery] = useState("");
@@ -231,14 +233,14 @@ export default function ReviewModerationPage() {
                       <div className="mt-3 space-y-1.5 text-xs text-text-tertiary">
                         <div className="flex items-center gap-2">
                           <span className="relative flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-400 to-green-600 text-[8px] font-bold text-white">
-                            {review.customer?.photoURL ? <img src={review.customer.photoURL} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} /> : null}
+                            {review.customer?.photoURL ? <img src={review.customer.photoURL} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} /> : null}
                             <span className={review.customer?.photoURL ? "opacity-0" : ""}>{review.customer?.name?.charAt(0)?.toUpperCase() || "?"}</span>
                           </span>
                           <span><span className="font-medium text-green-700">{review.customer?.name || "Anonymous"}</span> on <span className="font-medium text-blue-600">{review.tour?.title || "Unknown Tour"}</span></span>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="relative flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-[8px] font-bold text-white">
-                            {review.tour?.supplier?.photoURL ? <img src={review.tour.supplier.photoURL} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} /> : null}
+                            {review.tour?.supplier?.photoURL ? <img src={review.tour.supplier.photoURL} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} /> : null}
                             <span className={review.tour?.supplier?.photoURL ? "opacity-0" : ""}>{review.tour?.supplier?.name?.charAt(0)?.toUpperCase() || "?"}</span>
                           </span>
                           <span><span className="text-amber-600">Supplier:</span> <span className="font-medium text-amber-700">{review.tour?.supplier?.name || "Unknown Supplier"}</span></span>
@@ -261,30 +263,36 @@ export default function ReviewModerationPage() {
                       <div className="mt-4 flex gap-2">
                         {(review.status === "PENDING" || !review.status) ? (
                           <>
-                            <Button
-                              size="sm"
-                              variant="default"
-                              className="bg-green-600 hover:bg-green-700 text-white"
-                              onClick={() => { setActionReview(review); setActionType("approve"); setReason(""); }}
-                            >
-                              Approve
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="border-red-300 text-red-600 hover:bg-red-50"
-                              onClick={() => { setActionReview(review); setActionType("reject"); setReason(""); }}
-                            >
-                              Reject
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="border-amber-300 text-amber-600 hover:bg-amber-50"
-                              onClick={() => { setActionReview(review); setActionType("flag"); setReason(""); }}
-                            >
-                              Flag
-                            </Button>
+                            {can('reviews.moderate') && (
+                              <Button
+                                size="sm"
+                                variant="default"
+                                className="bg-green-600 hover:bg-green-700 text-white"
+                                onClick={() => { setActionReview(review); setActionType("approve"); setReason(""); }}
+                              >
+                                Approve
+                              </Button>
+                            )}
+                            {can('reviews.moderate') && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-red-300 text-red-600 hover:bg-red-50"
+                                onClick={() => { setActionReview(review); setActionType("reject"); setReason(""); }}
+                              >
+                                Reject
+                              </Button>
+                            )}
+                            {can('reviews.moderate') && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-amber-300 text-amber-600 hover:bg-amber-50"
+                                onClick={() => { setActionReview(review); setActionType("flag"); setReason(""); }}
+                              >
+                                Flag
+                              </Button>
+                            )}
                           </>
                         ) : (
                           <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${

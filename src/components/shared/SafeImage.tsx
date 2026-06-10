@@ -28,6 +28,7 @@ export function SafeImage({ src, alt, className, fallback }: SafeImageProps) {
       src={`${src}${cacheBuster}`}
       alt={alt}
       className={className}
+      loading="lazy"
       onError={handleError}
     />
   );

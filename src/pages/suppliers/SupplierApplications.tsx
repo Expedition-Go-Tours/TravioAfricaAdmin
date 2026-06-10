@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { DataTable } from "@/components/shared/DataTable";
 import type { Column } from "@/components/shared/DataTable";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { usePermission } from "@/hooks/usePermission";
 import api from "@/lib/axios";
 import { formatDate } from "@/lib/utils";
 
@@ -23,6 +24,7 @@ const tabs = ["All", "Pending", "Under Review", "Approved", "Rejected", "Active"
 
 export default function SupplierApplicationsPage() {
   const navigate = useNavigate();
+  const { can } = usePermission();
   const [page, setPage] = useState(1);
   const [activeTab, setActiveTab] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
@@ -49,6 +51,7 @@ export default function SupplierApplicationsPage() {
               src={r.user.photoURL}
               alt=""
               className="absolute inset-0 h-full w-full object-cover"
+              loading="lazy"
               onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
             />
           )}
@@ -64,9 +67,11 @@ export default function SupplierApplicationsPage() {
       key: "actions",
       header: "Actions",
       render: (r) => (
-        <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); navigate(`/admin/suppliers/${r.id}`); }}>
-          Review
-        </Button>
+        can('suppliers.view') ? (
+          <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); navigate(`/admin/suppliers/${r.id}`); }}>
+            Review
+          </Button>
+        ) : null
       ),
     },
   ];

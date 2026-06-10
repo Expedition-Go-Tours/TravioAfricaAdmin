@@ -26,6 +26,7 @@ import PayoutsList from "@/pages/finance/PayoutsList";
 import PayoutMethodsPage from "@/pages/finance/PayoutMethods";
 import ReviewModerationPage from "@/pages/reviews/ReviewModeration";
 import ChatPage from "@/pages/chat/ChatPage";
+import SettingsPage from "@/pages/settings/SettingsPage";
 
 export default function App() {
   return (
@@ -59,6 +60,7 @@ export default function App() {
             <Route path="payout-methods" element={<PayoutMethodsPage />} />
             <Route path="reviews" element={<ReviewModerationPage />} />
             <Route path="chat/:type" element={<ChatPage />} />
+            <Route path="settings" element={<SettingsPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/admin/overview" replace />} />
         </Routes>

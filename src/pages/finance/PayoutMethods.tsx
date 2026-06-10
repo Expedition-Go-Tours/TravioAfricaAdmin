@@ -24,6 +24,7 @@ import type { Column } from "@/components/shared/DataTable";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SectionEmpty } from "@/components/shared/SectionEmpty";
+import { usePermission } from "@/hooks/usePermission";
 import api from "@/lib/axios";
 import { formatDate } from "@/lib/utils";
 
@@ -71,6 +72,7 @@ const filterOptions = [
 export default function PayoutMethodsPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { can } = usePermission();
   const [page, setPage] = useState(1);
   const [hasMethod, setHasMethod] = useState("all");
   const [viewSupplierId, setViewSupplierId] = useState<string | null>(null);
@@ -116,6 +118,7 @@ export default function PayoutMethodsPage() {
                 src={photoUrl}
                 alt={name}
                 className="absolute inset-0 h-full w-full object-cover"
+                loading="lazy"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
               />
             )}
@@ -246,6 +249,7 @@ export default function PayoutMethodsPage() {
                     src={selectedSupplier.photoURL}
                     alt={selectedSupplier?.name || ""}
                     className="absolute inset-0 h-full w-full object-cover"
+                    loading="lazy"
                     onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                   />
                 )}
@@ -389,16 +393,18 @@ export default function PayoutMethodsPage() {
                               Added {formatDate(method.createdAt)}
                             </span>
                           ) : <span />}
-                          <Button
-                            size="sm"
-                            variant={method.verified ? "outline" : "default"}
-                            onClick={() => verifyMutation.mutate({ methodId: method.id, verified: !method.verified })}
-                            disabled={verifyMutation.isPending}
-                            className="gap-1.5"
-                          >
-                            {method.verified ? <EyeOff className="h-3.5 w-3.5" /> : <CheckCircle className="h-3.5 w-3.5" />}
-                            {method.verified ? "Unverify" : "Verify"}
-                          </Button>
+                          {can('payout-methods.verify') && (
+                            <Button
+                              size="sm"
+                              variant={method.verified ? "outline" : "default"}
+                              onClick={() => verifyMutation.mutate({ methodId: method.id, verified: !method.verified })}
+                              disabled={verifyMutation.isPending}
+                              className="gap-1.5"
+                            >
+                              {method.verified ? <EyeOff className="h-3.5 w-3.5" /> : <CheckCircle className="h-3.5 w-3.5" />}
+                              {method.verified ? "Unverify" : "Verify"}
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </div>

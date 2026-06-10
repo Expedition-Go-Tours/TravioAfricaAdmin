@@ -134,6 +134,7 @@ export function MessageBubble({
               src={senderAvatar}
               alt=""
               className="absolute inset-0 h-full w-full object-cover"
+              loading="lazy"
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = "none";
               }}

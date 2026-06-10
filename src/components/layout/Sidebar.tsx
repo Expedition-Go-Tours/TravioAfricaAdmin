@@ -29,9 +29,11 @@ import {
   UserCog,
   Target,
   MessageSquare,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fadeInLeft, listItem } from "@/lib/animations";
+import { usePermission } from "@/hooks/usePermission";
 
 interface ChildItem {
   label: string;
@@ -46,50 +48,53 @@ interface NavItem {
   children?: ChildItem[];
 }
 
-const navGroups: { group: string; items: NavItem[] }[] = [
-  {
-    group: "Analytics",
-    items: [
-      { label: "Overview", path: "/admin/overview", icon: <LayoutDashboard className="h-4 w-4" /> },
-      {
-        label: "Revenue",
-        icon: <TrendingUp className="h-4 w-4" />,
-        children: [
-          { label: "Revenue Trend", path: "/admin/revenue-trend", icon: <BarChart3 className="h-4 w-4" /> },
-          { label: "Search Analytics", path: "/admin/search-analytics", icon: <Search className="h-4 w-4" /> },
-          { label: "Cart Abandonment", path: "/admin/cart-abandonment", icon: <ShoppingCart className="h-4 w-4" /> },
-        ],
-      },
-      {
-        label: "Users",
-        icon: <Users className="h-4 w-4" />,
-        children: [
-          { label: "Customer Support", path: "/admin/chat/customers", icon: <MessageSquare className="h-4 w-4" /> },
-          { label: "User Growth", path: "/admin/user-growth", icon: <UserCog className="h-4 w-4" /> },
-          { label: "CLV", path: "/admin/clv", icon: <DollarSign className="h-4 w-4" /> },
-          { label: "Conversion Funnel", path: "/admin/funnel", icon: <Target className="h-4 w-4" /> },
-        ],
-      },
-      { label: "Tours", path: "/admin/tours", icon: <Map className="h-4 w-4" /> },
-    ],
-  },
-  {
-    group: "Management",
-    items: [
-      { label: "Suppliers", path: "/admin/suppliers", icon: <UserPlus className="h-4 w-4" /> },
-      { label: "Active Suppliers", path: "/admin/suppliers/active", icon: <UserCheck className="h-4 w-4" /> },
-      { label: "Reviews", path: "/admin/reviews", icon: <Star className="h-4 w-4" /> },
-      { label: "Supplier Messages", path: "/admin/chat/suppliers", icon: <Building className="h-4 w-4" /> },
-    ],
-  },
-  {
-    group: "Finance",
-    items: [
-      { label: "Payouts", path: "/admin/payouts", icon: <Banknote className="h-4 w-4" /> },
-      { label: "Payout Methods", path: "/admin/payout-methods", icon: <Wallet className="h-4 w-4" /> },
-    ],
-  },
-];
+function getNavGroups(can: (key: string) => boolean): { group: string; items: NavItem[] }[] {
+  const groups: { group: string; items: NavItem[] }[] = [
+    {
+      group: "Analytics",
+      items: [
+        ...(can('dashboard.view') || can('analytics.view') ? [{ label: "Overview", path: "/admin/overview", icon: <LayoutDashboard className="h-4 w-4" /> }] : []),
+        ...(can('analytics.view') ? [{
+          label: "Revenue",
+          icon: <TrendingUp className="h-4 w-4" />,
+          children: [
+            { label: "Revenue Trend", path: "/admin/revenue-trend", icon: <BarChart3 className="h-4 w-4" /> },
+            { label: "Search Analytics", path: "/admin/search-analytics", icon: <Search className="h-4 w-4" /> },
+            { label: "Cart Abandonment", path: "/admin/cart-abandonment", icon: <ShoppingCart className="h-4 w-4" /> },
+          ],
+        }] : []),
+        ...(can('users.view') || can('chat.access') ? [{
+          label: "Users",
+          icon: <Users className="h-4 w-4" />,
+          children: [
+            ...(can('chat.access') ? [{ label: "Customer Support", path: "/admin/chat/customers", icon: <MessageSquare className="h-4 w-4" /> }] : []),
+            ...(can('users.view') ? [{ label: "User Growth", path: "/admin/user-growth", icon: <UserCog className="h-4 w-4" /> }] : []),
+            ...(can('users.view') ? [{ label: "CLV", path: "/admin/clv", icon: <DollarSign className="h-4 w-4" /> }] : []),
+            ...(can('users.view') ? [{ label: "Conversion Funnel", path: "/admin/funnel", icon: <Target className="h-4 w-4" /> }] : []),
+          ],
+        }] : []),
+        ...(can('tours.view') ? [{ label: "Tours", path: "/admin/tours", icon: <Map className="h-4 w-4" /> }] : []),
+      ].filter((i) => !i.children || i.children.length > 0),
+    },
+    ...(can('suppliers.view') || can('reviews.view') || can('chat.access') ? [{
+      group: "Management",
+      items: [
+        ...(can('suppliers.view') ? [{ label: "Suppliers", path: "/admin/suppliers", icon: <UserPlus className="h-4 w-4" /> }] : []),
+        ...(can('suppliers.view') ? [{ label: "Active Suppliers", path: "/admin/suppliers/active", icon: <UserCheck className="h-4 w-4" /> }] : []),
+        ...(can('reviews.view') ? [{ label: "Reviews", path: "/admin/reviews", icon: <Star className="h-4 w-4" /> }] : []),
+        ...(can('chat.access') ? [{ label: "Supplier Messages", path: "/admin/chat/suppliers", icon: <Building className="h-4 w-4" /> }] : []),
+      ],
+    }] : []),
+    ...(can('payouts.view') || can('payout-methods.view') ? [{
+      group: "Finance",
+      items: [
+        ...(can('payouts.view') ? [{ label: "Payouts", path: "/admin/payouts", icon: <Banknote className="h-4 w-4" /> }] : []),
+        ...(can('payout-methods.view') ? [{ label: "Payout Methods", path: "/admin/payout-methods", icon: <Wallet className="h-4 w-4" /> }] : []),
+      ],
+    }] : []),
+  ];
+  return groups;
+}
 
 interface SidebarProps {
   collapsed: boolean;
@@ -99,7 +104,15 @@ interface SidebarProps {
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const location = useLocation();
+  const { can, isSuperAdmin } = usePermission();
   const [expandedMenus, setExpandedMenus] = useState<string[]>(["Revenue", "Users"]);
+  const navGroups = getNavGroups(can);
+  const adminGroups: { group: string; items: NavItem[] }[] = isSuperAdmin ? [{
+    group: "Administration",
+    items: [
+      { label: "Settings", path: "/admin/settings", icon: <Settings className="h-4 w-4" /> },
+    ],
+  }] : [];
 
   useEffect(() => {
     const unsub = auth.onAuthStateChanged((u) => setUser(u));
@@ -139,6 +152,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   src={user.photoURL}
                   alt=""
                   className="absolute inset-0 h-full w-full object-cover"
+                  loading="lazy"
                   onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                 />
               )}
@@ -157,7 +171,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         </button>
       </div>
       <nav className="flex-1 overflow-y-auto scrollbar-none p-2" role="navigation">
-        {navGroups.map((group) => (
+        {[...navGroups, ...adminGroups].map((group) => (
           <motion.div
             key={group.group}
             className="mb-4"

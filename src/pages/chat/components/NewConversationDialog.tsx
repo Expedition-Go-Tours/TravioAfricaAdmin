@@ -291,6 +291,7 @@ export function NewConversationDialog({
                             src={supplier.user.photoURL}
                             alt=""
                             className="absolute inset-0 h-full w-full object-cover"
+                            loading="lazy"
                             onError={(e) => {
                               (e.target as HTMLImageElement).style.display = "none";
                             }}
@@ -343,6 +344,7 @@ export function NewConversationDialog({
                           src={user.photoURL}
                           alt=""
                           className="absolute inset-0 h-full w-full object-cover"
+                          loading="lazy"
                           onError={(e) => {
                             (e.target as HTMLImageElement).style.display = "none";
                           }}
