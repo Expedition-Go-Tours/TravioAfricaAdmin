@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import { queryClient } from "@/lib/query-client";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProtectedRoute } from "@/auth/ProtectedRoute";
+import { hasPermission } from "@/hooks/usePermission";
 import { useDataSocket } from "@/hooks/useDataSocket";
 
 import LoginPage from "@/pages/Login";
@@ -59,7 +60,7 @@ export default function App() {
             <Route path="payouts" element={<PayoutsTabPage />} />
             <Route path="payout-methods" element={<PayoutMethodsPage />} />
             <Route path="reviews" element={<ReviewModerationPage />} />
-            <Route path="chat/:type" element={<ChatPage />} />
+            <Route path="chat/:type" element={<PermissionRoute permission="chat.access"><ChatPage /></PermissionRoute>} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/admin/overview" replace />} />
@@ -83,6 +84,10 @@ export default function App() {
 function DataSocketInit() {
   useDataSocket();
   return null;
+}
+
+function PermissionRoute({ permission, children }: { permission: string; children: React.ReactNode }) {
+  return hasPermission(permission) ? <>{children}</> : <Navigate to="/admin/overview" replace />;
 }
 
 function PayoutsTabPage() {

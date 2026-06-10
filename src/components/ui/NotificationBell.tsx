@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { getNotifications, getUnreadCount, markAsRead, markAllAsRead } from "@/services/notificationService";
 import { onAdminNotification } from "@/lib/adminSocket";
+import { hasPermission } from "@/hooks/usePermission";
 import { timeAgo, cn } from "@/lib/utils";
 
 const notificationRouteMap: Record<string, (data?: Record<string, unknown>) => { path: string; state?: Record<string, unknown> } | null> = {
@@ -59,7 +60,9 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  const { data: unreadCount = 0 } = useQuery({
+  const canChat = hasPermission('chat.access');
+
+  const { data: rawUnreadCount = 0 } = useQuery({
     queryKey: ["admin-notifications", "unread-count"],
     queryFn: getUnreadCount,
   });
@@ -69,6 +72,14 @@ export function NotificationBell() {
     queryFn: () => getNotifications(1, 20, true),
     enabled: open,
   });
+
+  const notifications = (dropdown?.notifications || []).filter(
+    (n) => n.type !== 'NEW_MESSAGE' || canChat,
+  );
+
+  const unreadCount = canChat
+    ? rawUnreadCount
+    : notifications.filter((n) => !n.read).length;
 
   const markRead = useMutation({
     mutationFn: markAsRead,
@@ -170,14 +181,14 @@ export function NotificationBell() {
                 <div className="flex items-center justify-center py-16">
                   <Loader2 className="h-6 w-6 animate-spin text-green-600" />
                 </div>
-              ) : !dropdown?.notifications?.length ? (
+              ) : !notifications.length ? (
                 <div className="flex flex-col items-center justify-center py-16 text-text-tertiary">
                   <Bell className="mb-3 h-10 w-10" />
                   <p className="text-sm">No new notifications</p>
                 </div>
               ) : (
                 <div className="divide-y divide-border-muted">
-                  {dropdown.notifications.map((n) => {
+                  {notifications.map((n) => {
                     const cfg = getTypeConfig(n.type);
                     return (
                       <button
