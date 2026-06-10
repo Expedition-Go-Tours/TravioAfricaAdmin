@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useSocketInvalidate } from "@/hooks/useSocketEvent";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   Legend,
@@ -12,6 +13,8 @@ import api from "@/lib/axios";
 import { formatCurrency, formatNumber } from "@/lib/utils";
 
 export default function PayoutsOverview() {
+  useSocketInvalidate("admin:payout-update", ["admin", "payout-summary"]);
+
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin", "payout-summary"],
     queryFn: () => api.get("/payouts/admin/summary").then((r) => r.data),

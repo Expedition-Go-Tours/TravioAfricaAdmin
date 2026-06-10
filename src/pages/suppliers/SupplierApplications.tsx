@@ -9,6 +9,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import type { Column } from "@/components/shared/DataTable";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { usePermission } from "@/hooks/usePermission";
+import { useSocketInvalidate } from "@/hooks/useSocketEvent";
 import api from "@/lib/axios";
 import { formatDate } from "@/lib/utils";
 
@@ -29,6 +30,9 @@ export default function SupplierApplicationsPage() {
   const [activeTab, setActiveTab] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const limit = 20;
+
+  useSocketInvalidate("admin:supplier-application", ["admin", "suppliers"]);
+  useSocketInvalidate("admin:supplier-status-change", ["admin", "suppliers"]);
 
   const statusParam = activeTab === "All" ? "" : activeTab.toUpperCase().replace(/\s+/g, "_");
 

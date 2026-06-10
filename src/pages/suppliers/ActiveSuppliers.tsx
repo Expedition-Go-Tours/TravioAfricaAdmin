@@ -13,6 +13,7 @@ import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { usePermission } from "@/hooks/usePermission";
+import { useSocketInvalidate } from "@/hooks/useSocketEvent";
 import api from "@/lib/axios";
 import { formatDate } from "@/lib/utils";
 
@@ -33,6 +34,8 @@ export default function ActiveSuppliersPage() {
   const [actionTarget, setActionTarget] = useState<{ id: string; userId: string; name: string; action: "suspend" | "reactivate" } | null>(null);
   const [suspendReason, setSuspendReason] = useState("");
   const limit = 20;
+
+  useSocketInvalidate("admin:supplier-status-change", ["admin", "suppliers"]);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin", "suppliers", { page, limit, status: "ACTIVE" }],

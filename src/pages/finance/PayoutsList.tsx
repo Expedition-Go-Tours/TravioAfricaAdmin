@@ -25,6 +25,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { usePermission } from "@/hooks/usePermission";
+import { useSocketInvalidate } from "@/hooks/useSocketEvent";
 import api from "@/lib/axios";
 import { formatCurrency, formatDate, truncateId } from "@/lib/utils";
 
@@ -76,6 +77,9 @@ const statusTabs = ["All", "Pending", "Approved", "Processing", "Paid", "Failed"
 export default function PayoutsList() {
   const queryClient = useQueryClient();
   const { can } = usePermission();
+
+  useSocketInvalidate("admin:payout-update", ["admin", "payouts"]);
+
   const [page, setPage] = useState(1);
   const [statusTab, setStatusTab] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");

@@ -17,6 +17,7 @@ import { SectionEmpty } from "@/components/shared/SectionEmpty";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { usePermission } from "@/hooks/usePermission";
+import { useSocketInvalidate } from "@/hooks/useSocketEvent";
 import api from "@/lib/axios";
 import { timeAgo } from "@/lib/utils";
 
@@ -47,6 +48,8 @@ export default function ReviewModerationPage() {
   const [reason, setReason] = useState("");
   const deepLinkHandled = useRef(false);
   const limit = 20;
+
+  useSocketInvalidate("admin:new-review", ["admin", "reviews"]);
 
   const statusParam = statusFilter === "All" ? "" : statusFilter.toUpperCase();
 
