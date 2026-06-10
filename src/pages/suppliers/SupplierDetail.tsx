@@ -161,6 +161,7 @@ export default function SupplierDetailPage() {
   const user = supplier?.user;
   const status = supplier?.status || "";
   const userId = user?.id || id;
+  const profileId = supplier?.id || id;
 
   const { data: payoutData, isLoading: payoutLoading } = useQuery({
     queryKey: ["admin", "payout-methods", "supplier", user?.id],
@@ -171,15 +172,15 @@ export default function SupplierDetailPage() {
   const payoutMethods = payoutData?.methods || [];
 
   const { data: overview, isLoading: overviewLoading } = useQuery({
-    queryKey: ["admin", "supplier", id, "overview"],
-    queryFn: () => api.get(`/suppliers/admin/${id}/overview`).then((r) => r.data?.data as SupplierOverview),
-    enabled: !!id,
+    queryKey: ["admin", "supplier", profileId, "overview"],
+    queryFn: () => api.get(`/suppliers/admin/${profileId}/overview`).then((r) => r.data?.data as SupplierOverview),
+    enabled: !!supplier?.id,
   });
 
   const { data: toursData, isLoading: toursLoading } = useQuery({
-    queryKey: ["admin", "supplier", id, "tours"],
-    queryFn: () => api.get(`/suppliers/admin/${id}/tours?limit=50`).then((r) => r.data?.data as SupplierToursResponse),
-    enabled: !!id,
+    queryKey: ["admin", "supplier", profileId, "tours"],
+    queryFn: () => api.get(`/suppliers/admin/${profileId}/tours?limit=50`).then((r) => r.data?.data as SupplierToursResponse),
+    enabled: !!supplier?.id,
   });
 
   const reviewMutation = useMutation({
