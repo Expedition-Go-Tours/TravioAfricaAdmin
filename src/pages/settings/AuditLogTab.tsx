@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search, X, Download, Clock, ChevronRight } from "lucide-react";
 
@@ -80,7 +80,7 @@ export function AuditLogTab() {
     }, 300);
   };
 
-  const dateRange = getDateRange(datePreset);
+  const dateRange = useMemo(() => getDateRange(datePreset), [datePreset]);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin", "audit-log", { page, action: debouncedAction, resource: debouncedResource, ...dateRange }],
