@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ErrorBoundary } from "react-error-boundary";
-import { RefreshCw, AlertTriangle, Settings, Shield, Users, Sliders, ClipboardList } from "lucide-react";
+import { RefreshCw, AlertTriangle, Settings, Shield, Users, Sliders, ClipboardList, ScrollText } from "lucide-react";
 import { useAdminRole } from "@/auth/useAdminRole";
 import { GeneralTab } from "./GeneralTab";
 import { RolesTab } from "./RolesTab";
 import { AdminUsersTab } from "./AdminUsersTab";
 import { SystemTab } from "./SystemTab";
+import { AuditLogTab } from "./AuditLogTab";
 import { isSuperAdmin } from "@/hooks/usePermission";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,6 +17,7 @@ const TABS = [
   { id: "roles", label: "Admin Roles", icon: Shield, adminOnly: true },
   { id: "users", label: "Admin Users", icon: Users, adminOnly: true },
   { id: "system", label: "System", icon: ClipboardList, adminOnly: true },
+  { id: "audit", label: "Audit Log", icon: ScrollText, adminOnly: true },
 ];
 
 const tabVariants = {
@@ -161,6 +163,7 @@ export default function SettingsPage() {
               {activeTab === "roles" && superAdmin && <RolesTab />}
               {activeTab === "users" && superAdmin && <AdminUsersTab />}
               {activeTab === "system" && superAdmin && <SystemTab />}
+              {activeTab === "audit" && superAdmin && <AuditLogTab />}
             </ErrorBoundary>
           </motion.div>
         </AnimatePresence>
