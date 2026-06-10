@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search, X, Download, Clock, ChevronRight } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,7 +56,7 @@ export function AuditLogTab() {
   const [page, setPage] = useState(1);
   const [actionFilter, setActionFilter] = useState("");
   const [resourceFilter, setResourceFilter] = useState("");
-  const [datePreset, setDatePreset] = useState("30d");
+  const [datePreset, setDatePreset] = useState("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
   const [debouncedAction, setDebouncedAction] = useState("");
@@ -96,7 +96,6 @@ export function AuditLogTab() {
   const entries: AuditEntry[] = data?.entries || [];
   const totalPages = data?.pages || 1;
   const totalCount = data?.total || 0;
-  const expandedEntry = expandedId ? entries.find((e) => e.id === expandedId) : null;
 
   const columns: Column<AuditEntry>[] = [
     {
@@ -290,49 +289,42 @@ export function AuditLogTab() {
             onRowClick={(row) => setExpandedId(expandedId === row.id ? null : row.id)}
             pagination={{ page, totalPages, totalCount, onPageChange: (p) => setPage(p) }}
             keyExtractor={(r) => r.id}
-          />
-
-          {/* Expanded detail */}
-          <AnimatePresence>
-            {expandedEntry && (expandedEntry.oldValues || expandedEntry.newValues) && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden border-t border-border-muted"
-              >
-                <div className="px-5 py-4 bg-gray-50/50">
-                  <h4 className="text-xs font-semibold text-text-primary mb-3">
-                    Change Details —{" "}
-                    <span className="font-mono text-[10px] text-text-secondary">{expandedEntry.action}</span>
-                  </h4>
+            expandedRow={expandedId}
+            renderExpanded={(entry) => (
+              <div className="px-5 py-4 bg-gray-50/50">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xs font-semibold text-text-primary">Entry Details</span>
+                  <span className="font-mono text-[10px] text-text-secondary">{entry.action}</span>
+                </div>
+                {entry.oldValues || entry.newValues ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {expandedEntry.oldValues && (
+                    {entry.oldValues && (
                       <div>
                         <p className="text-[10px] font-medium text-red-500 mb-1.5 uppercase tracking-wider">
                           Previous Values
                         </p>
                         <pre className="bg-white border border-border-muted rounded-sm p-3 text-[11px] font-mono text-text-secondary overflow-x-auto max-h-[240px] whitespace-pre-wrap">
-                          {JSON.stringify(expandedEntry.oldValues, null, 2)}
+                          {JSON.stringify(entry.oldValues, null, 2)}
                         </pre>
                       </div>
                     )}
-                    {expandedEntry.newValues && (
+                    {entry.newValues && (
                       <div>
                         <p className="text-[10px] font-medium text-green-600 mb-1.5 uppercase tracking-wider">
                           New Values
                         </p>
                         <pre className="bg-white border border-border-muted rounded-sm p-3 text-[11px] font-mono text-text-secondary overflow-x-auto max-h-[240px] whitespace-pre-wrap">
-                          {JSON.stringify(expandedEntry.newValues, null, 2)}
+                          {JSON.stringify(entry.newValues, null, 2)}
                         </pre>
                       </div>
                     )}
                   </div>
-                </div>
-              </motion.div>
+                ) : (
+                  <p className="text-xs text-text-secondary">No additional details recorded for this entry.</p>
+                )}
+              </div>
             )}
-          </AnimatePresence>
+          />
         </CardContent>
       </Card>
     </div>

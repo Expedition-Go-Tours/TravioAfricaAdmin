@@ -34,6 +34,8 @@ interface DataTableProps<T> {
   onSort?: (key: string) => void;
   onRetry?: () => void;
   keyExtractor: (row: T) => string;
+  expandedRow?: string | null;
+  renderExpanded?: (row: T) => React.ReactNode;
 }
 
 export function DataTable<T>({
@@ -49,6 +51,8 @@ export function DataTable<T>({
   onSort,
   onRetry,
   keyExtractor,
+  expandedRow,
+  renderExpanded,
 }: DataTableProps<T>) {
   if (error) {
     return (
@@ -151,37 +155,54 @@ export function DataTable<T>({
             initial="hidden"
             animate="visible"
           >
-            {data.map((row) => (
-              <motion.tr
-                key={keyExtractor(row)}
-                variants={{
-                  hidden: { opacity: 0, y: 6 },
-                  visible: { opacity: 1, y: 0, transition: { duration: 0.25 } },
-                }}
-                className={cn(
-                  "border-b border-border-muted transition-all last:border-b-0",
-                  onRowClick && "cursor-pointer hover:bg-green-50/40 hover:border-green-200",
-                  "even:bg-green-50/20",
-                )}
-                onClick={() => onRowClick?.(row)}
-                tabIndex={onRowClick ? 0 : undefined}
-                onKeyDown={(e) => {
-                  if (onRowClick && (e.key === "Enter" || e.key === " ")) {
-                    e.preventDefault();
-                    onRowClick(row);
-                  }
-                }}
-              >
-                {columns.map((col) => (
-                  <td key={col.key}                   className={cn(
-                    "px-5 py-3.5 text-text-primary leading-relaxed align-middle",
-                    col.className,
-                  )}>
-                    {col.render(row)}
+            {data.flatMap((row) => {
+              const isExpanded = expandedRow === keyExtractor(row);
+              const rowEl = (
+                <motion.tr
+                  key={keyExtractor(row)}
+                  variants={{
+                    hidden: { opacity: 0, y: 6 },
+                    visible: { opacity: 1, y: 0, transition: { duration: 0.25 } },
+                  }}
+                  className={cn(
+                    "border-b border-border-muted transition-all",
+                    onRowClick && "cursor-pointer hover:bg-green-50/40 hover:border-green-200",
+                    "even:bg-green-50/20",
+                    isExpanded && "bg-green-50/60",
+                  )}
+                  onClick={() => onRowClick?.(row)}
+                  tabIndex={onRowClick ? 0 : undefined}
+                  onKeyDown={(e) => {
+                    if (onRowClick && (e.key === "Enter" || e.key === " ")) {
+                      e.preventDefault();
+                      onRowClick(row);
+                    }
+                  }}
+                >
+                  {columns.map((col) => (
+                    <td key={col.key} className={cn(
+                      "px-5 py-3.5 text-text-primary leading-relaxed align-middle",
+                      col.className,
+                    )}>
+                      {col.render(row)}
+                    </td>
+                  ))}
+                </motion.tr>
+              );
+              if (!isExpanded || !renderExpanded) return [rowEl];
+              return [rowEl, (
+                <motion.tr
+                  key={`exp-${keyExtractor(row)}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <td colSpan={columns.length} className="p-0 border-b border-border-muted">
+                    {renderExpanded(row)}
                   </td>
-                ))}
-              </motion.tr>
-            ))}
+                </motion.tr>
+              )];
+            })}
           </motion.tbody>
         </table>
       </div>
