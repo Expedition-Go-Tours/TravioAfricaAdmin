@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { usePermission } from "@/hooks/usePermission";
 import {
   ArrowLeft,
   DollarSign,
@@ -54,6 +55,7 @@ const bookingColors: Record<string, string> = {
 
 export default function OverviewPage() {
   const navigate = useNavigate();
+  const { can } = usePermission();
   const [showActiveUsers, setShowActiveUsers] = useState(false);
   const [showTodayBookings, setShowTodayBookings] = useState(false);
   const [showNewSignups, setShowNewSignups] = useState(false);
@@ -227,300 +229,324 @@ export default function OverviewPage() {
 
       {/* KPI Row */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
-        <KpiCard
-          label="Revenue Today"
-          value={overviewLoading ? "..." : formatCurrency(overview?.revenue?.today?.revenue)}
-          icon={<DollarSign className="h-4 w-4" />}
-          trend={calcTrend(
-            overview?.revenue?.today?.revenue ? Number(overview.revenue.today.revenue) : undefined,
-            overview?.revenue?.yesterday?.revenue ? Number(overview.revenue.yesterday.revenue) : undefined,
-            "Revenue"
-          )}
-          accent="green"
-        />
-        <KpiCard
-          label="Bookings Today"
-          value={overviewLoading ? "..." : formatNumber(overview?.bookings?.today)}
-          icon={<CalendarCheck className="h-4 w-4" />}
-          onClick={() => setShowTodayBookings(true)}
-          trend={calcTrend(overview?.bookings?.today, overview?.bookings?.yesterday, "Bookings")}
-          accent="green"
-        />
-        <KpiCard
-          label="New Signups"
-          value={overviewLoading ? "..." : formatNumber(overview?.signups?.today)}
-          icon={<UserPlus className="h-4 w-4" />}
-          onClick={() => setShowNewSignups(true)}
-          trend={calcTrend(overview?.signups?.today, overview?.signups?.yesterday, "Signups")}
-          accent="blue"
-        />
-        <KpiCard
-          label="Active Users (30d)"
-          value={overviewLoading ? "..." : formatNumber(overview?.activeUsersLast30Days)}
-          icon={<Users className="h-4 w-4" />}
-          onClick={() => setShowActiveUsers(true)}
-          trend={calcTrend(overview?.activeUsersLast30Days, overview?.activeUsersPrevious30, "Active Users")}
-          accent="blue"
-        />
-        <KpiCard
-          label="Pending Payouts"
-          value={overviewLoading ? "..." : formatNumber(payoutSummary?.pending?.count)}
-          icon={<Clock className="h-4 w-4" />}
-          trend={payoutSummary?.pending?.count ? { value: 0, isPositive: true, text: "Awaiting payout" } : undefined}
-          accent="amber"
-        />
-        <KpiCard
-          label="Pending Reviews"
-          value={overviewLoading ? "..." : formatNumber(pendingReviews?.counts?.pending)}
-          icon={<MessageSquare className="h-4 w-4" />}
-          trend={pendingReviews?.counts?.pending ? { value: 0, isPositive: true, text: "Awaiting review" } : undefined}
-          accent="amber"
-        />
-        <KpiCard
-          label="Pending Suppliers"
-          value={overviewLoading ? "..." : formatNumber(pendingSuppliers?.pagination?.totalCount)}
-          icon={<Building className="h-4 w-4" />}
-          trend={pendingSuppliers?.pagination?.totalCount ? { value: 0, isPositive: true, text: "Awaiting approval" } : undefined}
-          accent="amber"
-        />
+        {can('dashboard.revenue') && (
+          <KpiCard
+            label="Revenue Today"
+            value={overviewLoading ? "..." : formatCurrency(overview?.revenue?.today?.revenue)}
+            icon={<DollarSign className="h-4 w-4" />}
+            trend={calcTrend(
+              overview?.revenue?.today?.revenue ? Number(overview.revenue.today.revenue) : undefined,
+              overview?.revenue?.yesterday?.revenue ? Number(overview.revenue.yesterday.revenue) : undefined,
+              "Revenue"
+            )}
+            accent="green"
+          />
+        )}
+        {can('dashboard.bookings') && (
+          <KpiCard
+            label="Bookings Today"
+            value={overviewLoading ? "..." : formatNumber(overview?.bookings?.today)}
+            icon={<CalendarCheck className="h-4 w-4" />}
+            onClick={() => setShowTodayBookings(true)}
+            trend={calcTrend(overview?.bookings?.today, overview?.bookings?.yesterday, "Bookings")}
+            accent="green"
+          />
+        )}
+        {can('dashboard.users') && (
+          <KpiCard
+            label="New Signups"
+            value={overviewLoading ? "..." : formatNumber(overview?.signups?.today)}
+            icon={<UserPlus className="h-4 w-4" />}
+            onClick={() => setShowNewSignups(true)}
+            trend={calcTrend(overview?.signups?.today, overview?.signups?.yesterday, "Signups")}
+            accent="blue"
+          />
+        )}
+        {can('dashboard.users') && (
+          <KpiCard
+            label="Active Users (30d)"
+            value={overviewLoading ? "..." : formatNumber(overview?.activeUsersLast30Days)}
+            icon={<Users className="h-4 w-4" />}
+            onClick={() => setShowActiveUsers(true)}
+            trend={calcTrend(overview?.activeUsersLast30Days, overview?.activeUsersPrevious30, "Active Users")}
+            accent="blue"
+          />
+        )}
+        {can('dashboard.payout_summary') && (
+          <KpiCard
+            label="Pending Payouts"
+            value={overviewLoading ? "..." : formatNumber(payoutSummary?.pending?.count)}
+            icon={<Clock className="h-4 w-4" />}
+            trend={payoutSummary?.pending?.count ? { value: 0, isPositive: true, text: "Awaiting payout" } : undefined}
+            accent="amber"
+          />
+        )}
+        {can('dashboard.*') && (
+          <KpiCard
+            label="Pending Reviews"
+            value={overviewLoading ? "..." : formatNumber(pendingReviews?.counts?.pending)}
+            icon={<MessageSquare className="h-4 w-4" />}
+            trend={pendingReviews?.counts?.pending ? { value: 0, isPositive: true, text: "Awaiting review" } : undefined}
+            accent="amber"
+          />
+        )}
+        {can('dashboard.*') && (
+          <KpiCard
+            label="Pending Suppliers"
+            value={overviewLoading ? "..." : formatNumber(pendingSuppliers?.pagination?.totalCount)}
+            icon={<Building className="h-4 w-4" />}
+            trend={pendingSuppliers?.pagination?.totalCount ? { value: 0, isPositive: true, text: "Awaiting approval" } : undefined}
+            accent="amber"
+          />
+        )}
       </div>
 
-      {/* Revenue Period Comparison */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {overviewLoading
-          ? Array.from({ length: 4 }).map((_, i) => (
-              <Card key={i}>
-                <CardContent className="p-4">
-                  <Skeleton className="mb-2 h-4 w-16" />
-                  <Skeleton className="h-7 w-24" />
-                  <Skeleton className="mt-1.5 h-3 w-20" />
-                </CardContent>
-              </Card>
-            ))
-          : (
-              <>
-                <RevenuePeriodCard period="Today" revenue={overview?.revenue?.today?.revenue} />
-                <RevenuePeriodCard period="This Week" revenue={overview?.revenue?.thisWeek?.revenue} commission={overview?.revenue?.thisWeek?.commission} payout={overview?.revenue?.thisWeek?.supplierPayout} />
-                <RevenuePeriodCard period="This Month" revenue={overview?.revenue?.thisMonth?.revenue} commission={overview?.revenue?.thisMonth?.commission} payout={overview?.revenue?.thisMonth?.supplierPayout} />
-                <RevenuePeriodCard period="Year to Date" revenue={overview?.revenue?.ytd?.revenue} commission={overview?.revenue?.ytd?.commission} payout={overview?.revenue?.ytd?.supplierPayout} />
-              </>
-            )}
-      </div>
+      {can('dashboard.revenue') && (
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {overviewLoading
+            ? Array.from({ length: 4 }).map((_, i) => (
+                <Card key={i}>
+                  <CardContent className="p-4">
+                    <Skeleton className="mb-2 h-4 w-16" />
+                    <Skeleton className="h-7 w-24" />
+                    <Skeleton className="mt-1.5 h-3 w-20" />
+                  </CardContent>
+                </Card>
+              ))
+            : (
+                <>
+                  <RevenuePeriodCard period="Today" revenue={overview?.revenue?.today?.revenue} />
+                  <RevenuePeriodCard period="This Week" revenue={overview?.revenue?.thisWeek?.revenue} commission={overview?.revenue?.thisWeek?.commission} payout={overview?.revenue?.thisWeek?.supplierPayout} />
+                  <RevenuePeriodCard period="This Month" revenue={overview?.revenue?.thisMonth?.revenue} commission={overview?.revenue?.thisMonth?.commission} payout={overview?.revenue?.thisMonth?.supplierPayout} />
+                  <RevenuePeriodCard period="Year to Date" revenue={overview?.revenue?.ytd?.revenue} commission={overview?.revenue?.ytd?.commission} payout={overview?.revenue?.ytd?.supplierPayout} />
+                </>
+              )}
+        </div>
+      )}
 
       {/* Top Suppliers + Top Tours */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Top Suppliers */}
-        <Card className="lg:col-span-1">
-          <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
-              Top Suppliers
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            {overviewLoading ? (
-              <div className="p-4 space-y-3">
-                {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
-              </div>
-            ) : overviewError ? (
-              <SectionError message="Failed to load suppliers" onRetry={() => overviewRefetch()} />
-            ) : !overview?.topSuppliers?.length ? (
-              <SectionEmpty message="No supplier data" />
-            ) : (
-              <div className="divide-y divide-border">
-                {(overview.topSuppliers || []).slice(0, 5).map((sup, idx) => (
-                  <div
-                    key={sup.id || idx}
-                    className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-surface-muted/30 transition-colors"
-                    onClick={() => navigate(`/admin/suppliers/${sup.id}`)}
-                    onKeyDown={(e) => { if (e.key === "Enter") navigate(`/admin/suppliers/${sup.id}`); }}
-                    tabIndex={0}
-                  >
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-100 text-xs font-medium text-green-700">
-                      {sup.user?.name?.charAt(0)?.toUpperCase() || "S"}
-                    </span>
-                    <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
-                      <p className="text-sm text-text-primary truncate">{sup.user?.name || "Unknown"}</p>
-                      <span className="text-sm text-text-secondary shrink-0">{formatCurrency(sup.totalEarnings)}</span>
-                    </div>
+      {(can('dashboard.top_suppliers') || can('dashboard.top_tours')) && (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {can('dashboard.top_suppliers') && (
+            <Card className="lg:col-span-1">
+              <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
+                <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+                  Top Suppliers
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {overviewLoading ? (
+                  <div className="p-4 space-y-3">
+                    {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Top Tours */}
-        <Card className="lg:col-span-2">
-          <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
-              Top Tours
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            {overviewLoading ? (
-              <div className="p-4 space-y-2">
-                {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
-              </div>
-            ) : overviewError ? (
-              <SectionError message="Failed to load tours" onRetry={() => overviewRefetch()} />
-            ) : !overview?.topTours?.length ? (
-              <SectionEmpty message="No top tours data" />
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm table-fixed">
-                  <thead>
-                    <tr className="border-b border-border bg-surface-muted/40">
-                      <th className="px-4 py-2.5 text-left text-xs font-semibold text-text-secondary" colSpan={2}>Tour</th>
-                      <th className="px-4 py-2.5 text-center text-xs font-semibold text-text-secondary">Bookings</th>
-                      <th className="px-4 py-2.5 text-center text-xs font-semibold text-text-secondary">Revenue</th>
-                      <th className="px-4 py-2.5 text-center text-xs font-semibold text-text-secondary">Rating</th>
-                      <th className="px-4 py-2.5 text-center text-xs font-semibold text-text-secondary">Reviews</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {overview.topTours.map((tour, idx) => (
-                      <tr
-                        key={tour.id || idx}
-                        className="border-b border-border last:border-b-0 cursor-pointer hover:bg-surface-muted/30 transition-colors"
-                        onClick={() => navigate("/admin/tours")}
+                ) : overviewError ? (
+                  <SectionError message="Failed to load suppliers" onRetry={() => overviewRefetch()} />
+                ) : !overview?.topSuppliers?.length ? (
+                  <SectionEmpty message="No supplier data" />
+                ) : (
+                  <div className="divide-y divide-border">
+                    {(overview.topSuppliers || []).slice(0, 5).map((sup, idx) => (
+                      <div
+                        key={sup.id || idx}
+                        className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-surface-muted/30 transition-colors"
+                        onClick={() => navigate(`/admin/suppliers/${sup.id}`)}
+                        onKeyDown={(e) => { if (e.key === "Enter") navigate(`/admin/suppliers/${sup.id}`); }}
                         tabIndex={0}
-                        onKeyDown={(e) => { if (e.key === "Enter") navigate("/admin/tours"); }}
                       >
-                        <td colSpan={2} className="px-4 py-3">
-                          <div className="flex items-center gap-3">
-                            <span className="w-5 text-center text-xs font-medium text-text-tertiary shrink-0">{idx + 1}</span>
-                            <span className="font-medium text-text-primary truncate min-w-0">{tour.title}</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-center text-text-primary text-sm">{formatNumber(tour.bookingCount)}</td>
-                        <td className="px-4 py-3 text-center text-text-primary text-sm">{formatCurrency(tour.revenue)}</td>
-                        <td className="px-4 py-3 text-center text-sm">
-                          {tour.averageRating != null ? Number(tour.averageRating).toFixed(1) : "—"}
-                        </td>
-                        <td className="px-4 py-3 text-center text-text-primary text-sm">{formatNumber(tour.reviewCount)}</td>
-                      </tr>
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-100 text-xs font-medium text-green-700">
+                          {sup.user?.name?.charAt(0)?.toUpperCase() || "S"}
+                        </span>
+                        <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
+                          <p className="text-sm text-text-primary truncate">{sup.user?.name || "Unknown"}</p>
+                          <span className="text-sm text-text-secondary shrink-0">{formatCurrency(sup.totalEarnings)}</span>
+                        </div>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {can('dashboard.top_tours') && (
+            <Card className="lg:col-span-2">
+              <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
+                <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+                  Top Tours
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {overviewLoading ? (
+                  <div className="p-4 space-y-2">
+                    {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+                  </div>
+                ) : overviewError ? (
+                  <SectionError message="Failed to load tours" onRetry={() => overviewRefetch()} />
+                ) : !overview?.topTours?.length ? (
+                  <SectionEmpty message="No top tours data" />
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm table-fixed">
+                      <thead>
+                        <tr className="border-b border-border bg-surface-muted/40">
+                          <th className="px-4 py-2.5 text-left text-xs font-semibold text-text-secondary" colSpan={2}>Tour</th>
+                          <th className="px-4 py-2.5 text-center text-xs font-semibold text-text-secondary">Bookings</th>
+                          <th className="px-4 py-2.5 text-center text-xs font-semibold text-text-secondary">Revenue</th>
+                          <th className="px-4 py-2.5 text-center text-xs font-semibold text-text-secondary">Rating</th>
+                          <th className="px-4 py-2.5 text-center text-xs font-semibold text-text-secondary">Reviews</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {overview.topTours.map((tour, idx) => (
+                          <tr
+                            key={tour.id || idx}
+                            className="border-b border-border last:border-b-0 cursor-pointer hover:bg-surface-muted/30 transition-colors"
+                            onClick={() => navigate("/admin/tours")}
+                            tabIndex={0}
+                            onKeyDown={(e) => { if (e.key === "Enter") navigate("/admin/tours"); }}
+                          >
+                            <td colSpan={2} className="px-4 py-3">
+                              <div className="flex items-center gap-3">
+                                <span className="w-5 text-center text-xs font-medium text-text-tertiary shrink-0">{idx + 1}</span>
+                                <span className="font-medium text-text-primary truncate min-w-0">{tour.title}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-center text-text-primary text-sm">{formatNumber(tour.bookingCount)}</td>
+                            <td className="px-4 py-3 text-center text-text-primary text-sm">{formatCurrency(tour.revenue)}</td>
+                            <td className="px-4 py-3 text-center text-sm">
+                              {tour.averageRating != null ? Number(tour.averageRating).toFixed(1) : "—"}
+                            </td>
+                            <td className="px-4 py-3 text-center text-text-primary text-sm">{formatNumber(tour.reviewCount)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
 
       {/* Bottom Grid: Booking Status, Activity, Payouts */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
-        {/* Booking Status */}
-        <Card className="xl:col-span-1">
-          <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
-              Booking Status
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {overviewLoading ? (
-              <Skeleton className="h-48 w-full" />
-            ) : overviewError ? (
-              <SectionError message="Failed to load booking status" onRetry={() => overviewRefetch()} />
-            ) : !overview?.bookingStatusDistribution?.length ? (
-              <SectionEmpty message="No booking data" />
-            ) : (
-              <div className="flex flex-col items-center">
-                <ResponsiveContainer width="100%" height={180}>
-                  <RePieChart>
-                    <Pie
-                      data={(overview.bookingStatusDistribution || []).map((d) => ({ name: d.status || "Unknown", value: d.count || 0 }))}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={50}
-                      outerRadius={75}
-                      dataKey="value"
-                      paddingAngle={2}
-                    >
-                      {(overview.bookingStatusDistribution || []).map((entry, i) => (
-                        <Cell key={entry.status || `unknown-${i}`} fill={bookingColors[entry.status || ""] || "#8a9ba8"} />
+      {(can('dashboard.bookings') || can('dashboard.recent_activity') || can('dashboard.payout_summary')) && (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
+          {can('dashboard.bookings') && (
+            <Card className="xl:col-span-1">
+              <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
+                <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+                  Booking Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {overviewLoading ? (
+                  <Skeleton className="h-48 w-full" />
+                ) : overviewError ? (
+                  <SectionError message="Failed to load booking status" onRetry={() => overviewRefetch()} />
+                ) : !overview?.bookingStatusDistribution?.length ? (
+                  <SectionEmpty message="No booking data" />
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <ResponsiveContainer width="100%" height={180}>
+                      <RePieChart>
+                        <Pie
+                          data={(overview.bookingStatusDistribution || []).map((d) => ({ name: d.status || "Unknown", value: d.count || 0 }))}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={50}
+                          outerRadius={75}
+                          dataKey="value"
+                          paddingAngle={2}
+                        >
+                          {(overview.bookingStatusDistribution || []).map((entry, i) => (
+                            <Cell key={entry.status || `unknown-${i}`} fill={bookingColors[entry.status || ""] || "#8a9ba8"} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </RePieChart>
+                    </ResponsiveContainer>
+                    <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1">
+                      {(overview.bookingStatusDistribution || []).map((d, i) => (
+                        <span key={d.status || `legend-${i}`} className="inline-flex items-center gap-1.5 text-xs text-text-secondary">
+                          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: bookingColors[d.status || ""] || "#8a9ba8" }} />
+                          {d.status || "Unknown"}
+                        </span>
                       ))}
-                    </Pie>
-                    <Tooltip />
-                  </RePieChart>
-                </ResponsiveContainer>
-                <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1">
-                  {(overview.bookingStatusDistribution || []).map((d, i) => (
-                    <span key={d.status || `legend-${i}`} className="inline-flex items-center gap-1.5 text-xs text-text-secondary">
-                      <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: bookingColors[d.status || ""] || "#8a9ba8" }} />
-                      {d.status || "Unknown"}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Recent Activity */}
-        <Card className="xl:col-span-1">
-          <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
-              Recent Activity
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            {overviewLoading ? (
-              <div className="p-4 space-y-3">
-                {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-6 w-full" />)}
-              </div>
-            ) : overviewError ? (
-              <SectionError message="Failed to load activity" onRetry={() => overviewRefetch()} />
-            ) : !overview?.eventFeed?.length ? (
-              <SectionEmpty message="No recent activity" />
-            ) : (
-              <div className="max-h-64 overflow-y-auto divide-y divide-border">
-                {overview.eventFeed.map((event, idx) => (
-                  <div key={idx} className="px-4 py-2.5">
-                    <p className="text-sm text-text-primary">{event.message}</p>
-                    <p className="text-xs text-text-tertiary mt-0.5">
-                      {event.userName && <>{event.userName} · </>}
-                      {timeAgo(event.createdAt)}
-                    </p>
+                    </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
-        {/* Payout Summary */}
-        <Card className="xl:col-span-1">
-          <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
-              Payout Summary
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-4 space-y-3">
-            {!payoutSummary ? (
-              <Skeleton className="h-28 w-full" />
-            ) : (
-              <>
-                <div className="flex items-center justify-between border-l-2 border-l-amber-500/60 pl-2 pb-2 border-b border-border">
-                  <span className="text-sm text-text-secondary">Pending</span>
-                  <span className="text-sm font-medium">{formatNumber(payoutSummary.pending?.count)}</span>
-                </div>
-                <div className="flex items-center justify-between border-l-2 border-l-green-500/60 pl-2 pb-2 border-b border-border">
-                  <span className="text-sm text-text-secondary">Paid This Month</span>
-                  <span className="text-sm font-medium">{formatNumber(payoutSummary.paidThisMonth?.count)}</span>
-                </div>
-                <div className="text-xs text-text-tertiary space-y-1 pt-1">
-                  <div className="flex justify-between"><span>Pending total</span><span>{formatCurrency(payoutSummary.pending?.totalAmount)}</span></div>
-                  <div className="flex justify-between"><span>Paid total</span><span>{formatCurrency(payoutSummary.paidThisMonth?.totalAmount)}</span></div>
-                </div>
-                <Button variant="outline" size="sm" className="w-full" onClick={() => navigate("/admin/payouts")}>
-                  View All Payouts <ArrowRight className="ml-1 h-3 w-3" />
-                </Button>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+          {can('dashboard.recent_activity') && (
+            <Card className="xl:col-span-1">
+              <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
+                <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+                  Recent Activity
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {overviewLoading ? (
+                  <div className="p-4 space-y-3">
+                    {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-6 w-full" />)}
+                  </div>
+                ) : overviewError ? (
+                  <SectionError message="Failed to load activity" onRetry={() => overviewRefetch()} />
+                ) : !overview?.eventFeed?.length ? (
+                  <SectionEmpty message="No recent activity" />
+                ) : (
+                  <div className="max-h-64 overflow-y-auto divide-y divide-border">
+                    {overview.eventFeed.map((event, idx) => (
+                      <div key={idx} className="px-4 py-2.5">
+                        <p className="text-sm text-text-primary">{event.message}</p>
+                        <p className="text-xs text-text-tertiary mt-0.5">
+                          {event.userName && <>{event.userName} · </>}
+                          {timeAgo(event.createdAt)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {can('dashboard.payout_summary') && (
+            <Card className="xl:col-span-1">
+              <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
+                <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+                  Payout Summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-4 space-y-3">
+                {!payoutSummary ? (
+                  <Skeleton className="h-28 w-full" />
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between border-l-2 border-l-amber-500/60 pl-2 pb-2 border-b border-border">
+                      <span className="text-sm text-text-secondary">Pending</span>
+                      <span className="text-sm font-medium">{formatNumber(payoutSummary.pending?.count)}</span>
+                    </div>
+                    <div className="flex items-center justify-between border-l-2 border-l-green-500/60 pl-2 pb-2 border-b border-border">
+                      <span className="text-sm text-text-secondary">Paid This Month</span>
+                      <span className="text-sm font-medium">{formatNumber(payoutSummary.paidThisMonth?.count)}</span>
+                    </div>
+                    <div className="text-xs text-text-tertiary space-y-1 pt-1">
+                      <div className="flex justify-between"><span>Pending total</span><span>{formatCurrency(payoutSummary.pending?.totalAmount)}</span></div>
+                      <div className="flex justify-between"><span>Paid total</span><span>{formatCurrency(payoutSummary.paidThisMonth?.totalAmount)}</span></div>
+                    </div>
+                    <Button variant="outline" size="sm" className="w-full" onClick={() => navigate("/admin/payouts")}>
+                      View All Payouts <ArrowRight className="ml-1 h-3 w-3" />
+                    </Button>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
 
       {/* Active Users Dialog */}
       {showActiveUsers && (

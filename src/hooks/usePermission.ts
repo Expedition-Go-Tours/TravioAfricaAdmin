@@ -49,6 +49,10 @@ export function usePermission() {
   const can = (permissionKey: string): boolean => {
     if (!adminRole) return false;
     if (adminRole.name === "super_admin") return true;
+    if (permissionKey.endsWith('*')) {
+      const prefix = permissionKey.slice(0, -1);
+      return adminRole.permissions.some((p) => p.startsWith(prefix));
+    }
     return adminRole.permissions.includes(permissionKey);
   };
 
@@ -63,6 +67,10 @@ export function hasPermission(permissionKey: string): boolean {
     if (!raw) return false;
     const role: StoredAdminRole = JSON.parse(raw);
     if (role.name === "super_admin") return true;
+    if (permissionKey.endsWith('*')) {
+      const prefix = permissionKey.slice(0, -1);
+      return role.permissions.some((p) => p.startsWith(prefix));
+    }
     return role.permissions.includes(permissionKey);
   } catch {
     return false;

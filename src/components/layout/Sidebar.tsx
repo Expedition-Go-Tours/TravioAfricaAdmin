@@ -53,7 +53,7 @@ function getNavGroups(can: (key: string) => boolean): { group: string; items: Na
     {
       group: "Analytics",
       items: [
-        ...(can('dashboard.view') || can('analytics.view') ? [{ label: "Overview", path: "/admin/overview", icon: <LayoutDashboard className="h-4 w-4" /> }] : []),
+        ...(can('dashboard.*') || can('analytics.view') ? [{ label: "Overview", path: "/admin/overview", icon: <LayoutDashboard className="h-4 w-4" /> }] : []),
         ...(can('analytics.view') ? [{
           label: "Revenue",
           icon: <TrendingUp className="h-4 w-4" />,
