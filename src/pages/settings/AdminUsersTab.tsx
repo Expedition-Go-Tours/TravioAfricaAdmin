@@ -220,7 +220,7 @@ export function AdminUsersTab() {
                     <div className="flex items-center gap-3">
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600 text-xs font-bold text-white">
                         {admin.photoURL ? (
-                          <img src={admin.photoURL} alt="" className="h-full w-full rounded-full object-cover" loading="lazy" />
+                          <img src={admin.photoURL} alt="" referrerPolicy="no-referrer" className="h-full w-full rounded-full object-cover" loading="lazy" />
                         ) : (
                           admin.name.charAt(0).toUpperCase()
                         )}
@@ -441,7 +441,7 @@ export function AdminUsersTab() {
             <div className="flex items-center gap-3 rounded-lg border border-border-muted bg-surface-base px-3 py-3">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600 text-sm font-bold text-white">
                 {showRevoke.photoURL ? (
-                  <img src={showRevoke.photoURL} alt="" className="h-full w-full rounded-full object-cover" loading="lazy" />
+                  <img src={showRevoke.photoURL} alt="" referrerPolicy="no-referrer" className="h-full w-full rounded-full object-cover" loading="lazy" />
                 ) : (
                   showRevoke.name.charAt(0).toUpperCase()
                 )}

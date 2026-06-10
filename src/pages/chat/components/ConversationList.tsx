@@ -175,6 +175,7 @@ export function ConversationList({
                       <img
                         src={otherUser.photoURL}
                         alt=""
+                        referrerPolicy="no-referrer"
                         className="absolute inset-0 h-full w-full object-cover"
                         loading="lazy"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}

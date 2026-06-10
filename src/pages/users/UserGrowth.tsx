@@ -251,6 +251,7 @@ export default function UserGrowthPage() {
                           <img
                             src={u.photoURL}
                             alt={u.name || ""}
+                            referrerPolicy="no-referrer"
                             className="absolute inset-0 h-full w-full object-cover"
                             loading="lazy"
                             onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}

@@ -117,6 +117,7 @@ export default function PayoutMethodsPage() {
               <img
                 src={photoUrl}
                 alt={name}
+                referrerPolicy="no-referrer"
                 className="absolute inset-0 h-full w-full object-cover"
                 loading="lazy"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
@@ -248,6 +249,7 @@ export default function PayoutMethodsPage() {
                   <img
                     src={selectedSupplier.photoURL}
                     alt={selectedSupplier?.name || ""}
+                    referrerPolicy="no-referrer"
                     className="absolute inset-0 h-full w-full object-cover"
                     loading="lazy"
                     onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}

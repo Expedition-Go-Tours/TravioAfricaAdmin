@@ -290,6 +290,7 @@ export function NewConversationDialog({
                           <img
                             src={supplier.user.photoURL}
                             alt=""
+                            referrerPolicy="no-referrer"
                             className="absolute inset-0 h-full w-full object-cover"
                             loading="lazy"
                             onError={(e) => {
@@ -343,6 +344,7 @@ export function NewConversationDialog({
                         <img
                           src={user.photoURL}
                           alt=""
+                          referrerPolicy="no-referrer"
                           className="absolute inset-0 h-full w-full object-cover"
                           loading="lazy"
                           onError={(e) => {

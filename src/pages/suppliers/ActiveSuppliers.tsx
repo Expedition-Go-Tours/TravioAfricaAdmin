@@ -72,6 +72,7 @@ export default function ActiveSuppliersPage() {
                 <img
                   src={r.user.photoURL}
                   alt={name}
+                  referrerPolicy="no-referrer"
                   className="absolute inset-0 h-full w-full object-cover"
                   loading="lazy"
                   onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
@@ -169,7 +170,7 @@ export default function ActiveSuppliersPage() {
           </div>
           <p className="text-sm text-text-secondary">Manage active suppliers — suspend or reactivate accounts.</p>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4">
           <DataTable
             columns={columns}
             data={applications}

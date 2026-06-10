@@ -133,6 +133,7 @@ export function MessageBubble({
             <img
               src={senderAvatar}
               alt=""
+              referrerPolicy="no-referrer"
               className="absolute inset-0 h-full w-full object-cover"
               loading="lazy"
               onError={(e) => {

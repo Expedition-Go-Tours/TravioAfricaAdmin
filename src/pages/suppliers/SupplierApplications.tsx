@@ -54,6 +54,7 @@ export default function SupplierApplicationsPage() {
             <img
               src={r.user.photoURL}
               alt=""
+              referrerPolicy="no-referrer"
               className="absolute inset-0 h-full w-full object-cover"
               loading="lazy"
               onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
@@ -145,7 +146,7 @@ export default function SupplierApplicationsPage() {
             ))}
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4">
           <DataTable
             columns={columns}
             data={applications}

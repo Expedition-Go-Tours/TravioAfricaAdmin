@@ -1,16 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Star, ChevronLeft, ChevronRight, ArrowLeft, Search, X, ThumbsUp, MessageSquare, AlertTriangle, Clock } from "lucide-react";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Star, ChevronLeft, ChevronRight, ArrowLeft, Search, X, ThumbsUp, AlertTriangle, Clock } from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { SectionError } from "@/components/shared/SectionError";
 import { SectionEmpty } from "@/components/shared/SectionEmpty";
@@ -41,7 +37,7 @@ export default function ReviewModerationPage() {
   const queryClient = useQueryClient();
   const { can } = usePermission();
   const [page, setPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState("Pending");
+  const [statusFilter, setStatusFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [actionReview, setActionReview] = useState<Review | null>(null);
   const [actionType, setActionType] = useState<"approve" | "reject" | "flag" | null>(null);
@@ -83,20 +79,23 @@ export default function ReviewModerationPage() {
     moderateMutation.mutate(body);
   };
 
-  const rawReviews: Review[] = data?.reviews || data?.data?.reviews || [];
+  const rawReviews: Review[] = useMemo(
+    () => data?.reviews || data?.data?.reviews || [],
+    [data]
+  );
   const pagination = data?.pagination || data?.data?.pagination;
 
   // Deep link from notification — auto-open approve modal for specific review
+  const deepLinkReviewId = location.state?.reviewId as string | undefined;
   useEffect(() => {
-    const reviewId = location.state?.reviewId as string | undefined;
-    if (!reviewId || deepLinkHandled.current || rawReviews.length === 0) return;
-    const found = rawReviews.find((r: Review) => r.id === reviewId);
+    if (!deepLinkReviewId || deepLinkHandled.current || rawReviews.length === 0) return;
+    const found = rawReviews.find((r: Review) => r.id === deepLinkReviewId);
     if (found) {
       deepLinkHandled.current = true;
       navigate(location.pathname, { replace: true, state: {} });
       setTimeout(() => { setActionReview(found); setActionType("approve"); }, 0);
     }
-  }, [rawReviews, location.pathname, navigate]);
+  }, [rawReviews, location.pathname, navigate, deepLinkReviewId]);
   const counts = data?.counts || data?.data?.counts;
   const pendingCount = counts?.pending ?? pagination?.totalCount ?? rawReviews.length;
   const flaggedCount = counts?.flagged ?? 0;
@@ -174,7 +173,7 @@ export default function ReviewModerationPage() {
               )}
             </div>
           </div>
-          <div className="flex gap-2 mt-3">
+          <div className="flex gap-2 mt-3 mb-1">
             {statusFilters.map((tab) => (
               <button
                 key={tab}
@@ -190,7 +189,7 @@ export default function ReviewModerationPage() {
             ))}
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-3">
           {isLoading ? (
             <div className="grid gap-4 md:grid-cols-2">
               {Array.from({ length: 4 }).map((_, i) => (
@@ -236,14 +235,14 @@ export default function ReviewModerationPage() {
                       <div className="mt-3 space-y-1.5 text-xs text-text-tertiary">
                         <div className="flex items-center gap-2">
                           <span className="relative flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-400 to-green-600 text-[8px] font-bold text-white">
-                            {review.customer?.photoURL ? <img src={review.customer.photoURL} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} /> : null}
+                            {review.customer?.photoURL ? <img src={review.customer.photoURL} alt="" referrerPolicy="no-referrer" className="absolute inset-0 h-full w-full object-cover" loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} /> : null}
                             <span className={review.customer?.photoURL ? "opacity-0" : ""}>{review.customer?.name?.charAt(0)?.toUpperCase() || "?"}</span>
                           </span>
                           <span><span className="font-medium text-green-700">{review.customer?.name || "Anonymous"}</span> on <span className="font-medium text-blue-600">{review.tour?.title || "Unknown Tour"}</span></span>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="relative flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-[8px] font-bold text-white">
-                            {review.tour?.supplier?.photoURL ? <img src={review.tour.supplier.photoURL} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} /> : null}
+                            {review.tour?.supplier?.photoURL ? <img src={review.tour.supplier.photoURL} alt="" referrerPolicy="no-referrer" className="absolute inset-0 h-full w-full object-cover" loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} /> : null}
                             <span className={review.tour?.supplier?.photoURL ? "opacity-0" : ""}>{review.tour?.supplier?.name?.charAt(0)?.toUpperCase() || "?"}</span>
                           </span>
                           <span><span className="text-amber-600">Supplier:</span> <span className="font-medium text-amber-700">{review.tour?.supplier?.name || "Unknown Supplier"}</span></span>
