@@ -46,23 +46,23 @@ export default function App() {
           >
             <Route index element={<Navigate to="/admin/overview" replace />} />
             <Route path="overview" element={<OverviewPage />} />
-            <Route path="revenue-trend" element={<RevenueTrendPage />} />
-            <Route path="search-analytics" element={<SearchAnalyticsPage />} />
-            <Route path="cart-abandonment" element={<CartAbandonmentPage />} />
-            <Route path="user-growth" element={<UserGrowthPage />} />
-            <Route path="clv" element={<CustomerLifetimeValuePage />} />
-            <Route path="funnel" element={<ConversionFunnelPage />} />
-            <Route path="tours" element={<TourPerformancePage />} />
-            <Route path="tours/:id" element={<TourDetailPage />} />
-            <Route path="suppliers" element={<SupplierApplicationsPage />} />
-            <Route path="suppliers/:id" element={<SupplierDetailPage />} />
-            <Route path="suppliers/active" element={<ActiveSuppliersPage />} />
-            <Route path="payouts" element={<PayoutsTabPage />} />
-            <Route path="payout-methods" element={<PayoutMethodsPage />} />
-            <Route path="reviews" element={<ReviewModerationPage />} />
+            <Route path="revenue-trend" element={<PermissionRoute permission="analytics.view"><RevenueTrendPage /></PermissionRoute>} />
+            <Route path="search-analytics" element={<PermissionRoute permission="analytics.view"><SearchAnalyticsPage /></PermissionRoute>} />
+            <Route path="cart-abandonment" element={<PermissionRoute permission="analytics.view"><CartAbandonmentPage /></PermissionRoute>} />
+            <Route path="user-growth" element={<PermissionRoute permission="users.view"><UserGrowthPage /></PermissionRoute>} />
+            <Route path="clv" element={<PermissionRoute permission="users.view"><CustomerLifetimeValuePage /></PermissionRoute>} />
+            <Route path="funnel" element={<PermissionRoute permission="users.view"><ConversionFunnelPage /></PermissionRoute>} />
+            <Route path="tours" element={<PermissionRoute permission="tours.view"><TourPerformancePage /></PermissionRoute>} />
+            <Route path="tours/:id" element={<PermissionRoute permission="tours.view"><TourDetailPage /></PermissionRoute>} />
+            <Route path="suppliers" element={<PermissionRoute permission="suppliers.view"><SupplierApplicationsPage /></PermissionRoute>} />
+            <Route path="suppliers/:id" element={<PermissionRoute permission="suppliers.view"><SupplierDetailPage /></PermissionRoute>} />
+            <Route path="suppliers/active" element={<PermissionRoute permission="suppliers.view"><ActiveSuppliersPage /></PermissionRoute>} />
+            <Route path="payouts" element={<PermissionRoute permission="payouts.view"><PayoutsTabPage /></PermissionRoute>} />
+            <Route path="payout-methods" element={<PermissionRoute permission="payout-methods.view"><PayoutMethodsPage /></PermissionRoute>} />
+            <Route path="reviews" element={<PermissionRoute permission="reviews.view"><ReviewModerationPage /></PermissionRoute>} />
             <Route path="chat/suppliers" element={<PermissionRoute permission="chat.suppliers"><ChatPage /></PermissionRoute>} />
             <Route path="chat/customers" element={<PermissionRoute permission="chat.customers"><ChatPage /></PermissionRoute>} />
-            <Route path="settings" element={<SettingsPage />} />
+            <Route path="settings" element={<PermissionRoute permission="settings.access"><SettingsPage /></PermissionRoute>} />
           </Route>
           <Route path="*" element={<Navigate to="/admin/overview" replace />} />
         </Routes>
