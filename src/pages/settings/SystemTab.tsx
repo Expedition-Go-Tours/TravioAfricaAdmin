@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, RotateCw } from "lucide-react";
+import { Shield, AlertTriangle, RotateCw } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -40,19 +40,21 @@ export function SystemTab() {
   });
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 max-w-4xl mx-auto">
       {maintLoading ? (
         <MaintSkeleton />
       ) : (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <AlertTriangle className={`h-4 w-4 ${maintMode ? "text-red-500" : "text-amber-500"}`} />
-              <h3 className="text-sm font-semibold text-text-primary">Maintenance Mode</h3>
+        <Card className="rounded-xl shadow-sm overflow-hidden">
+          <CardHeader className="px-6 py-5 border-b border-border/80 flex flex-row items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-green-50 flex items-center justify-center shrink-0">
+              <Shield className="h-4 w-4 text-green-600" />
             </div>
-            <p className="text-xs text-text-secondary">Put the platform in maintenance mode</p>
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-text-primary">Maintenance Mode</h3>
+              <p className="text-xs text-text-secondary">Put the platform in maintenance mode</p>
+            </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-6 py-5">
             <div className="flex items-center gap-3">
               <Button
                 variant="outline"
