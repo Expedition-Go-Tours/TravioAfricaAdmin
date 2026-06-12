@@ -90,7 +90,13 @@ export function AdminUsersTab() {
   const changeRoleMutation = useMutation({
     mutationFn: ({ userId, adminRoleId }: { userId: string; adminRoleId: string }) =>
       api.patch(`/admin/admins/${userId}/role`, { adminRoleId }),
-    onSuccess: () => {
+    onSuccess: (response) => {
+      const updated = response.data?.data;
+      if (updated) {
+        queryClient.setQueryData<AdminUser[]>(["admin", "admin-users"], (old) =>
+          old?.map((a) => (a.id === updated.id ? { ...a, ...updated } : a)) ?? []
+        );
+      }
       toast.success("Admin role updated");
       queryClient.invalidateQueries({ queryKey: ["admin", "admin-users"] });
     },
@@ -99,7 +105,13 @@ export function AdminUsersTab() {
 
   const revokeMutation = useMutation({
     mutationFn: (userId: string) => api.delete(`/admin/admins/${userId}/revoke`),
-    onSuccess: () => {
+    onSuccess: (response) => {
+      const revokedId = response.data?.data?.id;
+      if (revokedId) {
+        queryClient.setQueryData<AdminUser[]>(["admin", "admin-users"], (old) =>
+          old?.filter((a) => a.id !== revokedId) ?? []
+        );
+      }
       toast.success("Admin access revoked");
       queryClient.invalidateQueries({ queryKey: ["admin", "admin-users"] });
       setRevokeDone(true);
@@ -110,13 +122,29 @@ export function AdminUsersTab() {
   const addMutation = useMutation({
     mutationFn: (data: { userId: string; adminRoleId: string }) =>
       api.post("/admin/admins", data),
-    onSuccess: () => {
+    onSuccess: (response) => {
+      const newAdmin = response.data?.data;
+      if (newAdmin) {
+        queryClient.setQueryData<AdminUser[]>(["admin", "admin-users"], (old) =>
+          [{ ...newAdmin, lastLoginAt: null, createdAt: new Date().toISOString() }, ...(old ?? [])]
+        );
+      }
       toast.success("Admin access granted");
       queryClient.invalidateQueries({ queryKey: ["admin", "admin-users"] });
       setAddDone(true);
     },
     onError: (err: Error) => toast.error((err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to add admin"),
   });
+
+  const resetAddModal = useCallback(() => {
+    setShowAdd(false);
+    setSelectedUser(null);
+    setUserSearch("");
+    setSearchResults([]);
+    setNewRoleId("");
+    setAddDone(false);
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+  }, []);
 
   useEffect(() => {
     if (!addDone) return;
@@ -125,7 +153,7 @@ export function AdminUsersTab() {
       setAddDone(false);
     }, 1500);
     return () => clearTimeout(timer);
-  }, [addDone]);
+  }, [addDone, resetAddModal]);
 
   useEffect(() => {
     if (!revokeDone) return;
@@ -151,16 +179,6 @@ export function AdminUsersTab() {
         setSearchLoading(false);
       }
     }, 300);
-  }, []);
-
-  const resetAddModal = useCallback(() => {
-    setShowAdd(false);
-    setSelectedUser(null);
-    setUserSearch("");
-    setSearchResults([]);
-    setNewRoleId("");
-    setAddDone(false);
-    if (searchTimer.current) clearTimeout(searchTimer.current);
   }, []);
 
   const allAdmins: AdminUser[] = admins || [];
