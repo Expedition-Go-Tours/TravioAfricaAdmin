@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 
 Backendv2/
+
+# Playwright MCP
+.playwright-mcp/
