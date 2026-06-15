@@ -6,6 +6,7 @@ import { queryClient } from "@/lib/query-client";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProtectedRoute } from "@/auth/ProtectedRoute";
 import { hasPermission } from "@/hooks/usePermission";
+import { getDefaultRoute } from "@/lib/permissions";
 import { useDataSocket } from "@/hooks/useDataSocket";
 
 import LoginPage from "@/pages/Login";
@@ -44,7 +45,7 @@ export default function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<Navigate to="/admin/overview" replace />} />
+            <Route index element={<HomeRedirect />} />
             <Route path="overview" element={<OverviewPage />} />
             <Route path="revenue-trend" element={<PermissionRoute permission="analytics.view"><RevenueTrendPage /></PermissionRoute>} />
             <Route path="search-analytics" element={<PermissionRoute permission="analytics.view"><SearchAnalyticsPage /></PermissionRoute>} />
@@ -64,7 +65,7 @@ export default function App() {
             <Route path="chat/customers" element={<PermissionRoute permission="chat.customers"><ChatPage /></PermissionRoute>} />
             <Route path="settings" element={<PermissionRoute permission="settings.access"><SettingsPage /></PermissionRoute>} />
           </Route>
-          <Route path="*" element={<Navigate to="/admin/overview" replace />} />
+          <Route path="*" element={<Navigate to={getDefaultRoute()} replace />} />
         </Routes>
       </BrowserRouter>
       <Toaster
@@ -87,8 +88,12 @@ function DataSocketInit() {
   return null;
 }
 
+function HomeRedirect() {
+  return <Navigate to={getDefaultRoute()} replace />;
+}
+
 function PermissionRoute({ permission, children }: { permission: string; children: React.ReactNode }) {
-  return hasPermission(permission) ? <>{children}</> : <Navigate to="/admin/overview" replace />;
+  return hasPermission(permission) ? <>{children}</> : <Navigate to="/admin" replace />;
 }
 
 function PayoutsTabPage() {

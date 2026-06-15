@@ -3,45 +3,28 @@ import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 
 import { auth } from "@/lib/firebase";
 import api from "@/lib/axios";
 
-interface AdminRoleData {
-  id: string;
-  name: string;
-  permissions: string[];
-}
-
-async function fetchAdminRole() {
-  try {
-    const res = await api.get("/admin/me");
-    const userData = res.data?.data;
-    if (userData?.adminRoleId) {
-      localStorage.setItem("adminRoleId", userData.adminRoleId);
-    }
-    const rolesRes = await api.get("/admin/roles");
-    const roles: AdminRoleData[] = rolesRes.data?.data || [];
-    const match = roles.find((r) => r.id === userData?.adminRoleId);
-    if (match) {
-      localStorage.setItem("adminRole", JSON.stringify(match));
-    }
-  } catch {
-    // non-critical
-  }
-}
-
 export function useAuth() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const verifyAdmin = useCallback(async (token: string) => {
     try {
-      await api.get("/admin/analytics/overview", {
+      const res = await api.get("/admin/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
+      const userData = res.data?.data;
+      if (userData?.adminRoleId && userData?.adminRole) {
+        localStorage.setItem("adminRoleId", userData.adminRoleId);
+        localStorage.setItem("adminRole", JSON.stringify(userData.adminRole));
+      }
       return true;
-    } catch (overviewErr: unknown) {
-      if (overviewErr && typeof overviewErr === "object" && "response" in overviewErr) {
-        const axiosErr = overviewErr as { response?: { status?: number } };
+    } catch (err: unknown) {
+      if (err && typeof err === "object" && "response" in err) {
+        const axiosErr = err as { response?: { status?: number } };
         if (axiosErr.response?.status === 403) {
           setError("You do not have admin privileges");
+        } else if (axiosErr.response?.status === 404) {
+          setError("Admin profile not found");
         } else {
           setError("Unable to connect. Check your internet.");
         }
@@ -55,7 +38,6 @@ export function useAuth() {
   const postLogin = useCallback(async (token: string) => {
     localStorage.setItem("firebaseToken", token);
     localStorage.setItem("userRole", "admin");
-    await fetchAdminRole();
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {

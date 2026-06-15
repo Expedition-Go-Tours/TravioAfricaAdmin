@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/auth/useAuth";
+import { getDefaultRoute } from "@/lib/permissions";
 import logoSrc from "@/assets/new_logo.png";
 
 export default function LoginPage() {
@@ -15,7 +16,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/admin/overview", { replace: true });
+      navigate(getDefaultRoute(), { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
@@ -23,14 +24,14 @@ export default function LoginPage() {
     e.preventDefault();
     const success = await login(email, password);
     if (success) {
-      navigate("/admin/overview", { replace: true });
+      navigate(getDefaultRoute(), { replace: true });
     }
   };
 
   const handleGoogleLogin = async () => {
     const success = await loginWithGoogle();
     if (success) {
-      navigate("/admin/overview", { replace: true });
+      navigate(getDefaultRoute(), { replace: true });
     }
   };
 

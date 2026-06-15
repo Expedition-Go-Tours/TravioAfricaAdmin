@@ -1,4 +1,5 @@
 import { io, Socket } from "socket.io-client";
+import { auth } from "./firebase";
 
 const SOCKET_URL = import.meta.env.VITE_API_URL?.replace("/api", "") || "";
 const ADMIN_NOTIFICATION_EVENT = "admin-notification";
@@ -8,8 +9,9 @@ let socket: Socket | null = null;
 export function getAdminSocket(): Socket {
   if (!socket) {
     const token = localStorage.getItem("firebaseToken");
+    const userId = auth.currentUser?.uid || "admin";
     socket = io(SOCKET_URL, {
-      auth: { userId: "admin", role: "admin", token },
+      auth: { userId, role: "admin", token },
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 3000,

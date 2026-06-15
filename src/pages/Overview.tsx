@@ -15,6 +15,11 @@ import {
   ArrowRight,
   Star,
   X,
+  MessageCircle,
+  Map,
+  Star as StarIcon,
+  Banknote,
+  LayoutDashboard,
 } from "lucide-react";
 import {
   Tooltip,
@@ -33,6 +38,7 @@ import { getAdminSocket } from "@/lib/adminSocket";
 import { formatCurrency, formatNumber, formatDate, timeAgo } from "@/lib/utils";
 
 interface OverviewData {
+  forbidden?: boolean;
   revenue?: { today?: { revenue?: number }; yesterday?: { revenue?: number }; thisWeek?: { revenue?: number; commission?: number; supplierPayout?: number }; thisMonth?: { revenue?: number; commission?: number; supplierPayout?: number }; ytd?: { revenue?: number; commission?: number; supplierPayout?: number } };
   bookings?: { today?: number; yesterday?: number };
   signups?: { today?: number; yesterday?: number };
@@ -63,38 +69,48 @@ export default function OverviewPage() {
   const { data: overview, isLoading: overviewLoading, isError: overviewError, refetch: overviewRefetch } = useQuery({
     queryKey: ["admin", "overview"],
     queryFn: async () => {
-      const res = await api.get("/admin/analytics/overview");
-      const d = res.data?.data as Record<string, unknown> | undefined;
-      const overview = (d?.overview as Record<string, unknown>) || {};
-      return {
-        revenue: (overview?.revenue as Record<string, unknown>) || {},
-        bookings: (overview?.bookings as Record<string, unknown>) || {},
-        signups: (overview?.signups as Record<string, unknown>) || {},
-        activeUsersLast30Days: (overview?.activeUsersLast30Days as number) || 0,
-        activeUsersPrevious30: (overview?.activeUsersPrevious30 as number) || 0,
-        topTours: ((d?.topTours as Array<Record<string, unknown>>) || []).map((t) => ({
-          id: t.id as string,
-          title: t.title as string,
-          coverPhoto: t.coverPhoto as string,
-          bookingCount: (t.totalBookings as number) || 0,
-          revenue: (t.totalRevenue as number) || 0,
-          averageRating: (t.averageRating as number) || 0,
-          reviewCount: (t.reviewCount as number) || 0,
-        })),
-        topSuppliers: ((d?.topSuppliers as Array<Record<string, unknown>>) || []).map((s) => ({
-          id: s.id as string,
-          user: { name: s.name as string, email: s.email as string, photoURL: s.photoURL as string },
-          totalEarnings: (s.totalEarnings as number) || 0,
-          totalBookings: (s.totalBookings as number) || 0,
-          averageRating: (s.averageRating as number) || 0,
-        })),
-        bookingStatusDistribution: (d?.bookingStatusDistribution as Array<Record<string, unknown>>) || [],
-        eventFeed: ((d?.eventFeed as Array<Record<string, unknown>>) || []).map((e) => ({
-          message: typeof e.properties === "object" && e.properties ? ((e.properties as Record<string, unknown>).message as string) || (e.name as string) : (e.name as string),
-          userName: (e.userName as string) || null,
-          createdAt: e.createdAt as string,
-        })),
-      } as OverviewData;
+      try {
+        const res = await api.get("/admin/analytics/overview");
+        const d = res.data?.data as Record<string, unknown> | undefined;
+        const overview = (d?.overview as Record<string, unknown>) || {};
+        return {
+          revenue: (overview?.revenue as Record<string, unknown>) || {},
+          bookings: (overview?.bookings as Record<string, unknown>) || {},
+          signups: (overview?.signups as Record<string, unknown>) || {},
+          activeUsersLast30Days: (overview?.activeUsersLast30Days as number) || 0,
+          activeUsersPrevious30: (overview?.activeUsersPrevious30 as number) || 0,
+          topTours: ((d?.topTours as Array<Record<string, unknown>>) || []).map((t) => ({
+            id: t.id as string,
+            title: t.title as string,
+            coverPhoto: t.coverPhoto as string,
+            bookingCount: (t.totalBookings as number) || 0,
+            revenue: (t.totalRevenue as number) || 0,
+            averageRating: (t.averageRating as number) || 0,
+            reviewCount: (t.reviewCount as number) || 0,
+          })),
+          topSuppliers: ((d?.topSuppliers as Array<Record<string, unknown>>) || []).map((s) => ({
+            id: s.id as string,
+            user: { name: s.name as string, email: s.email as string, photoURL: s.photoURL as string },
+            totalEarnings: (s.totalEarnings as number) || 0,
+            totalBookings: (s.totalBookings as number) || 0,
+            averageRating: (s.averageRating as number) || 0,
+          })),
+          bookingStatusDistribution: (d?.bookingStatusDistribution as Array<Record<string, unknown>>) || [],
+          eventFeed: ((d?.eventFeed as Array<Record<string, unknown>>) || []).map((e) => ({
+            message: typeof e.properties === "object" && e.properties ? ((e.properties as Record<string, unknown>).message as string) || (e.name as string) : (e.name as string),
+            userName: (e.userName as string) || null,
+            createdAt: e.createdAt as string,
+          })),
+        } as OverviewData;
+      } catch (err: unknown) {
+        if (err && typeof err === "object" && "response" in err) {
+          const axiosErr = err as { response?: { status?: number } };
+          if (axiosErr.response?.status === 403) {
+            return { forbidden: true } as OverviewData;
+          }
+        }
+        throw err;
+      }
     },
   });
 
@@ -227,6 +243,10 @@ export default function OverviewPage() {
         </div>
       </div>
 
+      {overview?.forbidden ? (
+        <WelcomeDashboard />
+      ) : (
+      <>
       {/* KPI Row */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
         {can('dashboard.revenue') && (
@@ -671,11 +691,68 @@ export default function OverviewPage() {
           </div>
         </div>
       )}
+      </>
+      )}
     </div>
   );
 }
 
 /* ── Sub-components ── */
+
+function WelcomeDashboard() {
+  const navigate = useNavigate();
+  const { can, adminRole } = usePermission();
+
+  const sections = [
+    { permission: 'chat.customers', label: 'Customer Support', icon: <MessageCircle className="h-6 w-6" />, route: '/admin/chat/customers', desc: 'Respond to customer inquiries' },
+    { permission: 'chat.suppliers', label: 'Supplier Messages', icon: <MessageSquare className="h-6 w-6" />, route: '/admin/chat/suppliers', desc: 'Communicate with suppliers' },
+    { permission: 'reviews.view', label: 'Review Moderation', icon: <StarIcon className="h-6 w-6" />, route: '/admin/reviews', desc: 'Approve or flag reviews' },
+    { permission: 'suppliers.view', label: 'Suppliers', icon: <Building className="h-6 w-6" />, route: '/admin/suppliers', desc: 'Manage supplier applications' },
+    { permission: 'payouts.view', label: 'Payouts', icon: <Banknote className="h-6 w-6" />, route: '/admin/payouts', desc: 'View and approve payouts' },
+    { permission: 'tours.view', label: 'Tours', icon: <Map className="h-6 w-6" />, route: '/admin/tours', desc: 'Browse tour performance' },
+    { permission: 'users.view', label: 'Users', icon: <Users className="h-6 w-6" />, route: '/admin/user-growth', desc: 'User growth and analytics' },
+    { permission: 'settings.access', label: 'Settings', icon: <Settings className="h-6 w-6" />, route: '/admin/settings', desc: 'Configure platform settings' },
+  ];
+
+  const available = sections.filter((s) => can(s.permission));
+
+  return (
+    <div className="space-y-6">
+      <div className="border-l-2 border-l-green-500 pl-3">
+        <h1 className="text-lg font-semibold text-text-primary">
+          Welcome{adminRole?.name ? `, ${adminRole.name.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}` : ''}
+        </h1>
+        <p className="text-sm text-text-secondary mt-1">Select a section below to get started</p>
+      </div>
+      {available.length > 0 ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {available.map((section) => (
+            <button
+              key={section.route}
+              onClick={() => navigate(section.route)}
+              className="flex flex-col items-start gap-3 rounded-sm border border-border bg-card p-5 text-left transition-all hover:border-green-200 hover:shadow-md hover:-translate-y-0.5"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-700">
+                {section.icon}
+              </div>
+              <div>
+                <p className="font-medium text-text-primary">{section.label}</p>
+                <p className="text-sm text-text-tertiary mt-0.5">{section.desc}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <LayoutDashboard className="mx-auto h-12 w-12 text-text-tertiary/40" />
+            <p className="mt-3 text-sm text-text-tertiary">No sections available for your role. Contact a super admin.</p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
 
 const accentBorders: Record<string, string> = {
   green: "border-l-green-500/60",

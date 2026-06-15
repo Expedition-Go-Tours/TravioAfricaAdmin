@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import api from "@/lib/axios";
+import { useMemo } from "react";
 
 interface StoredAdminRole {
   id: string;
@@ -16,35 +15,8 @@ function getStoredAdminRole(): StoredAdminRole | null {
   }
 }
 
-function setStoredAdminRole(role: StoredAdminRole | null) {
-  if (role) {
-    localStorage.setItem("adminRole", JSON.stringify(role));
-  } else {
-    localStorage.removeItem("adminRole");
-  }
-}
-
 export function usePermission() {
-  const [adminRole, setAdminRole] = useState<StoredAdminRole | null>(getStoredAdminRole);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const stored = getStoredAdminRole();
-    if (stored) return;
-
-    setLoading(true);
-    api
-      .get("/admin/roles")
-      .then((res) => {
-        const data = res.data?.data;
-        const matching: StoredAdminRole | undefined = data?.find?.(
-          (r: StoredAdminRole) => r.id === localStorage.getItem("adminRoleId"),
-        );
-        if (matching) setStoredAdminRole(matching);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+  const adminRole = useMemo(() => getStoredAdminRole(), []);
 
   const can = (permissionKey: string): boolean => {
     if (!adminRole) return false;
@@ -58,7 +30,7 @@ export function usePermission() {
 
   const isSuperAdmin = adminRole?.name === "super_admin";
 
-  return { can, isSuperAdmin, adminRole, loading, setAdminRole };
+  return { can, isSuperAdmin, adminRole, loading: false, setAdminRole: () => {} };
 }
 
 export function hasPermission(permissionKey: string): boolean {
