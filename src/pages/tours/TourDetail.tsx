@@ -11,6 +11,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { SectionError } from "@/components/shared/SectionError";
 import api from "@/lib/axios";
 import { formatCurrency, formatNumber, formatDate } from "@/lib/utils";
+import { usePermission } from "@/hooks/usePermission";
 
 interface TourDetail {
   id: string;
@@ -25,7 +26,7 @@ interface TourDetail {
   currency?: string;
   photos?: string[];
   coverPhoto?: string;
-  supplier?: { id?: string; name?: string; email?: string };
+  supplier?: { id?: string; name?: string; email?: string; photoURL?: string };
   bookingCount?: number;
   totalRevenue?: number;
   averageRating?: number;
@@ -45,6 +46,8 @@ interface TourDetail {
     duration?: { days?: number; hours?: number; minutes?: number };
     groupSize?: { min?: number; max?: number };
     transportMode?: unknown;
+    includes?: string[];
+    excludes?: string[];
   };
   productContent?: {
     highlights?: string[];
@@ -143,8 +146,8 @@ function normalizeTour(raw: Record<string, unknown>): TourDetail {
       }
       return undefined;
     })(),
-    inclusions: ensureArray(productContent?.included) as string[] | undefined,
-    exclusions: ensureArray(productContent?.excluded) as string[] | undefined,
+    inclusions: (ensureArray(productContent?.included) || ensureArray(raw.includes) || ensureArray(categorization?.includes)) as string[] | undefined,
+    exclusions: (ensureArray(productContent?.excluded) || ensureArray(raw.excludes) || ensureArray(categorization?.excludes)) as string[] | undefined,
     averageRating: avgRating,
     bookingCount: (raw._count as { bookings?: number })?.bookings ?? (raw.totalBookings as number ?? undefined),
     reviewCount: (raw._count as { reviews?: number })?.reviews ?? (raw.reviewCount as number ?? undefined),
@@ -155,6 +158,7 @@ function normalizeTour(raw: Record<string, unknown>): TourDetail {
 export default function TourDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { can } = usePermission();
 
   const { data: tour, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin", "tour-detail", id],
@@ -261,10 +265,16 @@ export default function TourDetailPage() {
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <KpiCard label="Total Revenue" value={formatCurrency(tour.totalRevenue)} icon={<DollarSign className="h-4 w-4" />} accent="green" />
-        <KpiCard label="Bookings" value={formatNumber(tour.bookingCount)} icon={<Calendar className="h-4 w-4" />} accent="blue" />
+        {can('analytics.view') && (
+          <KpiCard label="Total Revenue" value={tour.totalRevenue != null ? formatCurrency(tour.totalRevenue) : "—"} icon={<DollarSign className="h-4 w-4" />} accent="green" />
+        )}
+        {can('bookings.view') && (
+          <KpiCard label="Bookings" value={tour.bookingCount != null ? formatNumber(tour.bookingCount) : "—"} icon={<Calendar className="h-4 w-4" />} accent="blue" />
+        )}
         <KpiCard label="Avg Rating" value={tour.averageRating != null ? Number(tour.averageRating).toFixed(1) : "—"} icon={<Star className="h-4 w-4" />} accent="amber" />
-        <KpiCard label="Views" value={formatNumber(tour.viewCount)} icon={<Eye className="h-4 w-4" />} accent="green" />
+        {can('analytics.view') && (
+          <KpiCard label="Views" value={tour.viewCount != null ? formatNumber(tour.viewCount) : "—"} icon={<Eye className="h-4 w-4" />} accent="green" />
+        )}
       </div>
 
       {/* Main Content */}
@@ -414,15 +424,19 @@ export default function TourDetailPage() {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Supplier Card */}
+          {can('suppliers.view') && (
           <Card>
             <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Supplier</CardTitle></CardHeader>
             <CardContent>
               {tour.supplier ? (
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-sm font-bold text-amber-700">
-                    {tour.supplier.name?.charAt(0)?.toUpperCase() || "?"}
-                  </div>
+                  {tour.supplier.photoURL ? (
+                    <img src={tour.supplier.photoURL} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
+                  ) : (
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-sm font-bold text-amber-700">
+                      {tour.supplier.name?.charAt(0)?.toUpperCase() || "?"}
+                    </div>
+                  )}
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-text-primary">{tour.supplier.name || "Unknown"}</p>
                     {tour.supplier.email && (
@@ -440,6 +454,7 @@ export default function TourDetailPage() {
               )}
             </CardContent>
           </Card>
+          )}
 
           {/* Performance Stats */}
           <Card>
@@ -447,10 +462,9 @@ export default function TourDetailPage() {
             <CardContent className="p-0">
               <DetailTable
                 rows={[
-                  { label: "Reviews", value: formatNumber(tour.reviewCount) },
+                  ...(can('reviews.view') ? [{ label: "Reviews", value: formatNumber(tour.reviewCount) }] : []),
                   { label: "Avg Rating", value: tour.averageRating != null ? Number(tour.averageRating).toFixed(1) : "—" },
-                  { label: "Conversion", value: conversionRate ? `${conversionRate}%` : null },
-                  { label: "Revenue/Booking", value: revenuePerBooking ? formatCurrency(revenuePerBooking) : null, highlight: true },
+                  ...(can('analytics.view') ? [{ label: "Conversion", value: conversionRate ? `${conversionRate}%` : null }, { label: "Revenue/Booking", value: revenuePerBooking ? formatCurrency(revenuePerBooking) : null, highlight: true }] : []),
                 ]}
               />
             </CardContent>
@@ -458,10 +472,12 @@ export default function TourDetailPage() {
 
           {/* Quick Stats */}
           <div className="grid grid-cols-2 gap-3">
+            {can('bookings.view') && (
             <div className="rounded-sm border border-green-200/40 bg-gradient-to-br from-green-50 to-white p-3 text-center shadow-2">
               <p className="text-xs text-text-secondary">Bookings</p>
               <p className="text-xl font-bold text-green-700">{formatNumber(tour.bookingCount)}</p>
             </div>
+            )}
             <div className="rounded-sm border border-amber-200/40 bg-gradient-to-br from-amber-50 to-white p-3 text-center shadow-2">
               <p className="text-xs text-text-secondary">Rating</p>
               <p className="text-xl font-bold text-amber-700">{tour.averageRating != null ? Number(tour.averageRating).toFixed(1) : "—"}</p>
