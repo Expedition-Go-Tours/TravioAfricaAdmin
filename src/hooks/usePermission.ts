@@ -1,4 +1,9 @@
-import { useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
+
+interface RawPermission {
+  permission?: { key: string };
+  key?: string;
+}
 
 interface StoredAdminRole {
   id: string;
@@ -6,27 +11,61 @@ interface StoredAdminRole {
   permissions: string[];
 }
 
+function flattenPermissions(raw: any): string[] {
+  if (!raw?.permissions) return [];
+  return raw.permissions.map((p: any) => {
+    if (typeof p === "string") return p;
+    return p.permission?.key || p.key || "";
+  }).filter(Boolean);
+}
+
 function getStoredAdminRole(): StoredAdminRole | null {
   try {
     const raw = localStorage.getItem("adminRole");
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return {
+      id: parsed.id || "",
+      name: parsed.name || "",
+      permissions: flattenPermissions(parsed),
+    };
   } catch {
     return null;
   }
 }
 
 export function usePermission() {
-  const adminRole = useMemo(() => getStoredAdminRole(), []);
+  const [version, setVersion] = useState(0);
 
-  const can = (permissionKey: string): boolean => {
-    if (!adminRole) return false;
-    if (adminRole.name === "super_admin") return true;
-    if (permissionKey.endsWith('*')) {
+  useEffect(() => {
+    const handler = () => setVersion((v) => v + 1);
+
+    window.addEventListener("storage", handler);
+
+    const origSetItem = localStorage.setItem;
+    localStorage.setItem = function (key, value) {
+      origSetItem.call(this, key, value);
+      if (key === "adminRole") handler();
+    };
+
+    return () => {
+      window.removeEventListener("storage", handler);
+      localStorage.setItem = origSetItem;
+    };
+  }, []);
+
+  const adminRole = getStoredAdminRole();
+
+  const can = useCallback((permissionKey: string): boolean => {
+    const role = getStoredAdminRole();
+    if (!role) return false;
+    if (role.name === "super_admin") return true;
+    if (permissionKey.endsWith("*")) {
       const prefix = permissionKey.slice(0, -1);
-      return adminRole.permissions.some((p) => p.startsWith(prefix));
+      return role.permissions.some((p) => p.startsWith(prefix));
     }
-    return adminRole.permissions.includes(permissionKey);
-  };
+    return role.permissions.includes(permissionKey);
+  }, [version]);
 
   const isSuperAdmin = adminRole?.name === "super_admin";
 
@@ -37,13 +76,14 @@ export function hasPermission(permissionKey: string): boolean {
   try {
     const raw = localStorage.getItem("adminRole");
     if (!raw) return false;
-    const role: StoredAdminRole = JSON.parse(raw);
-    if (role.name === "super_admin") return true;
-    if (permissionKey.endsWith('*')) {
+    const parsed = JSON.parse(raw);
+    if (parsed.name === "super_admin") return true;
+    const permissions = flattenPermissions(parsed);
+    if (permissionKey.endsWith("*")) {
       const prefix = permissionKey.slice(0, -1);
-      return role.permissions.some((p) => p.startsWith(prefix));
+      return permissions.some((p: string) => p.startsWith(prefix));
     }
-    return role.permissions.includes(permissionKey);
+    return permissions.includes(permissionKey);
   } catch {
     return false;
   }
@@ -53,8 +93,8 @@ export function isSuperAdmin(): boolean {
   try {
     const raw = localStorage.getItem("adminRole");
     if (!raw) return false;
-    const role: StoredAdminRole = JSON.parse(raw);
-    return role.name === "super_admin";
+    const parsed = JSON.parse(raw);
+    return parsed.name === "super_admin";
   } catch {
     return false;
   }

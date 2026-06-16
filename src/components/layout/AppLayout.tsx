@@ -4,10 +4,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { pageTransition } from "@/lib/animations";
+import { useAdminRole } from "@/auth/useAdminRole";
 
 export function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  useAdminRole(true);
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-white">

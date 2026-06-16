@@ -5,7 +5,7 @@ import { LogOut, Loader2, Settings, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/ui/NotificationBell";
 import { useAuth } from "@/auth/useAuth";
-import { isSuperAdmin } from "@/hooks/usePermission";
+import { isSuperAdmin, hasPermission } from "@/hooks/usePermission";
 
 const breadcrumbMap: Record<string, string> = {
   overview: "Overview",
@@ -75,7 +75,7 @@ export function Header() {
         })}
       </nav>
       <div className="flex items-center gap-2">
-        <NotificationBell />
+        {hasPermission('notifications.view') && <NotificationBell />}
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setMenuOpen(!menuOpen)}

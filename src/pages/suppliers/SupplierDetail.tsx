@@ -732,7 +732,7 @@ export default function SupplierDetailPage() {
       </Tabs>
 
       {/* Delete User — subtle, at bottom */}
-      {can('suppliers.delete') && (
+      {can('suppliers.suspend') && (
         <div className="flex items-center justify-between rounded-sm border border-border-muted px-5 py-3">
           <div>
             <p className="text-sm font-medium text-text-primary">Danger Zone</p>

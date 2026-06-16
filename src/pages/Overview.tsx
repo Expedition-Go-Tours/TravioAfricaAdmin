@@ -20,6 +20,7 @@ import {
   Star as StarIcon,
   Banknote,
   LayoutDashboard,
+  Settings,
 } from "lucide-react";
 import {
   Tooltip,
@@ -116,6 +117,7 @@ export default function OverviewPage() {
 
   const { data: payoutSummary } = useQuery({
     queryKey: ["admin", "payout-summary"],
+    enabled: can('payouts.view'),
     queryFn: async () => {
       const res = await api.get("/payouts/admin/summary");
       const d = res.data?.data as { pending?: { count: number; total: number }; paidThisMonth?: { count: number; total: string } } | undefined;
@@ -128,6 +130,7 @@ export default function OverviewPage() {
 
   const { data: pendingReviews } = useQuery({
     queryKey: ["admin", "reviews-pending-count"],
+    enabled: can('reviews.view'),
     queryFn: async () => {
       const res = await api.get("/reviews/admin/pending?page=1&limit=1");
       const d = res.data?.data as { reviews: unknown[]; pagination: { totalCount: number }; counts?: { pending?: number } } | undefined;
@@ -137,6 +140,7 @@ export default function OverviewPage() {
 
   const { data: pendingSuppliers } = useQuery({
     queryKey: ["admin", "suppliers-pending"],
+    enabled: can('suppliers.view'),
     queryFn: async () => {
       const res = await api.get("/suppliers/admin/applications?status=PENDING&page=1&limit=1");
       return (res.data?.data as { applications: unknown[]; pagination: { totalCount: number } } | undefined) ?? { applications: [], pagination: { totalCount: 0 } };
@@ -272,7 +276,7 @@ export default function OverviewPage() {
             accent="green"
           />
         )}
-        {can('dashboard.users') && (
+        {can('users.view') && (
           <KpiCard
             label="New Signups"
             value={overviewLoading ? "..." : formatNumber(overview?.signups?.today)}
@@ -282,7 +286,7 @@ export default function OverviewPage() {
             accent="blue"
           />
         )}
-        {can('dashboard.users') && (
+        {can('users.view') && (
           <KpiCard
             label="Active Users (30d)"
             value={overviewLoading ? "..." : formatNumber(overview?.activeUsersLast30Days)}
@@ -292,7 +296,7 @@ export default function OverviewPage() {
             accent="blue"
           />
         )}
-        {can('dashboard.payout_summary') && (
+        {can('payouts.view') && (
           <KpiCard
             label="Pending Payouts"
             value={overviewLoading ? "..." : formatNumber(payoutSummary?.pending?.count)}
@@ -301,7 +305,7 @@ export default function OverviewPage() {
             accent="amber"
           />
         )}
-        {can('dashboard.*') && (
+        {can('reviews.view') && (
           <KpiCard
             label="Pending Reviews"
             value={overviewLoading ? "..." : formatNumber(pendingReviews?.counts?.pending)}
@@ -310,7 +314,7 @@ export default function OverviewPage() {
             accent="amber"
           />
         )}
-        {can('dashboard.*') && (
+        {can('suppliers.view') && (
           <KpiCard
             label="Pending Suppliers"
             value={overviewLoading ? "..." : formatNumber(pendingSuppliers?.pagination?.totalCount)}
@@ -345,9 +349,9 @@ export default function OverviewPage() {
       )}
 
       {/* Top Suppliers + Top Tours */}
-      {(can('dashboard.top_suppliers') || can('dashboard.top_tours')) && (
+      {(can('suppliers.view') || can('tours.view')) && (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {can('dashboard.top_suppliers') && (
+          {can('suppliers.view') && (
             <Card className="lg:col-span-1">
               <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
                 <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
@@ -388,7 +392,7 @@ export default function OverviewPage() {
             </Card>
           )}
 
-          {can('dashboard.top_tours') && (
+          {can('tours.view') && (
             <Card className="lg:col-span-2">
               <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
                 <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
@@ -450,7 +454,7 @@ export default function OverviewPage() {
       )}
 
       {/* Bottom Grid: Booking Status, Activity, Payouts */}
-      {(can('dashboard.bookings') || can('dashboard.recent_activity') || can('dashboard.payout_summary')) && (
+      {(can('dashboard.bookings') || can('dashboard.*') || can('payouts.view')) && (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
           {can('dashboard.bookings') && (
             <Card className="xl:col-span-1">
@@ -500,7 +504,7 @@ export default function OverviewPage() {
             </Card>
           )}
 
-          {can('dashboard.recent_activity') && (
+          {can('dashboard.*') && (
             <Card className="xl:col-span-1">
               <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
                 <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
@@ -533,7 +537,7 @@ export default function OverviewPage() {
             </Card>
           )}
 
-          {can('dashboard.payout_summary') && (
+          {can('payouts.view') && (
             <Card className="xl:col-span-1">
               <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
                 <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">

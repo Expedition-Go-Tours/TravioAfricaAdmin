@@ -55,17 +55,26 @@ const ROUTE_PRIORITY = [
   { permission: 'settings.access', route: '/admin/settings' },
 ];
 
+function flattenPermissions(raw: any): string[] {
+  if (!raw?.permissions) return [];
+  return raw.permissions.map((p: any) => {
+    if (typeof p === "string") return p;
+    return p.permission?.key || p.key || "";
+  }).filter(Boolean);
+}
+
 function hasStoredPermission(permissionKey: string): boolean {
   try {
     const raw = localStorage.getItem('adminRole');
     if (!raw) return false;
     const role = JSON.parse(raw);
     if (role.name === 'super_admin') return true;
+    const permissions = flattenPermissions(role);
     if (permissionKey.endsWith('*')) {
       const prefix = permissionKey.slice(0, -1);
-      return role.permissions?.some((p: string) => p.startsWith(prefix));
+      return permissions.some((p: string) => p.startsWith(prefix));
     }
-    return role.permissions?.includes(permissionKey);
+    return permissions.includes(permissionKey);
   } catch {
     return false;
   }

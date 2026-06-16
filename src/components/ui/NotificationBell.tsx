@@ -21,7 +21,6 @@ import {
 } from "lucide-react";
 import { getNotifications, getUnreadCount, markAsRead, markAllAsRead } from "@/services/notificationService";
 import { onAdminNotification } from "@/lib/adminSocket";
-import { hasPermission } from "@/hooks/usePermission";
 import { timeAgo, cn } from "@/lib/utils";
 
 const notificationRouteMap: Record<string, (data?: Record<string, unknown>) => { path: string; state?: Record<string, unknown> } | null> = {
@@ -60,10 +59,7 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  const canSupplierChat = hasPermission('chat.suppliers');
-  const canCustomerChat = hasPermission('chat.customers');
-
-  const { data: rawUnreadCount = 0 } = useQuery({
+  const { data: unreadCount = 0 } = useQuery({
     queryKey: ["admin-notifications", "unread-count"],
     queryFn: getUnreadCount,
   });
@@ -74,17 +70,7 @@ export function NotificationBell() {
     enabled: open,
   });
 
-  const notifications = (dropdown?.notifications || []).filter((n) => {
-    if (n.type !== 'NEW_MESSAGE') return true;
-    const chatType = n.data?.chatType as string | undefined;
-    if (chatType === 'suppliers') return canSupplierChat;
-    if (chatType === 'customers') return canCustomerChat;
-    return canSupplierChat || canCustomerChat;
-  });
-
-  const unreadCount = (canSupplierChat || canCustomerChat)
-    ? rawUnreadCount
-    : notifications.filter((n) => !n.read).length;
+  const notifications = dropdown?.notifications || [];
 
   const markRead = useMutation({
     mutationFn: markAsRead,
