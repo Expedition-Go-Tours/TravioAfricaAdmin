@@ -377,9 +377,13 @@ export default function OverviewPage() {
                         onKeyDown={(e) => { if (e.key === "Enter") navigate(`/admin/suppliers/${sup.id}`); }}
                         tabIndex={0}
                       >
-                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-100 text-xs font-medium text-green-700">
-                          {sup.user?.name?.charAt(0)?.toUpperCase() || "S"}
-                        </span>
+                        {sup.user?.photoURL ? (
+                          <img src={sup.user.photoURL} alt="" className="h-7 w-7 shrink-0 rounded-full object-cover" />
+                        ) : (
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-100 text-xs font-medium text-green-700">
+                            {sup.user?.name?.charAt(0)?.toUpperCase() || "S"}
+                          </span>
+                        )}
                         <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
                           <p className="text-sm text-text-primary truncate">{sup.user?.name || "Unknown"}</p>
                           <span className="text-sm text-text-secondary shrink-0">{formatCurrency(sup.totalEarnings)}</span>
