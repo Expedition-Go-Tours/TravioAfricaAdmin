@@ -597,9 +597,13 @@ export default function OverviewPage() {
                 <div className="divide-y divide-border">
                   {activeUsersData.map((user) => (
                     <div key={user.id} className="flex items-start gap-3 px-4 py-2.5">
-                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-muted text-xs font-medium text-text-secondary mt-0.5">
-                        {user.name?.charAt(0)?.toUpperCase() || "?"}
-                      </div>
+                      {user.photoURL ? (
+                        <img src={user.photoURL} alt="" className="h-7 w-7 shrink-0 rounded-full object-cover mt-0.5" />
+                      ) : (
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-muted text-xs font-medium text-text-secondary mt-0.5">
+                          {user.name?.charAt(0)?.toUpperCase() || "?"}
+                        </div>
+                      )}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-text-primary truncate">{user.name || "Unknown"}</p>
                         <p className="text-xs text-text-tertiary truncate">{user.email || "—"}</p>
@@ -665,7 +669,7 @@ export default function OverviewPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowNewSignups(false)}>
           <div className="w-full max-w-lg rounded-sm border border-border bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-border px-4 py-3">
-              <h2 className="text-sm font-semibold">New Signups (30d)</h2>
+              <h2 className="text-sm font-semibold">New Signups (Today)</h2>
               <button onClick={() => setShowNewSignups(false)} className="rounded-sm p-1 text-text-tertiary hover:bg-surface-muted transition-colors">
                 <X className="h-4 w-4" />
               </button>
@@ -681,9 +685,13 @@ export default function OverviewPage() {
                 <div className="divide-y divide-border">
                   {newSignupsData.map((user) => (
                     <div key={user.id} className="flex items-start gap-3 px-4 py-2.5">
-                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-muted text-xs font-medium text-text-secondary mt-0.5">
-                        {user.name?.charAt(0)?.toUpperCase() || "?"}
-                      </div>
+                      {user.photoURL ? (
+                        <img src={user.photoURL} alt="" className="h-7 w-7 shrink-0 rounded-full object-cover mt-0.5" />
+                      ) : (
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-muted text-xs font-medium text-text-secondary mt-0.5">
+                          {user.name?.charAt(0)?.toUpperCase() || "?"}
+                        </div>
+                      )}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-text-primary truncate">{user.name || "Unknown"}</p>
                         <p className="text-xs text-text-tertiary truncate">{user.email || "—"}</p>
