@@ -81,9 +81,10 @@ export default function UserGrowthPage() {
 
     const lm = growth[growth.length - 1];
     const prev = growth.length > 1 ? growth[growth.length - 2] : null;
-    const mom = prev && prev.total > 0 ? ((lm.total - prev.total) / prev.total) * 100 : null;
-    const custMom = prev && prev.customers > 0 ? ((lm.customers - prev.customers) / prev.customers) * 100 : null;
-    const suppMom = prev && prev.suppliers > 0 ? ((lm.suppliers - prev.suppliers) / prev.suppliers) * 100 : null;
+    const cap = (v: number | null) => v != null ? Math.sign(v) * Math.min(Math.abs(v), 100) : null;
+    const mom = cap(prev && prev.total > 0 ? ((lm.total - prev.total) / prev.total) * 100 : null);
+    const custMom = cap(prev && prev.customers > 0 ? ((lm.customers - prev.customers) / prev.customers) * 100 : null);
+    const suppMom = cap(prev && prev.suppliers > 0 ? ((lm.suppliers - prev.suppliers) / prev.suppliers) * 100 : null);
 
     return { totals, latestMonth: lm, avgMonthly: Math.round(totals.total / growth.length), momChange: mom, customerMom: custMom, supplierMom: suppMom };
   }, [growth]);

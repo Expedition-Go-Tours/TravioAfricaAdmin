@@ -230,7 +230,7 @@ export default function OverviewPage() {
     const prev = Number(previous) || 0;
     if (prev === 0) return { value: 0, isPositive: true, text: context ? `${context} today` : undefined };
     const change = ((cur - prev) / prev) * 100;
-    const rounded = Math.abs(Math.round(change));
+    const rounded = Math.min(Math.abs(Math.round(change)), 100);
     const direction = change >= 0 ? "more than" : "less than";
     const period = context === "Active Users" ? "last 30 days" : "yesterday";
     return { value: rounded, isPositive: change >= 0, text: `${rounded}% ${direction} ${period}` };
