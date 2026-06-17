@@ -6,6 +6,7 @@ interface TypingEvent {
   conversationId: string;
   userId: string;
   userName?: string;
+  isTyping?: boolean;
 }
 
 interface ChatMessageEvent {
@@ -80,8 +81,8 @@ export function useChatSocket(conversationId: string | null) {
   );
 
   const emitTyping = useCallback(
-    (convId: string) => {
-      socket.emit("chat:typing", { conversationId: convId });
+    (convId: string, isTyping: boolean) => {
+      socket.emit("chat:typing", { conversationId: convId, isTyping });
     },
     [socket]
   );

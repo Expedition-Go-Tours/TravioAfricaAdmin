@@ -1,6 +1,6 @@
 ﻿import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, ChevronDown, Paperclip, ChevronRight, Trash2 } from "lucide-react";
+import { Send, ChevronDown, Paperclip, ChevronRight, Trash2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { MessageBubble, type MessageStatus } from "./MessageBubble";
@@ -23,6 +23,7 @@ interface ChatWindowProps {
   onDeleteMessage?: (messageId: string) => Promise<void>;
   onDeleteConversation?: () => Promise<void>;
   chatType?: "suppliers" | "customers";
+  onBack?: () => void;
 }
 
 function formatDateSeparator(dateStr: string) {
@@ -116,6 +117,7 @@ export function ChatWindow({
   onDeleteMessage,
   onDeleteConversation,
   chatType = "suppliers",
+  onBack,
 }: ChatWindowProps) {
   const a = accent(chatType);
   const [input, setInput] = useState("");
@@ -125,6 +127,8 @@ export function ChatWindow({
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeoutRef = useRef<number | undefined>(undefined);
+  const typingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const typingStopRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevMsgCountRef = useRef(messages.length);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -133,6 +137,10 @@ export function ChatWindow({
   useEffect(() => {
     const unsub = onTyping((data) => {
       if (data.conversationId === conversation?.id) {
+        if (data.isTyping === false) {
+          setTypingUser(null);
+          return;
+        }
         setTypingUser(data.userName || "Someone");
         clearTimeout(typingTimeoutRef.current);
         typingTimeoutRef.current = window.setTimeout(() => setTypingUser(null), 3000);
@@ -143,6 +151,25 @@ export function ChatWindow({
       clearTimeout(typingTimeoutRef.current);
     };
   }, [conversation?.id, onTyping]);
+
+  useEffect(() => {
+    return () => {
+      if (typingIntervalRef.current) {
+        clearInterval(typingIntervalRef.current);
+        typingIntervalRef.current = null;
+      }
+      if (typingStopRef.current) {
+        clearTimeout(typingStopRef.current);
+        typingStopRef.current = null;
+      }
+    };
+  }, [conversation?.id]);
+
+  useEffect(() => {
+    if (typingUser) {
+      scrollToBottom(true);
+    }
+  }, [typingUser, scrollToBottom]);
 
   const isNearBottom = useCallback(() => {
     const el = messagesContainerRef.current;
@@ -192,9 +219,10 @@ export function ChatWindow({
     const trimmed = input.trim();
     if (!trimmed || sending) return;
     setInput("");
+    stopTypingSignal();
     await onSendMessage(trimmed);
     requestAnimationFrame(() => scrollToBottom(true));
-  }, [input, sending, onSendMessage, scrollToBottom]);
+  }, [input, sending, onSendMessage, scrollToBottom, stopTypingSignal]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -203,10 +231,32 @@ export function ChatWindow({
     }
   };
 
+  const stopTypingSignal = useCallback(() => {
+    if (conversation?.id) emitTyping(conversation.id, false);
+    if (typingIntervalRef.current) {
+      clearInterval(typingIntervalRef.current);
+      typingIntervalRef.current = null;
+    }
+    if (typingStopRef.current) {
+      clearTimeout(typingStopRef.current);
+      typingStopRef.current = null;
+    }
+  }, [conversation?.id, emitTyping]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(e.target.value);
+    const value = e.target.value;
+    setInput(value);
     if (conversation?.id) {
-      emitTyping(conversation.id);
+      if (!typingIntervalRef.current) {
+        emitTyping(conversation.id, true);
+        typingIntervalRef.current = setInterval(() => {
+          if (conversation?.id) emitTyping(conversation.id, true);
+        }, 2000);
+      }
+      if (typingStopRef.current) clearTimeout(typingStopRef.current);
+      typingStopRef.current = setTimeout(() => {
+        stopTypingSignal();
+      }, 1500);
     }
     if (inputRef.current) {
       inputRef.current.style.height = "auto";
@@ -261,8 +311,17 @@ export function ChatWindow({
   return (
     <div className="flex h-full flex-col">
       <div
-        className="group flex items-center gap-3 border-b border-border/50 bg-white px-5 py-3"
+        className="group flex items-center gap-1 border-b border-border/50 bg-white px-5 py-3"
       >
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-text-tertiary transition-colors hover:bg-gray-100 hover:text-text-primary lg:hidden"
+            title="Back to conversations"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+        )}
         <div
           className="flex cursor-pointer items-center gap-3 flex-1 min-w-0"
           onClick={() => otherParticipant?.id && onViewProfile?.(otherParticipant.id)}
@@ -298,15 +357,7 @@ export function ChatWindow({
                     : "User"}
               </span>
             </div>
-            {typingUser ? (
-              <p className={cn("text-xs", a.text)}>
-                <span className="inline-flex gap-0.5">
-                  typing<span className="animate-bounce delay-0">.</span><span className="animate-bounce delay-150">.</span><span className="animate-bounce delay-300">.</span>
-                </span>
-              </p>
-            ) : (
-              <p className="text-xs text-text-tertiary">{formatLastSeen(otherParticipant?.lastLoginAt)}</p>
-            )}
+            <p className="text-xs text-text-tertiary">{formatLastSeen(otherParticipant?.lastLoginAt)}</p>
           </div>
           <ChevronRight className={cn("h-4 w-4 shrink-0 text-text-tertiary transition-all duration-200 group-hover:translate-x-0.5", chatType === "suppliers" ? "group-hover:text-green-600" : "group-hover:text-blue-600")} />
         </div>
@@ -385,6 +436,28 @@ export function ChatWindow({
                 </div>
               );
             })}
+            {typingUser && (
+              <div className="flex items-start gap-2 py-0.5">
+                <div className={cn("relative mt-1 flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br text-xs font-bold text-white", a.gradient)}>
+                  <span>{headerName.charAt(0).toUpperCase()}</span>
+                  {otherParticipant?.photoURL && (
+                    <img src={otherParticipant.photoURL} alt="" referrerPolicy="no-referrer" className="absolute inset-0 h-full w-full object-cover" loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5 rounded-[18px] rounded-bl-[4px] border border-border/50 bg-white px-4 py-3 shadow-sm">
+                  <span className="flex gap-1">
+                    {[0, 1, 2].map((i) => (
+                      <motion.span
+                        key={i}
+                        className={cn("h-2 w-2 rounded-full", a.text)}
+                        animate={{ y: [0, -5, 0] }}
+                        transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
+                      />
+                    ))}
+                  </span>
+                </div>
+              </div>
+            )}
             <div ref={messagesEndRef} />
           </div>
         </div>

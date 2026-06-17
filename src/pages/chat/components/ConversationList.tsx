@@ -1,7 +1,9 @@
-﻿import { useState } from "react";
+﻿import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { cn, timeAgo } from "@/lib/utils";
 import { MailOpen, Inbox, Eye, Building2, Headphones } from "lucide-react";
 import type { Conversation } from "@/services/chatService";
+import { getAdminSocket } from "@/lib/adminSocket";
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -32,7 +34,28 @@ export function ConversationList({
   chatType = "suppliers",
 }: ConversationListProps) {
   const [tab, setTab] = useState<"all" | "unread">("all");
+  const [typingConversations, setTypingConversations] = useState<Record<string, { userName: string }>>({});
   const a = accent(chatType);
+
+  useEffect(() => {
+    const socket = getAdminSocket();
+    const handler = (data: { conversationId: string; isTyping: boolean; userName?: string }) => {
+      setTypingConversations((prev) => {
+        if (data.isTyping) {
+          if (prev[data.conversationId]?.userName === (data.userName || "Someone")) return prev;
+          return { ...prev, [data.conversationId]: { userName: data.userName || "Someone" } };
+        }
+        if (!prev[data.conversationId]) return prev;
+        const next = { ...prev };
+        delete next[data.conversationId];
+        return next;
+      });
+    };
+    socket.on("chat:typing", handler);
+    return () => {
+      socket.off("chat:typing", handler);
+    };
+  }, []);
 
   const displayed = tab === "unread"
     ? conversations.filter((c) => c.unreadCount > 0)
@@ -204,11 +227,27 @@ export function ConversationList({
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="truncate text-xs text-text-secondary">
-                        {chatType === "suppliers"
-                          ? (formatLastActive(otherUser?.lastLoginAt) || preview)
-                          : preview}
-                      </span>
+                      {typingConversations[conv.id] ? (
+                        <span className={cn("truncate text-xs", a.text)}>
+                          <span className="inline-flex items-center gap-1">
+                            <span>typing</span>
+                            {[0, 1, 2].map((i) => (
+                              <motion.span
+                                key={i}
+                                className={cn("h-1.5 w-1.5 rounded-full", a.text)}
+                                animate={{ y: [0, -3, 0] }}
+                                transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
+                              />
+                            ))}
+                          </span>
+                        </span>
+                      ) : (
+                        <span className="truncate text-xs text-text-secondary">
+                          {chatType === "suppliers"
+                            ? (formatLastActive(otherUser?.lastLoginAt) || preview)
+                            : preview}
+                        </span>
+                      )}
                       {conv.unreadCount > 0 && (
                         <span className={cn("flex h-4 min-w-[16px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white", a.badge)}>
                           {conv.unreadCount}

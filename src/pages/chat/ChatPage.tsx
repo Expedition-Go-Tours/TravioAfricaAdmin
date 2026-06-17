@@ -1,7 +1,8 @@
 ﻿import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Plus } from "lucide-react";
+import { Plus, ArrowLeft } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
@@ -306,8 +307,11 @@ export default function ChatPage() {
   );
 
   return (
-    <div className="-m-6 flex h-[calc(100vh-72px)] overflow-hidden">
-      <div className="flex w-[380px] shrink-0 flex-col border-r border-border/50 bg-white">
+    <div className="-mx-6 -mt-6 max-sm:-mx-4 max-sm:-mt-4 flex h-[calc(100vh-72px)] overflow-hidden">
+      <div className={cn(
+        "flex flex-col border-r border-border/50 bg-white transition-all duration-300 overflow-hidden shrink-0",
+        selectedConv ? "w-0 lg:w-[380px]" : "w-full lg:w-[380px]"
+      )}>
         <div className="flex items-center justify-between border-b border-border/50 px-5 py-4">
           <h1 className="text-base font-bold text-text-primary">
             {type === "suppliers" ? "Supplier Messages" : "Customer Support"}
@@ -337,7 +341,7 @@ export default function ChatPage() {
         </div>
       </div>
 
-      <div className="relative flex-1">
+      <div className={cn("relative flex-1", !selectedConv && "hidden lg:flex")}>
             <ChatWindow
               conversation={selectedConv}
               messages={messages}
@@ -353,6 +357,7 @@ export default function ChatPage() {
               onDeleteMessage={handleDeleteMessage}
               onDeleteConversation={handleDeleteConversation}
               chatType={type}
+              onBack={() => setSelectedConv(null)}
             />
       </div>
 
