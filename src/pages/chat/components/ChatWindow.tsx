@@ -134,6 +134,30 @@ export function ChatWindow({
 
   const { onTyping, emitTyping } = useChatSocket(conversation?.id || null);
 
+  const isNearBottom = useCallback(() => {
+    const el = messagesContainerRef.current;
+    if (!el) return true;
+    return el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+  }, []);
+
+  const scrollToBottom = useCallback((force = false) => {
+    if (force || isNearBottom()) {
+      messagesEndRef.current?.scrollIntoView({ behavior: force ? "auto" : "smooth" });
+    }
+  }, [isNearBottom]);
+
+  const stopTypingSignal = useCallback(() => {
+    if (conversation?.id) emitTyping(conversation.id, false);
+    if (typingIntervalRef.current) {
+      clearInterval(typingIntervalRef.current);
+      typingIntervalRef.current = null;
+    }
+    if (typingStopRef.current) {
+      clearTimeout(typingStopRef.current);
+      typingStopRef.current = null;
+    }
+  }, [conversation?.id, emitTyping]);
+
   useEffect(() => {
     const unsub = onTyping((data) => {
       if (data.conversationId === conversation?.id) {
@@ -154,34 +178,15 @@ export function ChatWindow({
 
   useEffect(() => {
     return () => {
-      if (typingIntervalRef.current) {
-        clearInterval(typingIntervalRef.current);
-        typingIntervalRef.current = null;
-      }
-      if (typingStopRef.current) {
-        clearTimeout(typingStopRef.current);
-        typingStopRef.current = null;
-      }
+      stopTypingSignal();
     };
-  }, [conversation?.id]);
+  }, [conversation?.id, stopTypingSignal]);
 
   useEffect(() => {
     if (typingUser) {
       scrollToBottom(true);
     }
   }, [typingUser, scrollToBottom]);
-
-  const isNearBottom = useCallback(() => {
-    const el = messagesContainerRef.current;
-    if (!el) return true;
-    return el.scrollHeight - el.scrollTop - el.clientHeight < 100;
-  }, []);
-
-  const scrollToBottom = useCallback((force = false) => {
-    if (force || isNearBottom()) {
-      messagesEndRef.current?.scrollIntoView({ behavior: force ? "auto" : "smooth" });
-    }
-  }, [isNearBottom]);
 
   const prevConvIdRef = useRef<string | null>(null);
   const pendingScrollRef = useRef<string | null>(null);
@@ -230,18 +235,6 @@ export function ChatWindow({
       handleSend();
     }
   };
-
-  const stopTypingSignal = useCallback(() => {
-    if (conversation?.id) emitTyping(conversation.id, false);
-    if (typingIntervalRef.current) {
-      clearInterval(typingIntervalRef.current);
-      typingIntervalRef.current = null;
-    }
-    if (typingStopRef.current) {
-      clearTimeout(typingStopRef.current);
-      typingStopRef.current = null;
-    }
-  }, [conversation?.id, emitTyping]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;

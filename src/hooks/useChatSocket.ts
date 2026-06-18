@@ -31,7 +31,11 @@ export function useChatSocket(conversationId: string | null) {
 
   useEffect(() => {
     if (!conversationId) return;
-    socket.emit("chat:join", { conversationId });
+    socket.emit("chat:join", { conversationId }, (response: { status?: string; message?: string }) => {
+      if (response?.status === "error") {
+        console.warn("[chat:join] Failed to join conversation:", conversationId, response.message);
+      }
+    });
     return () => {
       socket.emit("chat:leave", { conversationId });
     };

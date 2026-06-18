@@ -8,10 +8,14 @@ let socket: Socket | null = null;
 
 export function getAdminSocket(): Socket {
   if (!socket) {
-    const token = localStorage.getItem("firebaseToken");
-    const userId = auth.currentUser?.uid || "admin";
     socket = io(SOCKET_URL, {
-      auth: { userId, role: "admin", token },
+      auth: (cb) => {
+        cb({
+          userId: auth.currentUser?.uid || "admin",
+          role: "admin",
+          token: localStorage.getItem("firebaseToken"),
+        });
+      },
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 3000,
