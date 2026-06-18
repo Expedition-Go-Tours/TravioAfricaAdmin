@@ -31,3 +31,6 @@ Backendv2/
 
 # Playwright MCP
 .playwright-mcp/
+
+# Design references
+imagereference/
