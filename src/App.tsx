@@ -10,6 +10,7 @@ import { getDefaultRoute } from "@/lib/permissions";
 import { useDataSocket } from "@/hooks/useDataSocket";
 
 import LoginPage from "@/pages/Login";
+import AuthCallback from "@/pages/auth/AuthCallback";
 import OverviewPage from "@/pages/Overview";
 import RevenueTrendPage from "@/pages/revenue/RevenueTrend";
 import SearchAnalyticsPage from "@/pages/revenue/SearchAnalytics";
@@ -37,6 +38,7 @@ export default function App() {
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
           <Route path="/admin/login" element={<LoginPage />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
           <Route
             path="/admin"
             element={

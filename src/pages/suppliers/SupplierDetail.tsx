@@ -19,7 +19,6 @@ import {
   Smartphone,
   CreditCard,
   Check,
-  EyeOff,
   AlertCircle,
   BarChart3,
   List,
@@ -485,7 +484,7 @@ export default function SupplierDetailPage() {
                                 <td className="px-3 py-2 text-text-primary font-medium truncate max-w-[200px]">{tc.title}</td>
                                 <td className="px-3 py-2 text-center text-text-primary">{tc.bookings}</td>
                                 <td className="px-3 py-2 text-right text-text-primary">{formatCurrency(tc.revenue)}</td>
-                                <td className="px-3 py-2 text-right text-text-primary font-medium text-green-700">{formatCurrency(tc.commission)}</td>
+                                <td className="px-3 py-2 text-right font-medium text-green-700">{formatCurrency(tc.commission)}</td>
                               </tr>
                             ))}
                           </tbody>

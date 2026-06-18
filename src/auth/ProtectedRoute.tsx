@@ -5,11 +5,12 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const token = localStorage.getItem("firebaseToken");
+  const token = localStorage.getItem("accessToken");
   const role = localStorage.getItem("userRole");
 
   if (token && role !== "admin") {
-    localStorage.removeItem("firebaseToken");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
     localStorage.removeItem("userRole");
   }
 

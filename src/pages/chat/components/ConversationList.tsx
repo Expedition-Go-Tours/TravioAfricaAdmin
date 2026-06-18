@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { cn, timeAgo } from "@/lib/utils";
 import { MailOpen, Inbox, Eye, Building2, Headphones } from "lucide-react";
@@ -12,6 +12,8 @@ interface ConversationListProps {
   loading: boolean;
   chatType?: "suppliers" | "customers";
 }
+
+const TYPING_TIMEOUT_MS = 5000;
 
 const accent = (type: "suppliers" | "customers") => ({
   bg: type === "suppliers" ? "green" : "blue",
@@ -35,16 +37,32 @@ export function ConversationList({
 }: ConversationListProps) {
   const [tab, setTab] = useState<"all" | "unread">("all");
   const [typingConversations, setTypingConversations] = useState<Record<string, { userName: string }>>({});
+  const typingTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const a = accent(chatType);
 
   useEffect(() => {
     const socket = getAdminSocket();
+    const clearTypingTimeout = (convId: string) => {
+      if (typingTimeoutsRef.current[convId]) {
+        clearTimeout(typingTimeoutsRef.current[convId]);
+        delete typingTimeoutsRef.current[convId];
+      }
+    };
     const handler = (data: { conversationId: string; isTyping: boolean; userName?: string }) => {
       setTypingConversations((prev) => {
         if (data.isTyping) {
+          clearTypingTimeout(data.conversationId);
+          typingTimeoutsRef.current[data.conversationId] = setTimeout(() => {
+            setTypingConversations((prev) => {
+              const next = { ...prev };
+              delete next[data.conversationId];
+              return next;
+            });
+          }, TYPING_TIMEOUT_MS);
           if (prev[data.conversationId]?.userName === (data.userName || "Someone")) return prev;
           return { ...prev, [data.conversationId]: { userName: data.userName || "Someone" } };
         }
+        clearTypingTimeout(data.conversationId);
         if (!prev[data.conversationId]) return prev;
         const next = { ...prev };
         delete next[data.conversationId];
@@ -54,6 +72,10 @@ export function ConversationList({
     socket.on("chat:typing", handler);
     return () => {
       socket.off("chat:typing", handler);
+      for (const convId of Object.keys(typingTimeoutsRef.current)) {
+        clearTimeout(typingTimeoutsRef.current[convId]);
+      }
+      typingTimeoutsRef.current = {};
     };
   }, []);
 

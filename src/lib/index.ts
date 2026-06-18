@@ -1,6 +1,5 @@
 export { default as api } from "./axios";
 export { queryClient } from "./query-client";
-export { auth } from "./firebase";
 export {
   cn,
   formatCurrency,

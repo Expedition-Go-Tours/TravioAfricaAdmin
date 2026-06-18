@@ -4,7 +4,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Plus, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { SectionError } from "@/components/shared/SectionError";
 import { ConversationList } from "./components/ConversationList";
@@ -51,10 +50,8 @@ export default function ChatPage() {
   }, [queryClient]);
 
   useEffect(() => {
-    const unsub = auth.onAuthStateChanged((user) => {
-      if (user) setCurrentUserId(user.uid);
-    });
-    return unsub;
+    const adminId = localStorage.getItem("adminRoleId");
+    if (adminId) setCurrentUserId(adminId);
   }, []);
 
   useEffect(() => {

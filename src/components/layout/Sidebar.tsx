@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { auth } from "@/lib/firebase";
-import type { User as FirebaseUser } from "firebase/auth";
+import api from "@/lib/axios";
 import {
   LayoutDashboard,
   TrendingUp,
@@ -102,7 +101,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
-  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [user, setUser] = useState<{ name?: string; email?: string; photoURL?: string } | null>(null);
   const location = useLocation();
   const { can, isSuperAdmin } = usePermission();
   const [expandedMenus, setExpandedMenus] = useState<string[]>(["Revenue", "Users"]);
@@ -115,8 +114,10 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   }] : [];
 
   useEffect(() => {
-    const unsub = auth.onAuthStateChanged((u) => setUser(u));
-    return unsub;
+    api.get("/admin/me").then((res) => {
+      const u = res.data?.data;
+      if (u) setUser({ name: u.name, email: u.email, photoURL: u.photoURL });
+    }).catch(() => {});
   }, []);
 
   const toggleMenu = (label: string) => {
@@ -146,7 +147,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         {!collapsed && (
           <div className="flex items-center gap-2 truncate flex-1 justify-center">
             <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/20 text-sm font-semibold text-white">
-              <span>{user?.displayName?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "A"}</span>
+              <span>{user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "A"}</span>
               {user?.photoURL && (
                 <img
                   src={user.photoURL}
@@ -159,7 +160,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               )}
             </div>
             <span className="truncate text-sm font-semibold text-white">
-              {user?.displayName || user?.email?.split("@")[0] || "Admin"}
+              {user?.name || user?.email?.split("@")[0] || "Admin"}
             </span>
           </div>
         )}

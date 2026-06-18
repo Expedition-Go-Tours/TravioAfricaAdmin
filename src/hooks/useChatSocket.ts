@@ -31,13 +31,21 @@ export function useChatSocket(conversationId: string | null) {
 
   useEffect(() => {
     if (!conversationId) return;
-    socket.emit("chat:join", { conversationId }, (response: { status?: string; message?: string }) => {
-      if (response?.status === "error") {
-        console.warn("[chat:join] Failed to join conversation:", conversationId, response.message);
-      }
-    });
+
+    const joinRoom = () => {
+      socket.emit("chat:join", { conversationId }, (response: { status?: string; message?: string }) => {
+        if (response?.status === "error") {
+          console.warn("[chat:join] Failed to join conversation:", conversationId, response.message);
+        }
+      });
+    };
+
+    socket.on("connect", joinRoom);
+    joinRoom();
+
     return () => {
       socket.emit("chat:leave", { conversationId });
+      socket.off("connect", joinRoom);
     };
   }, [conversationId, socket]);
 

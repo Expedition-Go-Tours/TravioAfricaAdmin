@@ -1,7 +1,5 @@
 import axios from "axios";
 import { toast } from "sonner";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "@/lib/firebase";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
@@ -10,7 +8,7 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("firebaseToken");
+    const token = localStorage.getItem("accessToken");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -36,6 +34,14 @@ function processQueue(error: unknown, token: string | null = null) {
   failedQueue = [];
 }
 
+function clearAuth() {
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("userRole");
+  localStorage.removeItem("adminRoleId");
+  localStorage.removeItem("adminRole");
+}
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -43,7 +49,7 @@ api.interceptors.response.use(
       const { status } = error.response;
       const originalRequest = error.config;
 
-      if (status === 401 && !originalRequest._retry) {
+      if (status === 401 && !originalRequest._retry && !originalRequest.url?.includes("/auth/refresh")) {
         if (isRefreshing) {
           return new Promise<string>((resolve, reject) => {
             failedQueue.push({ resolve, reject });
@@ -57,19 +63,22 @@ api.interceptors.response.use(
         isRefreshing = true;
 
         try {
-          const user = auth.currentUser;
-          if (!user) throw new Error("No authenticated user");
-          const newToken = await user.getIdToken(true);
-          localStorage.setItem("firebaseToken", newToken);
-          processQueue(null, newToken);
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          const refreshToken = localStorage.getItem("refreshToken");
+          if (!refreshToken) throw new Error("No refresh token");
+
+          const { data } = await axios.post(
+            `${import.meta.env.VITE_API_URL}/auth/refresh`,
+            { refreshToken },
+          );
+
+          localStorage.setItem("accessToken", data.data.accessToken);
+          localStorage.setItem("refreshToken", data.data.refreshToken);
+          processQueue(null, data.data.accessToken);
+          originalRequest.headers.Authorization = `Bearer ${data.data.accessToken}`;
           return api(originalRequest);
         } catch (refreshError) {
           processQueue(refreshError, null);
-          localStorage.removeItem("firebaseToken");
-          localStorage.removeItem("userRole");
-          localStorage.removeItem("adminRoleId");
-          localStorage.removeItem("adminRole");
+          clearAuth();
           window.location.href = "/admin/login";
           return Promise.reject(refreshError);
         } finally {
@@ -87,29 +96,12 @@ api.interceptors.response.use(
     }
 
     if (error.response?.status === 401 && window.location.pathname !== "/admin/login") {
-      localStorage.removeItem("firebaseToken");
-      localStorage.removeItem("userRole");
-      localStorage.removeItem("adminRoleId");
-      localStorage.removeItem("adminRole");
+      clearAuth();
       window.location.href = "/admin/login";
     }
 
     return Promise.reject(error);
   },
 );
-
-let wasAuthenticated = false;
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    wasAuthenticated = true;
-  } else if (wasAuthenticated) {
-    wasAuthenticated = false;
-    localStorage.removeItem("firebaseToken");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("adminRoleId");
-    localStorage.removeItem("adminRole");
-    window.location.href = "/admin/login";
-  }
-});
 
 export default api;

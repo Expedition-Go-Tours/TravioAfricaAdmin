@@ -1,17 +1,16 @@
 import { useState, useCallback } from "react";
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import axios from "axios";
 import api from "@/lib/axios";
+
+const API_URL = import.meta.env.VITE_API_URL || "";
 
 export function useAuth() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const verifyAdmin = useCallback(async (token: string) => {
+  const verifyAdmin = useCallback(async () => {
     try {
-      const res = await api.get("/admin/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get("/admin/me");
       const userData = res.data?.data;
       if (userData?.adminRoleId && userData?.adminRole) {
         localStorage.setItem("adminRoleId", userData.adminRoleId);
@@ -35,33 +34,28 @@ export function useAuth() {
     }
   }, []);
 
-  const postLogin = useCallback(async (token: string) => {
-    localStorage.setItem("firebaseToken", token);
-    localStorage.setItem("userRole", "admin");
-  }, []);
-
   const login = useCallback(async (email: string, password: string) => {
     setLoading(true);
     setError(null);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const token = await userCredential.user.getIdToken();
+      const { data } = await axios.post(`${API_URL}/auth/login`, { email, password });
+      const { accessToken, refreshToken, user } = data.data;
 
-      const ok = await verifyAdmin(token);
-      if (ok) {
-        await postLogin(token);
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
+      localStorage.setItem("userRole", user.roles?.includes("admin") ? "admin" : "user");
+
+      const ok = await verifyAdmin();
+      if (!ok) {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("userRole");
       }
       return ok;
-    } catch (firebaseErr: unknown) {
-      if (firebaseErr && typeof firebaseErr === "object") {
-        const err = firebaseErr as { code?: string };
-        if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password" || err.code === "auth/invalid-credential") {
-          setError("Invalid email or password");
-        } else if (err.code === "auth/too-many-requests") {
-          setError("Too many attempts. Try again later.");
-        } else {
-          setError("Unable to connect. Check your internet.");
-        }
+    } catch (err: unknown) {
+      if (err && typeof err === "object") {
+        const axiosErr = err as { response?: { data?: { message?: string } } };
+        setError(axiosErr.response?.data?.message || "Invalid email or password");
       } else {
         setError("Unable to connect. Check your internet.");
       }
@@ -69,50 +63,35 @@ export function useAuth() {
     } finally {
       setLoading(false);
     }
-  }, [verifyAdmin, postLogin]);
+  }, [verifyAdmin]);
 
   const loginWithGoogle = useCallback(async () => {
     setLoading(true);
     setError(null);
-    try {
-      const provider = new GoogleAuthProvider();
-      const userCredential = await signInWithPopup(auth, provider);
-      const token = await userCredential.user.getIdToken();
-
-      const ok = await verifyAdmin(token);
-      if (ok) {
-        await postLogin(token);
-      }
-      return ok;
-    } catch (firebaseErr: unknown) {
-      if (firebaseErr && typeof firebaseErr === "object") {
-        const err = firebaseErr as { code?: string };
-        if (err.code === "auth/popup-closed-by-user") {
-          setError(null);
-        } else if (err.code === "auth/popup-blocked") {
-          setError("Popup blocked. Allow popups for this site.");
-        } else {
-          setError("Unable to connect. Check your internet.");
-        }
-      } else {
-        setError("Unable to connect. Check your internet.");
-      }
-      return false;
-    } finally {
+    if (!API_URL) {
+      setError("API URL not configured. Check your .env file.");
       setLoading(false);
+      return false;
     }
-  }, [verifyAdmin, postLogin]);
+    window.location.href = `${API_URL}/auth/google`;
+    return false;
+  }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem("firebaseToken");
+  const logout = useCallback(async () => {
+    try {
+      await api.post("/auth/logout");
+    } catch {
+      // Ignore logout errors
+    }
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
     localStorage.removeItem("userRole");
     localStorage.removeItem("adminRoleId");
     localStorage.removeItem("adminRole");
-    auth.signOut();
     window.location.href = "/admin/login";
   }, []);
 
-  const isAuthenticated = !!localStorage.getItem("firebaseToken") && localStorage.getItem("userRole") === "admin";
+  const isAuthenticated = !!localStorage.getItem("accessToken") && localStorage.getItem("userRole") === "admin";
 
   return { login, loginWithGoogle, logout, loading, error, isAuthenticated };
 }
