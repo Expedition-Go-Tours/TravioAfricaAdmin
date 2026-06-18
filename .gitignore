@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 .env
+null
+SUPPLIER_FIELD_MISMATCH_ANALYSIS.md
+SUPPLIER_FIX_IMPLEMENTATION_SUMMARY.md
 
 # Editor directories and files
 .vscode/*
