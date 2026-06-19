@@ -20,7 +20,9 @@ export function useAuth() {
     } catch (err: unknown) {
       if (err && typeof err === "object" && "response" in err) {
         const axiosErr = err as { response?: { status?: number } };
-        if (axiosErr.response?.status === 403) {
+        if (axiosErr.response?.status === 401) {
+          setError("Session expired. Please log in again.");
+        } else if (axiosErr.response?.status === 403) {
           setError("You do not have admin privileges");
         } else if (axiosErr.response?.status === 404) {
           setError("Admin profile not found");
