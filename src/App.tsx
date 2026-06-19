@@ -5,7 +5,7 @@ import { Toaster } from "sonner";
 import { queryClient } from "@/lib/query-client";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProtectedRoute } from "@/auth/ProtectedRoute";
-import { hasPermission } from "@/hooks/usePermission";
+import { usePermission } from "@/hooks/usePermission";
 import { getDefaultRoute } from "@/lib/permissions";
 import { useDataSocket } from "@/hooks/useDataSocket";
 
@@ -95,7 +95,8 @@ function HomeRedirect() {
 }
 
 function PermissionRoute({ permission, children }: { permission: string; children: React.ReactNode }) {
-  return hasPermission(permission) ? <>{children}</> : <Navigate to="/admin" replace />;
+  const { can } = usePermission();
+  return can(permission) ? <>{children}</> : <Navigate to="/admin" replace />;
 }
 
 function PayoutsTabPage() {
