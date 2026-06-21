@@ -98,6 +98,14 @@ export default function ChatPage() {
   }, []);
 
   useEffect(() => {
+    const el = document.querySelector("main");
+    if (!el) return;
+    const prev = el.style.overflow;
+    el.style.overflow = "hidden";
+    return () => { el.style.overflow = prev; };
+  }, []);
+
+  useEffect(() => {
     const convId = (location.state as { conversationId?: string })?.conversationId;
     if (convId) {
       selectByNotificationRef.current = convId;
