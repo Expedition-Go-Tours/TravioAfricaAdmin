@@ -338,7 +338,7 @@ export default function ChatPage() {
         </div>
       </div>
 
-      <div className={cn("relative flex-1", !selectedConv && "hidden lg:flex")}>
+      <div className={cn("relative flex-1 flex flex-col min-h-0", !selectedConv && "hidden lg:flex")}>
             <ChatWindow
               conversation={selectedConv}
               messages={messages}

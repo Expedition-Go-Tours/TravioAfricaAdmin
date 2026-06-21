@@ -303,7 +303,7 @@ export function ChatWindow({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className="flex flex-1 min-h-0 flex-col">
       <div
         className="group flex items-center gap-1 border-b border-border/50 bg-white px-5 py-3"
       >
