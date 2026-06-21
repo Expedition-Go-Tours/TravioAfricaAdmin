@@ -425,6 +425,7 @@ export function ChatWindow({
                       senderName={isOwn ? "Admin" : headerName}
                       onEdit={isOwn ? onEditMessage : undefined}
                       onDelete={onDeleteMessage}
+                      onAvatarClick={onViewProfile}
                     />
                   </div>
                 </div>

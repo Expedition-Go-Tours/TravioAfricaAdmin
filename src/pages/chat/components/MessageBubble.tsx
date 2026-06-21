@@ -14,6 +14,7 @@ interface MessageBubbleProps {
   senderName?: string;
   onEdit?: (messageId: string, newContent: string) => Promise<void>;
   onDelete?: (messageId: string) => Promise<void>;
+  onAvatarClick?: (userId: string) => void;
 }
 
 function formatMessageTime(dateStr: string) {
@@ -41,6 +42,7 @@ export function MessageBubble({
   senderName,
   onEdit,
   onDelete,
+  onAvatarClick,
 }: MessageBubbleProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -127,7 +129,10 @@ export function MessageBubble({
       {isOwn ? (
         <div className="w-8 shrink-0" />
       ) : showAvatar ? (
-        <div className="relative mt-1 flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-400 to-green-600 text-xs font-bold text-white">
+        <div
+          className="relative mt-1 flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-400 to-green-600 text-xs font-bold text-white"
+          onClick={() => message.sender?.id && onAvatarClick?.(message.sender.id)}
+        >
           <span>{senderName?.charAt(0)?.toUpperCase() || "?"}</span>
           {senderAvatar && (
             <img
