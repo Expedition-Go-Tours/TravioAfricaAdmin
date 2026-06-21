@@ -288,7 +288,7 @@ export function ChatWindow({
 
   if (!conversation) {
     return (
-      <div className={cn("flex h-full flex-col items-center justify-center text-center", a.bg30)}>
+      <div className={cn("flex h-full w-full flex-col items-center justify-center text-center", a.bg30)}>
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm">
           <Send className={cn("h-6 w-6", a.text400)} />
         </div>
