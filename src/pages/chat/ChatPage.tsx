@@ -101,7 +101,7 @@ export default function ChatPage() {
     const el = document.querySelector("main");
     if (!el) return;
     const prev = el.style.overflow;
-    el.style.overflow = "hidden";
+    el.style.overflow = "clip";
     return () => { el.style.overflow = prev; };
   }, []);
 
@@ -390,7 +390,7 @@ export default function ChatPage() {
         </div>
       </div>
 
-      <div className={cn("relative flex-1 flex flex-col min-h-0", !selectedConv && "hidden lg:flex")}>
+      <div className={cn("relative flex flex-col min-h-0", selectedConv ? "flex-1" : "w-0 overflow-hidden lg:flex-1 lg:overflow-visible")}>
             <ChatWindow
               conversation={selectedConv}
               messages={messages}
