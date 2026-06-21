@@ -100,6 +100,7 @@ const accent = (type: "suppliers" | "customers") => ({
   button: type === "suppliers" ? "bg-green-600 hover:bg-green-700" : "bg-blue-600 hover:bg-blue-700",
   scrollBg: type === "suppliers" ? "hover:bg-green-50" : "hover:bg-blue-50",
   loadMore: type === "suppliers" ? "hover:bg-green-50 text-green-600" : "hover:bg-blue-50 text-blue-600",
+  badge: type === "suppliers" ? "bg-green-600" : "bg-blue-600",
 });
 
 export function ChatWindow({
@@ -442,7 +443,7 @@ export function ChatWindow({
                     {[0, 1, 2].map((i) => (
                       <motion.span
                         key={i}
-                        className={cn("h-2 w-2 rounded-full", a.text)}
+                        className={cn("h-2 w-2 rounded-full", a.badge)}
                         animate={{ y: [0, -5, 0] }}
                         transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
                       />
