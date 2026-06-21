@@ -1,9 +1,8 @@
-﻿import { useState, useEffect, useRef } from "react";
+﻿import { useState } from "react";
 import { motion } from "framer-motion";
 import { cn, timeAgo } from "@/lib/utils";
 import { MailOpen, Inbox, Eye, Building2, Headphones } from "lucide-react";
 import type { Conversation } from "@/services/chatService";
-import { getAdminSocket } from "@/lib/adminSocket";
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -11,9 +10,8 @@ interface ConversationListProps {
   onSelect: (conv: Conversation) => void;
   loading: boolean;
   chatType?: "suppliers" | "customers";
+  typingConversations: Record<string, { userName: string }>;
 }
-
-const TYPING_TIMEOUT_MS = 5000;
 
 const accent = (type: "suppliers" | "customers") => ({
   bg: type === "suppliers" ? "green" : "blue",
@@ -34,50 +32,10 @@ export function ConversationList({
   onSelect,
   loading,
   chatType = "suppliers",
+  typingConversations,
 }: ConversationListProps) {
   const [tab, setTab] = useState<"all" | "unread">("all");
-  const [typingConversations, setTypingConversations] = useState<Record<string, { userName: string }>>({});
-  const typingTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const a = accent(chatType);
-
-  useEffect(() => {
-    const socket = getAdminSocket();
-    const clearTypingTimeout = (convId: string) => {
-      if (typingTimeoutsRef.current[convId]) {
-        clearTimeout(typingTimeoutsRef.current[convId]);
-        delete typingTimeoutsRef.current[convId];
-      }
-    };
-    const handler = (data: { conversationId: string; isTyping: boolean; userName?: string }) => {
-      setTypingConversations((prev) => {
-        if (data.isTyping) {
-          clearTypingTimeout(data.conversationId);
-          typingTimeoutsRef.current[data.conversationId] = setTimeout(() => {
-            setTypingConversations((prev) => {
-              const next = { ...prev };
-              delete next[data.conversationId];
-              return next;
-            });
-          }, TYPING_TIMEOUT_MS);
-          if (prev[data.conversationId]?.userName === (data.userName || "Someone")) return prev;
-          return { ...prev, [data.conversationId]: { userName: data.userName || "Someone" } };
-        }
-        clearTypingTimeout(data.conversationId);
-        if (!prev[data.conversationId]) return prev;
-        const next = { ...prev };
-        delete next[data.conversationId];
-        return next;
-      });
-    };
-    socket.on("chat:typing", handler);
-    return () => {
-      socket.off("chat:typing", handler);
-      for (const convId of Object.keys(typingTimeoutsRef.current)) {
-        clearTimeout(typingTimeoutsRef.current[convId]);
-      }
-      typingTimeoutsRef.current = {};
-    };
-  }, []);
 
   const displayed = tab === "unread"
     ? conversations.filter((c) => c.unreadCount > 0)
@@ -256,7 +214,7 @@ export function ConversationList({
                             {[0, 1, 2].map((i) => (
                               <motion.span
                                 key={i}
-                                className={cn("h-1.5 w-1.5 rounded-full", a.text)}
+                                className={cn("h-1.5 w-1.5 rounded-full", a.badge)}
                                 animate={{ y: [0, -3, 0] }}
                                 transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
                               />

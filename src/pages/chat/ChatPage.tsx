@@ -10,6 +10,7 @@ import { ConversationList } from "./components/ConversationList";
 import { ChatWindow } from "./components/ChatWindow";
 import { NewConversationDialog } from "./components/NewConversationDialog";
 import { useChatSocket } from "@/hooks/useChatSocket";
+import { getAdminSocket } from "@/lib/adminSocket";
 import {
   getConversations,
   getMessages,
@@ -41,6 +42,48 @@ export default function ChatPage() {
   const invalidateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const selectByNotificationRef = useRef<string | null>(null);
   const conversationType = type === "suppliers" ? "SUPPLIER_ADMIN" : "USER_SUPPORT" as const;
+  const [typingConversations, setTypingConversations] = useState<Record<string, { userName: string }>>({});
+  const typingTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const TYPING_TIMEOUT_MS = 5000;
+
+  useEffect(() => {
+    const socket = getAdminSocket();
+    const clearTypingTimeout = (convId: string) => {
+      if (typingTimeoutsRef.current[convId]) {
+        clearTimeout(typingTimeoutsRef.current[convId]);
+        delete typingTimeoutsRef.current[convId];
+      }
+    };
+    const handler = (data: { conversationId: string; isTyping: boolean; userName?: string }) => {
+      setTypingConversations((prev) => {
+        if (data.isTyping) {
+          clearTypingTimeout(data.conversationId);
+          typingTimeoutsRef.current[data.conversationId] = setTimeout(() => {
+            setTypingConversations((prev) => {
+              const next = { ...prev };
+              delete next[data.conversationId];
+              return next;
+            });
+          }, TYPING_TIMEOUT_MS);
+          if (prev[data.conversationId]?.userName === (data.userName || "Someone")) return prev;
+          return { ...prev, [data.conversationId]: { userName: data.userName || "Someone" } };
+        }
+        clearTypingTimeout(data.conversationId);
+        if (!prev[data.conversationId]) return prev;
+        const next = { ...prev };
+        delete next[data.conversationId];
+        return next;
+      });
+    };
+    socket.on("chat:typing", handler);
+    return () => {
+      socket.off("chat:typing", handler);
+      for (const convId of Object.keys(typingTimeoutsRef.current)) {
+        clearTimeout(typingTimeoutsRef.current[convId]);
+      }
+      typingTimeoutsRef.current = {};
+    };
+  }, []);
 
   const invalidateConvs = useCallback(() => {
     if (invalidateTimerRef.current) clearTimeout(invalidateTimerRef.current);
@@ -333,6 +376,7 @@ export default function ChatPage() {
               onSelect={handleSelect}
               loading={convsLoading}
               chatType={type}
+              typingConversations={typingConversations}
             />
           )}
         </div>
