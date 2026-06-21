@@ -303,7 +303,7 @@ export function ChatWindow({
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-h-0 flex-col">
       <div
         className="group flex items-center gap-1 border-b border-border/50 bg-white px-5 py-3"
       >
@@ -373,7 +373,7 @@ export function ChatWindow({
       <div
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className={cn("flex-1 overflow-y-auto scrollbar-none", a.bg30)}
+        className={cn("flex-1 overflow-y-auto min-h-0 scrollbar-none", a.bg30)}
       >
         <div className="px-4 py-3">
           {hasMore && (

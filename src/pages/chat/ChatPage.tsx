@@ -62,14 +62,6 @@ export default function ChatPage() {
     }
   }, []);
 
-  useEffect(() => {
-    const el = document.querySelector("main");
-    if (!el) return;
-    const prev = el.style.overflow;
-    el.style.overflow = "hidden";
-    return () => { el.style.overflow = prev; };
-  }, []);
-
   const { onNewMessage, onMarkRead, onDelivered, emitDelivered } = useChatSocket(selectedConv?.id || null);
 
   const {
