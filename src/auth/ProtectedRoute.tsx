@@ -5,16 +5,9 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const token = localStorage.getItem("accessToken");
-  const role = localStorage.getItem("userRole");
+  const hasRole = !!localStorage.getItem("adminRoleId");
 
-  if (token && role !== "admin") {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("userRole");
-  }
-
-  if (!token || role !== "admin") {
+  if (!hasRole) {
     return <Navigate to="/admin/login" replace />;
   }
 

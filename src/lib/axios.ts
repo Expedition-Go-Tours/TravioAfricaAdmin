@@ -2,42 +2,28 @@ import axios from "axios";
 import { toast } from "sonner";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: "/api",
   headers: { "Content-Type": "application/json" },
 });
 
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("accessToken");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error),
-);
-
 let isRefreshing = false;
 let failedQueue: Array<{
-  resolve: (token: string) => void;
+  resolve: () => void;
   reject: (error: unknown) => void;
 }> = [];
 
-function processQueue(error: unknown, token: string | null = null) {
+function processQueue(error: unknown) {
   failedQueue.forEach(({ resolve, reject }) => {
     if (error) {
       reject(error);
     } else {
-      resolve(token as string);
+      resolve();
     }
   });
   failedQueue = [];
 }
 
 function clearAuth() {
-  localStorage.removeItem("accessToken");
-  localStorage.removeItem("refreshToken");
-  localStorage.removeItem("userRole");
   localStorage.removeItem("adminRoleId");
   localStorage.removeItem("adminRole");
 }
@@ -51,33 +37,21 @@ api.interceptors.response.use(
 
       if (status === 401 && !originalRequest._retry && !originalRequest.url?.includes("/auth/refresh")) {
         if (isRefreshing) {
-          return new Promise<string>((resolve, reject) => {
+          return new Promise<void>((resolve, reject) => {
             failedQueue.push({ resolve, reject });
-          }).then((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            return api(originalRequest);
-          });
+          }).then(() => api(originalRequest));
         }
 
         originalRequest._retry = true;
         isRefreshing = true;
 
         try {
-          const refreshToken = localStorage.getItem("refreshToken");
-          if (!refreshToken) throw new Error("No refresh token");
+          await axios.post("/api/auth/refresh");
 
-          const { data } = await axios.post(
-            `${import.meta.env.VITE_API_URL}/auth/refresh`,
-            { refreshToken },
-          );
-
-          localStorage.setItem("accessToken", data.data.accessToken);
-          localStorage.setItem("refreshToken", data.data.refreshToken);
-          processQueue(null, data.data.accessToken);
-          originalRequest.headers.Authorization = `Bearer ${data.data.accessToken}`;
+          processQueue(null);
           return api(originalRequest);
         } catch (refreshError) {
-          processQueue(refreshError, null);
+          processQueue(refreshError);
           clearAuth();
           window.location.href = "/admin/login";
           return Promise.reject(refreshError);
@@ -93,11 +67,6 @@ api.interceptors.response.use(
       }
     } else if (error.request) {
       toast.error("Network error. Check connection.");
-    }
-
-    if (error.response?.status === 401 && window.location.pathname !== "/admin/login") {
-      clearAuth();
-      window.location.href = "/admin/login";
     }
 
     return Promise.reject(error);

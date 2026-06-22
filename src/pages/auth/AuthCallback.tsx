@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import axios from "axios";
 import api from "@/lib/axios";
 
 export default function AuthCallback() {
@@ -18,23 +19,24 @@ export default function AuthCallback() {
       return;
     }
 
-    localStorage.setItem("accessToken", accessToken);
-    localStorage.setItem("refreshToken", refreshToken);
-    localStorage.setItem("userRole", "admin");
-
-    verifyAdminAndRedirect(accessToken);
+    convertToCookies(accessToken, refreshToken);
   }, [searchParams, navigate]);
 
-  async function verifyAdminAndRedirect(token: string) {
+  async function convertToCookies(accessToken: string, refreshToken: string) {
     try {
-      const res = await api.get("/admin/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.post("/api/auth/set-cookies", { accessToken, refreshToken });
+    } catch {
+      setStatus("Authentication failed. Redirecting...");
+      setTimeout(() => navigate("/admin/login", { replace: true }), 2000);
+      return;
+    }
+
+    try {
+      const res = await api.get("/admin/me");
       const userData = res.data?.data;
 
       if (!userData?.adminRoleId) {
         setStatus("You do not have admin access. Redirecting...");
-        clearAuth();
         setTimeout(() => navigate("/admin/login", { replace: true }), 2000);
         return;
       }
@@ -46,17 +48,8 @@ export default function AuthCallback() {
       window.location.href = getDefaultRoute();
     } catch {
       setStatus("Access denied. Redirecting...");
-      clearAuth();
       setTimeout(() => navigate("/admin/login", { replace: true }), 2000);
     }
-  }
-
-  function clearAuth() {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("adminRoleId");
-    localStorage.removeItem("adminRole");
   }
 
   return (

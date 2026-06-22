@@ -5,7 +5,7 @@ import { Toaster } from "sonner";
 import { queryClient } from "@/lib/query-client";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProtectedRoute } from "@/auth/ProtectedRoute";
-import { usePermission } from "@/hooks/usePermission";
+import { useAdminRole } from "@/auth/useAdminRole";
 import { getDefaultRoute } from "@/lib/permissions";
 import { useDataSocket } from "@/hooks/useDataSocket";
 
@@ -97,8 +97,14 @@ function HomeRedirect() {
 }
 
 function PermissionRoute({ permission, children }: { permission: string; children: React.ReactNode }) {
-  const { can } = usePermission();
-  return can(permission) ? <>{children}</> : <Navigate to="/admin" replace />;
+  const { data: role, isLoading } = useAdminRole();
+
+  if (isLoading) return null;
+  if (!role) return <Navigate to="/admin" replace />;
+  if (role.name === "super_admin") return <>{children}</>;
+  if (!role.permissions?.includes(permission)) return <Navigate to="/admin" replace />;
+
+  return <>{children}</>;
 }
 
 function PayoutsTabPage() {

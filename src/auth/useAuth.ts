@@ -2,8 +2,6 @@ import { useState, useCallback } from "react";
 import axios from "axios";
 import api from "@/lib/axios";
 
-const API_URL = import.meta.env.VITE_API_URL || "";
-
 export function useAuth() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,18 +38,11 @@ export function useAuth() {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await axios.post(`${API_URL}/auth/login`, { email, password });
-      const { accessToken, refreshToken, user } = data.data;
-
-      localStorage.setItem("accessToken", accessToken);
-      localStorage.setItem("refreshToken", refreshToken);
-      localStorage.setItem("userRole", user.roles?.includes("admin") ? "admin" : "user");
+      await axios.post("/api/auth/login", { email, password });
 
       const ok = await verifyAdmin();
       if (!ok) {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        localStorage.removeItem("userRole");
+        clearAuthTokens();
       }
       return ok;
     } catch (err: unknown) {
@@ -70,30 +61,26 @@ export function useAuth() {
   const loginWithGoogle = useCallback(async () => {
     setLoading(true);
     setError(null);
-    if (!API_URL) {
-      setError("API URL not configured. Check your .env file.");
-      setLoading(false);
-      return false;
-    }
-    window.location.href = `${API_URL}/auth/google`;
+    window.location.href = "/api/auth/google";
     return false;
   }, []);
 
   const logout = useCallback(async () => {
     try {
-      await api.post("/auth/logout");
+      await axios.post("/api/auth/logout");
     } catch {
       // Ignore logout errors
     }
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("adminRoleId");
-    localStorage.removeItem("adminRole");
+    clearAuthTokens();
     window.location.href = "/admin/login";
   }, []);
 
-  const isAuthenticated = !!localStorage.getItem("accessToken") && localStorage.getItem("userRole") === "admin";
+  const isAuthenticated = !!localStorage.getItem("adminRoleId");
 
   return { login, loginWithGoogle, logout, loading, error, isAuthenticated };
+}
+
+function clearAuthTokens() {
+  localStorage.removeItem("adminRoleId");
+  localStorage.removeItem("adminRole");
 }
