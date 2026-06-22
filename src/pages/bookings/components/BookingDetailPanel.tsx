@@ -21,6 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn, timeAgo } from "@/lib/utils";
 import { BookingTimeline } from "./BookingTimeline";
 import type { Booking } from "@/types/booking";
+import { isPaymentPaid } from "@/types/booking";
 
 const STATUS_BADGE: Record<string, "success" | "warning" | "error" | "info"> = {
   PENDING: "warning",
@@ -33,7 +34,9 @@ const STATUS_BADGE: Record<string, "success" | "warning" | "error" | "info"> = {
 
 const PAYMENT_STATUS_BADGE: Record<string, "success" | "warning" | "error" | "info"> = {
   PENDING: "warning",
+  PROCESSING: "warning",
   PAID: "success",
+  SUCCEEDED: "success",
   FAILED: "error",
   REFUNDED: "info",
 };
@@ -78,7 +81,7 @@ export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onViewC
 
   const timelineSteps = [
     { label: "Booking Created", date: booking.createdAt, active: true },
-    { label: "Payment Confirmed", date: booking.paidAt || null, active: booking.paymentStatus === "PAID" },
+    { label: "Payment Confirmed", date: booking.paidAt || null, active: isPaymentPaid(booking.paymentStatus) },
     { label: "Tour Completed", date: booking.status === "COMPLETED" ? booking.updatedAt : null, active: booking.status === "COMPLETED" },
     { label: "Payout Processed", date: booking.payouts?.[0]?.paidAt || null, active: booking.payouts?.[0]?.status === "PAID" },
   ];

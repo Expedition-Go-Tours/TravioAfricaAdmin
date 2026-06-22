@@ -30,6 +30,7 @@ import { cn } from "@/lib/utils";
 import { BookingDetailPanel } from "./components/BookingDetailPanel";
 import { ConfirmPaymentDialog } from "./components/ConfirmPaymentDialog";
 import type { Booking } from "@/types/booking";
+import { isPaymentPaid } from "@/types/booking";
 
 const STATUS_BADGE: Record<string, "success" | "warning" | "error" | "info"> = {
   PENDING: "warning",
@@ -371,16 +372,18 @@ export default function BookingsPage() {
                         <td className="px-4 py-3.5 text-center">
                           <span className={cn(
                             "inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full",
-                            booking.paymentStatus === "PAID"
+                            isPaymentPaid(booking.paymentStatus)
                               ? "bg-emerald-50 text-emerald-700"
                               : booking.paymentStatus === "FAILED"
                                 ? "bg-red-50 text-red-700"
                                 : "bg-amber-50 text-amber-700",
                           )}>
-                            {booking.paymentStatus === "PAID" ? (
+                            {isPaymentPaid(booking.paymentStatus) ? (
                               <><CheckCircle2 className="h-2.5 w-2.5" /> Paid</>
                             ) : booking.paymentStatus === "FAILED" ? (
                               "Failed"
+                            ) : booking.paymentStatus === "PROCESSING" ? (
+                              "Processing"
                             ) : (
                               "Pending"
                             )}
