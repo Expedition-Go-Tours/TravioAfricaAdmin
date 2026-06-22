@@ -25,6 +25,7 @@ export function AppLayout() {
                 initial="initial"
                 animate="animate"
                 exit="exit"
+                className="h-full"
               >
                 <Outlet />
               </motion.div>

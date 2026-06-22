@@ -1,8 +1,7 @@
-import { useState, useRef, useMemo } from "react";
+﻿import { useState, useRef, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, X, Download, Clock, ChevronRight } from "lucide-react";
+import { Search, X, Download, Clock, ChevronRight, CalendarDays, Filter, FileDown } from "lucide-react";
 
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +9,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import type { Column } from "@/components/shared/DataTable";
 import api from "@/lib/axios";
 import { formatDateTime, truncateId } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 interface AuditEntry {
   id: string;
@@ -52,6 +52,65 @@ function actionBadge(action: string): { variant: "success" | "warning" | "error"
   return { variant: "default", label: action };
 }
 
+function DiffBlock({ oldV, newV }: { oldV: Record<string, unknown> | null; newV: Record<string, unknown> | null }) {
+  const allKeys = [...new Set([...Object.keys(oldV || {}), ...Object.keys(newV || {})])];
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <div className="flex items-center gap-2 mb-2">
+          <span className="w-2 h-2 rounded-full bg-red-400" />
+          <span className="text-[10px] font-semibold text-red-600 uppercase tracking-wider">Previous</span>
+        </div>
+        {oldV ? (
+          <div className="bg-white border border-red-100 rounded-lg p-3 text-[11px] font-mono text-text-secondary overflow-x-auto max-h-[260px] whitespace-pre-wrap shadow-sm">
+            {allKeys.map((key) => {
+              const oldVal = oldV[key];
+              const changed = newV && key in newV && JSON.stringify(newV[key]) !== JSON.stringify(oldVal);
+              return (
+                <div key={key} className={cn("py-0.5", changed && "bg-red-50/50 -mx-2 px-2 rounded")}>
+                  <span className="text-text-tertiary">"{key}": </span>
+                  <span className={cn(changed ? "text-red-600 line-through" : "text-text-secondary")}>
+                    {oldVal !== undefined ? JSON.stringify(oldVal) : "undefined"}
+                  </span>
+                  {changed && ","}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="bg-gray-50 border border-border/40 rounded-lg p-4 text-xs text-text-tertiary italic text-center">No previous data</div>
+        )}
+      </div>
+      <div>
+        <div className="flex items-center gap-2 mb-2">
+          <span className="w-2 h-2 rounded-full bg-green-400" />
+          <span className="text-[10px] font-semibold text-green-600 uppercase tracking-wider">New</span>
+        </div>
+        {newV ? (
+          <div className="bg-white border border-green-100 rounded-lg p-3 text-[11px] font-mono text-text-secondary overflow-x-auto max-h-[260px] whitespace-pre-wrap shadow-sm">
+            {allKeys.map((key) => {
+              const newVal = newV[key];
+              const changed = oldV && key in oldV && JSON.stringify(oldV[key]) !== JSON.stringify(newVal);
+              return (
+                <div key={key} className={cn("py-0.5", changed && "bg-green-50/50 -mx-2 px-2 rounded")}>
+                  <span className="text-text-tertiary">"{key}": </span>
+                  <span className={cn(changed ? "text-green-700 font-medium" : "text-text-secondary")}>
+                    {newVal !== undefined ? JSON.stringify(newVal) : "undefined"}
+                  </span>
+                  {changed && ","}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="bg-gray-50 border border-border/40 rounded-lg p-4 text-xs text-text-tertiary italic text-center">No new data</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function AuditLogTab() {
   const [page, setPage] = useState(1);
   const [actionFilter, setActionFilter] = useState("");
@@ -65,19 +124,13 @@ export function AuditLogTab() {
   const handleActionChange = (val: string) => {
     setActionFilter(val);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      setDebouncedAction(val);
-      setPage(1);
-    }, 300);
+    debounceRef.current = setTimeout(() => { setDebouncedAction(val); setPage(1); }, 300);
   };
 
   const handleResourceChange = (val: string) => {
     setResourceFilter(val);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      setDebouncedResource(val);
-      setPage(1);
-    }, 300);
+    debounceRef.current = setTimeout(() => { setDebouncedResource(val); setPage(1); }, 300);
   };
 
   const dateRange = useMemo(() => getDateRange(datePreset), [datePreset]);
@@ -113,7 +166,7 @@ export function AuditLogTab() {
       header: "Admin",
       render: (r) => (
         <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600 text-[10px] font-bold text-white shrink-0">
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600 text-[10px] font-bold text-white shadow-sm shrink-0">
             {(r.userName || r.userEmail || "S").charAt(0).toUpperCase()}
           </div>
           <span className="text-sm font-medium text-text-primary truncate">{r.userName || r.userEmail || "System"}</span>
@@ -154,18 +207,17 @@ export function AuditLogTab() {
       render: (r) => (
         <div className="flex items-center justify-end gap-2">
           {(r.oldValues || r.newValues) && (
-            <Badge
-              variant={r.oldValues && r.newValues ? "warning" : r.newValues ? "success" : "error"}
-              className="text-[9px]"
-            >
+            <span className={cn(
+              "text-[9px] font-medium px-1.5 py-0.5 rounded",
+              r.oldValues && r.newValues ? "bg-amber-50 text-amber-700" : r.newValues ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700",
+            )}>
               {r.oldValues && r.newValues ? "Modified" : r.newValues ? "Created" : "Removed"}
-            </Badge>
+            </span>
           )}
-          <ChevronRight
-            className={`h-4 w-4 text-text-tertiary transition-transform duration-200 ${
-              expandedId === r.id ? "rotate-90" : ""
-            }`}
-          />
+          <ChevronRight className={cn(
+            "h-4 w-4 text-text-tertiary transition-transform duration-200",
+            expandedId === r.id && "rotate-90",
+          )} />
         </div>
       ),
       className: "w-[140px]",
@@ -173,112 +225,108 @@ export function AuditLogTab() {
   ];
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      {/* Filters */}
-      <Card>
-        <CardContent className="pt-5">
-          <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-tertiary pointer-events-none" />
-                <Input
-                  placeholder="Filter by action..."
-                  value={actionFilter}
-                  onChange={(e) => handleActionChange(e.target.value)}
-                  className="pl-9"
-                />
-                {actionFilter && (
-                  <button
-                    type="button"
-                    onClick={() => { setActionFilter(""); setDebouncedAction(""); setPage(1); }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-primary"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                )}
-              </div>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-tertiary pointer-events-none" />
-                <Input
-                  placeholder="Filter by resource..."
-                  value={resourceFilter}
-                  onChange={(e) => handleResourceChange(e.target.value)}
-                  className="pl-9"
-                />
-                {resourceFilter && (
-                  <button
-                    type="button"
-                    onClick={() => { setResourceFilter(""); setDebouncedResource(""); setPage(1); }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-primary"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                )}
-              </div>
+    <div className="space-y-5">
+      <div className="rounded-xl border border-border/60 bg-white/90 backdrop-blur-sm shadow-sm overflow-hidden">
+        <div className="h-1 w-full bg-gradient-to-r from-rose-500 to-pink-600" />
+        <div className="p-4 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="relative">
+              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-tertiary pointer-events-none" />
+              <Input
+                placeholder="Filter by action..."
+                value={actionFilter}
+                onChange={(e) => handleActionChange(e.target.value)}
+                className="pl-9"
+              />
+              {actionFilter && (
+                <button
+                  type="button"
+                  onClick={() => { setActionFilter(""); setDebouncedAction(""); setPage(1); }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-primary"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
-            <div className="flex items-center justify-between flex-wrap gap-3">
-              <div className="flex items-center gap-1.5">
-                <Clock className="h-4 w-4 text-text-tertiary" />
-                {DATE_PRESETS.map((p) => (
-                  <button
-                    key={p.value}
-                    type="button"
-                    onClick={() => { setDatePreset(p.value); setPage(1); }}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-sm transition-colors ${
-                      datePreset === p.value
-                        ? "bg-green-100 text-green-700 border border-green-200"
-                        : "bg-gray-50 text-text-secondary border border-border-muted hover:bg-gray-100"
-                    }`}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={async () => {
-                  try {
-                    const params = new URLSearchParams();
-                    if (debouncedAction) params.set("action", debouncedAction);
-                    if (debouncedResource) params.set("resource", debouncedResource);
-                    if (dateRange.startDate) params.set("startDate", dateRange.startDate);
-                    const res = await api.get(`/admin/audit-log/export?${params.toString()}`, { responseType: "blob" });
-                    const url = window.URL.createObjectURL(new Blob([res.data]));
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = `audit-log-${new Date().toISOString().split("T")[0]}.csv`;
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                    window.URL.revokeObjectURL(url);
-                  } catch {
-                    /* ignore */
-                  }
-                }}
-                className="gap-2"
-              >
-                <Download className="h-4 w-4" /> Export CSV
-              </Button>
+            <div className="relative">
+              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-tertiary pointer-events-none" />
+              <Input
+                placeholder="Filter by resource..."
+                value={resourceFilter}
+                onChange={(e) => handleResourceChange(e.target.value)}
+                className="pl-9"
+              />
+              {resourceFilter && (
+                <button
+                  type="button"
+                  onClick={() => { setResourceFilter(""); setDebouncedResource(""); setPage(1); }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-primary"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
           </div>
-        </CardContent>
-      </Card>
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-1.5">
+              <CalendarDays className="h-4 w-4 text-text-tertiary mr-1" />
+              {DATE_PRESETS.map((p) => (
+                <button
+                  key={p.value}
+                  type="button"
+                  onClick={() => { setDatePreset(p.value); setPage(1); }}
+                  className={cn(
+                    "px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200",
+                    datePreset === p.value
+                      ? "bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-sm"
+                      : "bg-gray-50 text-text-secondary border border-border/60 hover:bg-gray-100",
+                  )}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                try {
+                  const params = new URLSearchParams();
+                  if (debouncedAction) params.set("action", debouncedAction);
+                  if (debouncedResource) params.set("resource", debouncedResource);
+                  if (dateRange.startDate) params.set("startDate", dateRange.startDate);
+                  const res = await api.get(`/admin/audit-log/export?${params.toString()}`, { responseType: "blob" });
+                  const url = window.URL.createObjectURL(new Blob([res.data]));
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `audit-log-${new Date().toISOString().split("T")[0]}.csv`;
+                  document.body.appendChild(a);
+                  a.click();
+                  a.remove();
+                  window.URL.revokeObjectURL(url);
+                } catch { /* ignore */ }
+              }}
+              className="gap-2 shadow-sm"
+            >
+              <FileDown className="h-4 w-4" /> Export CSV
+            </Button>
+          </div>
+        </div>
+      </div>
 
-      {/* Table */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-semibold text-text-primary">Audit Log Entries</h3>
-              <p className="text-xs text-text-secondary">Track all admin actions and configuration changes</p>
-            </div>
-            {totalCount > 0 && (
-              <span className="text-xs text-text-tertiary">{totalCount.toLocaleString()} total entries</span>
-            )}
+      <div className="rounded-xl border border-border/60 bg-white shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border/40">
+          <div>
+            <h3 className="text-sm font-semibold text-text-primary">Audit Log Entries</h3>
+            <p className="text-xs text-text-secondary">Track all admin actions and configuration changes</p>
           </div>
-        </CardHeader>
-        <CardContent className="p-0">
+          {totalCount > 0 && (
+            <span className="text-xs text-text-tertiary bg-gray-50 px-2.5 py-1 rounded-lg border border-border/40">
+              {totalCount.toLocaleString()} total
+            </span>
+          )}
+        </div>
+        <div className="overflow-x-auto">
           <DataTable
             columns={columns}
             data={entries}
@@ -291,42 +339,24 @@ export function AuditLogTab() {
             keyExtractor={(r) => r.id}
             expandedRow={expandedId}
             renderExpanded={(entry) => (
-              <div className="px-5 py-4 bg-gray-50/50">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-xs font-semibold text-text-primary">Entry Details</span>
-                  <span className="font-mono text-[10px] text-text-secondary">{entry.action}</span>
+              <div className="px-6 py-5 bg-gradient-to-b from-gray-50/80 to-transparent">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-xs font-semibold text-text-primary">Details</span>
+                  <Badge variant="outline" className="text-[9px] font-mono">{entry.action}</Badge>
                 </div>
                 {entry.oldValues || entry.newValues ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {entry.oldValues && (
-                      <div>
-                        <p className="text-[10px] font-medium text-red-500 mb-1.5 uppercase tracking-wider">
-                          Previous Values
-                        </p>
-                        <pre className="bg-white border border-border-muted rounded-sm p-3 text-[11px] font-mono text-text-secondary overflow-x-auto max-h-[240px] whitespace-pre-wrap">
-                          {JSON.stringify(entry.oldValues, null, 2)}
-                        </pre>
-                      </div>
-                    )}
-                    {entry.newValues && (
-                      <div>
-                        <p className="text-[10px] font-medium text-green-600 mb-1.5 uppercase tracking-wider">
-                          New Values
-                        </p>
-                        <pre className="bg-white border border-border-muted rounded-sm p-3 text-[11px] font-mono text-text-secondary overflow-x-auto max-h-[240px] whitespace-pre-wrap">
-                          {JSON.stringify(entry.newValues, null, 2)}
-                        </pre>
-                      </div>
-                    )}
-                  </div>
+                  <DiffBlock oldV={entry.oldValues} newV={entry.newValues} />
                 ) : (
-                  <p className="text-xs text-text-secondary">No additional details recorded for this entry.</p>
+                  <p className="text-xs text-text-secondary py-4 text-center bg-white rounded-lg border border-border/40">
+                    No additional details recorded for this entry.
+                  </p>
                 )}
               </div>
             )}
           />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
+

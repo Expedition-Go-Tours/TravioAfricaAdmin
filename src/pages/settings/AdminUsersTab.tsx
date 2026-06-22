@@ -1,8 +1,7 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+﻿import { useState, useRef, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, ShieldOff, Loader2, ShieldCheck, Search, X, AlertTriangle, Users as UsersIcon } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Plus, ShieldOff, Loader2, ShieldCheck, Search, X, AlertTriangle, Users as UsersIcon, Mail, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Badge } from "@/components/ui/badge";
 import api from "@/lib/axios";
 import { timeAgo } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import type { AdminUser, AdminRole } from "@/lib/permissions";
 
 function TableSkeleton() {
@@ -24,40 +24,38 @@ function TableSkeleton() {
         </div>
         <Skeleton className="h-9 w-32" />
       </div>
-      <Card>
-        <CardContent className="p-0">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border-muted">
-                {["Admin", "Role", "Status", "Last Active", "Actions"].map((h) => (
-                  <th key={h} className="px-4 py-3 text-left">
-                    <Skeleton className="h-3 w-16" />
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {Array.from({ length: 4 }).map((_, i) => (
-                <tr key={i} className="border-b border-border-muted">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <Skeleton className="h-8 w-8 rounded-full" />
-                      <div className="space-y-1">
-                        <Skeleton className="h-3.5 w-28" />
-                        <Skeleton className="h-3 w-36" />
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3"><Skeleton className="h-7 w-32" /></td>
-                  <td className="px-4 py-3"><Skeleton className="h-5 w-14" /></td>
-                  <td className="px-4 py-3"><Skeleton className="h-3.5 w-16" /></td>
-                  <td className="px-4 py-3"><Skeleton className="h-7 w-16 ml-auto" /></td>
-                </tr>
+      <div className="rounded-xl border border-border/60 bg-white shadow-sm overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border/40">
+              {["Admin", "Role", "Status", "Last Active", "Actions"].map((h) => (
+                <th key={h} className="px-5 py-3.5 text-left">
+                  <Skeleton className="h-3 w-16" />
+                </th>
               ))}
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
+            </tr>
+          </thead>
+          <tbody>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <tr key={i} className="border-b border-border/30">
+                <td className="px-5 py-3">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-9 w-9 rounded-full" />
+                    <div className="space-y-1">
+                      <Skeleton className="h-3.5 w-28" />
+                      <Skeleton className="h-3 w-36" />
+                    </div>
+                  </div>
+                </td>
+                <td className="px-5 py-3"><Skeleton className="h-7 w-32" /></td>
+                <td className="px-5 py-3"><Skeleton className="h-5 w-14" /></td>
+                <td className="px-5 py-3"><Skeleton className="h-3.5 w-16" /></td>
+                <td className="px-5 py-3"><Skeleton className="h-7 w-16 ml-auto" /></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -94,7 +92,7 @@ export function AdminUsersTab() {
       const updated = response.data?.data;
       if (updated) {
         queryClient.setQueryData<AdminUser[]>(["admin", "admin-users"], (old) =>
-          old?.map((a) => (a.id === updated.id ? { ...a, ...updated } : a)) ?? []
+          old?.map((a) => (a.id === updated.id ? { ...a, ...updated } : a)) ?? [],
         );
       }
       toast.success("Admin role updated");
@@ -109,7 +107,7 @@ export function AdminUsersTab() {
       const revokedId = response.data?.data?.id;
       if (revokedId) {
         queryClient.setQueryData<AdminUser[]>(["admin", "admin-users"], (old) =>
-          old?.filter((a) => a.id !== revokedId) ?? []
+          old?.filter((a) => a.id !== revokedId) ?? [],
         );
       }
       toast.success("Admin access revoked");
@@ -126,7 +124,7 @@ export function AdminUsersTab() {
       const newAdmin = response.data?.data;
       if (newAdmin) {
         queryClient.setQueryData<AdminUser[]>(["admin", "admin-users"], (old) =>
-          [{ ...newAdmin, lastLoginAt: null, createdAt: new Date().toISOString() }, ...(old ?? [])]
+          [{ ...newAdmin, lastLoginAt: null, createdAt: new Date().toISOString() }, ...(old ?? [])],
         );
       }
       toast.success("Admin access granted");
@@ -148,19 +146,13 @@ export function AdminUsersTab() {
 
   useEffect(() => {
     if (!addDone) return;
-    const timer = setTimeout(() => {
-      resetAddModal();
-      setAddDone(false);
-    }, 1500);
+    const timer = setTimeout(() => { resetAddModal(); setAddDone(false); }, 1500);
     return () => clearTimeout(timer);
   }, [addDone, resetAddModal]);
 
   useEffect(() => {
     if (!revokeDone) return;
-    const timer = setTimeout(() => {
-      setShowRevoke(null);
-      setRevokeDone(false);
-    }, 1500);
+    const timer = setTimeout(() => { setShowRevoke(null); setRevokeDone(false); }, 1500);
     return () => clearTimeout(timer);
   }, [revokeDone]);
 
@@ -173,11 +165,8 @@ export function AdminUsersTab() {
       try {
         const res = await api.get(`/admin/users/search?q=${encodeURIComponent(q)}`);
         setSearchResults(res.data?.data?.users || []);
-      } catch {
-        setSearchResults([]);
-      } finally {
-        setSearchLoading(false);
-      }
+      } catch { setSearchResults([]); }
+      finally { setSearchLoading(false); }
     }, 300);
   }, []);
 
@@ -190,73 +179,82 @@ export function AdminUsersTab() {
     return true;
   });
 
-  if (isLoading) {
-    return <TableSkeleton />;
-  }
+  if (isLoading) return <TableSkeleton />;
 
   return (
-    <div className="space-y-4 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between">
+    <div className="space-y-5">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <Input
-            placeholder="Search admins..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-64"
-          />
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-tertiary pointer-events-none" />
+            <Input
+              placeholder="Search admins..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-64 pl-9"
+            />
+          </div>
           <Select value={roleFilter} onValueChange={setRoleFilter}>
             <SelectTrigger className="w-40"><SelectValue placeholder="All Roles" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Roles</SelectItem>
               {allRoles.map((r) => (
-                <SelectItem key={r.id} value={r.name}>{r.name.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}</SelectItem>
+                <SelectItem key={r.id} value={r.name}>
+                  {r.name.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
-        <Button onClick={() => setShowAdd(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Add Admin
+        <Button onClick={() => setShowAdd(true)} className="gap-2 shadow-sm">
+          <Plus className="h-4 w-4" /> Add Admin
         </Button>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
+      <div className="rounded-xl border border-border/60 bg-white shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border-muted">
-                <th className="px-4 py-3 text-left font-medium text-text-secondary">Admin</th>
-                <th className="px-4 py-3 text-left font-medium text-text-secondary">Role</th>
-                <th className="px-4 py-3 text-left font-medium text-text-secondary">Status</th>
-                <th className="px-4 py-3 text-left font-medium text-text-secondary">Last Active</th>
-                <th className="px-4 py-3 text-right font-medium text-text-secondary">Actions</th>
+              <tr className="bg-gradient-to-r from-green-50/50 to-transparent border-b border-border/40">
+                <th className="px-5 py-3.5 text-left font-semibold text-text-secondary text-xs uppercase tracking-wider">Admin</th>
+                <th className="px-5 py-3.5 text-left font-semibold text-text-secondary text-xs uppercase tracking-wider">Role</th>
+                <th className="px-5 py-3.5 text-left font-semibold text-text-secondary text-xs uppercase tracking-wider">Status</th>
+                <th className="px-5 py-3.5 text-left font-semibold text-text-secondary text-xs uppercase tracking-wider">Last Active</th>
+                <th className="px-5 py-3.5 text-right font-semibold text-text-secondary text-xs uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((admin) => (
-                <tr key={admin.id} className="border-b border-border-muted last:border-0 hover:bg-gray-50">
-                  <td className="px-4 py-3">
+              {filtered.map((admin, idx) => (
+                <tr key={admin.id} className={cn(
+                  "border-b border-border/30 transition-colors hover:bg-green-50/20",
+                  idx === filtered.length - 1 && "border-b-0",
+                )}>
+                  <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600 text-xs font-bold text-white">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600 text-xs font-bold text-white shadow-sm shrink-0">
                         {admin.photoURL ? (
                           <img src={admin.photoURL} alt="" referrerPolicy="no-referrer" className="h-full w-full rounded-full object-cover" loading="lazy" />
                         ) : (
                           admin.name.charAt(0).toUpperCase()
                         )}
                       </div>
-                      <div>
-                        <span className="font-medium text-text-primary">{admin.name}</span>
-                        <p className="text-xs text-text-secondary">{admin.email}</p>
+                      <div className="min-w-0">
+                        <span className="font-medium text-text-primary block truncate">{admin.name}</span>
+                        <div className="flex items-center gap-1 text-xs text-text-secondary">
+                          <Mail className="h-3 w-3" />
+                          <span className="truncate">{admin.email}</span>
+                        </div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-5 py-4">
                     {admin.adminRole ? (
                       <div className="flex items-center gap-2">
                         <Select
                           value={admin.adminRole.id}
                           onValueChange={(val) => changeRoleMutation.mutate({ userId: admin.id, adminRoleId: val })}
                         >
-                          <SelectTrigger className="h-7 text-xs w-40">
+                          <SelectTrigger className="h-7 text-xs w-40 border-border/60 shadow-sm">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -270,42 +268,62 @@ export function AdminUsersTab() {
                         {changeRoleMutation.isPending && <Loader2 className="h-3 w-3 animate-spin text-text-secondary" />}
                       </div>
                     ) : (
-                      <span className="text-text-tertiary italic">No role</span>
+                      <span className="text-text-tertiary italic text-xs">No role</span>
                     )}
                   </td>
-                  <td className="px-4 py-3">
-                    <Badge variant={admin.active ? "default" : "secondary"} className="text-xs">
+                  <td className="px-5 py-4">
+                    <Badge
+                      variant={admin.active ? "default" : "secondary"}
+                      className={cn(
+                        "text-xs font-medium",
+                        admin.active && "bg-green-100 text-green-700 hover:bg-green-100",
+                      )}
+                    >
+                      <span className={cn("w-1.5 h-1.5 rounded-full mr-1.5", admin.active ? "bg-green-500" : "bg-gray-400")} />
                       {admin.active ? "Active" : "Inactive"}
                     </Badge>
                   </td>
-                  <td className="px-4 py-3 text-text-secondary">
-                    {admin.lastLoginAt ? timeAgo(admin.lastLoginAt) : "Never"}
+                  <td className="px-5 py-4 text-text-secondary">
+                    <div className="flex items-center gap-1 text-xs">
+                      <Clock className="h-3 w-3 text-text-tertiary" />
+                      {admin.lastLoginAt ? timeAgo(admin.lastLoginAt) : "Never"}
+                    </div>
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-5 py-4 text-right">
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                      className="text-red-500 hover:text-red-600 hover:bg-red-50 gap-1.5 text-xs"
                       onClick={() => setShowRevoke(admin)}
                     >
-                      <ShieldOff className="mr-1.5 h-3.5 w-3.5" />
+                      <ShieldOff className="h-3.5 w-3.5" />
                       Revoke
                     </Button>
                   </td>
                 </tr>
               ))}
               {filtered.length === 0 && (
-                <tr><td colSpan={5} className="px-4 py-8 text-center text-text-secondary">No admin users found</td></tr>
+                <tr>
+                  <td colSpan={5} className="px-5 py-12 text-center text-text-secondary">
+                    <UsersIcon className="h-8 w-8 mx-auto mb-2 text-text-tertiary" />
+                    No admin users found
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <Dialog open={showAdd} onOpenChange={(o) => { if (!o) resetAddModal(); }}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg !bg-white/95 backdrop-blur-xl">
           <DialogHeader>
-            <DialogTitle>Add Admin</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white">
+                <ShieldCheck className="h-3.5 w-3.5" />
+              </div>
+              Add Admin
+            </DialogTitle>
             <DialogDescription>Search for a user and grant them admin access</DialogDescription>
           </DialogHeader>
 
@@ -335,14 +353,14 @@ export function AdminUsersTab() {
             </div>
 
             {searchLoading && (
-              <div className="flex items-center justify-center gap-2 py-4 text-sm text-text-secondary">
+              <div className="flex items-center justify-center gap-2 py-6 text-sm text-text-secondary bg-gray-50 rounded-lg border border-border/40">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Searching...
+                Searching users...
               </div>
             )}
 
             {!searchLoading && userSearch.length >= 2 && searchResults.length === 0 && (
-              <div className="flex flex-col items-center gap-2 py-6 text-center">
+              <div className="flex flex-col items-center gap-2 py-8 text-center bg-gray-50 rounded-lg border border-border/40">
                 <UsersIcon className="h-8 w-8 text-text-tertiary" />
                 <p className="text-sm text-text-secondary">No users found for "{userSearch}"</p>
                 <p className="text-xs text-text-tertiary">Try a different name or email</p>
@@ -351,18 +369,18 @@ export function AdminUsersTab() {
 
             {!searchLoading && searchResults.length > 0 && !selectedUser && (
               <>
-                <Label className="text-xs text-text-tertiary uppercase tracking-wide">
+                <p className="text-xs font-medium text-text-tertiary">
                   {searchResults.length} result{searchResults.length !== 1 ? "s" : ""}
-                </Label>
-                <div className="max-h-48 overflow-y-auto rounded-lg border border-border-muted -mt-2">
+                </p>
+                <div className="max-h-52 overflow-y-auto rounded-xl border border-border/60 bg-white shadow-sm -mt-2">
                   {searchResults.map((u) => (
                     <button
                       key={u.id}
                       type="button"
-                      className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm hover:bg-gray-50 border-b border-border-muted last:border-0 transition-colors"
+                      className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-green-50/50 border-b border-border/30 last:border-b-0 transition-colors"
                       onClick={() => setSelectedUser({ id: u.id, name: u.name, email: u.email })}
                     >
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600 text-xs font-bold text-white">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600 text-xs font-bold text-white shadow-sm">
                         {u.name.charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0">
@@ -376,9 +394,9 @@ export function AdminUsersTab() {
             )}
 
             {selectedUser && (
-              <div className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 px-3 py-2.5">
+              <div className="flex items-center justify-between rounded-xl border border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 px-4 py-3 shadow-sm">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600 text-xs font-bold text-white">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600 text-xs font-bold text-white shadow-sm">
                     {selectedUser.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0">
@@ -388,10 +406,10 @@ export function AdminUsersTab() {
                 </div>
                 <button
                   type="button"
-                  className="shrink-0 ml-2 text-green-500 hover:text-green-700"
+                  className="shrink-0 ml-2 flex items-center justify-center w-6 h-6 rounded-md bg-green-200/50 text-green-600 hover:text-green-700 hover:bg-green-200 transition-colors"
                   onClick={() => { setSelectedUser(null); setSearchResults([]); setUserSearch(""); }}
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-3.5 w-3.5" />
                 </button>
               </div>
             )}
@@ -399,7 +417,7 @@ export function AdminUsersTab() {
             <div className="space-y-1.5">
               <Label htmlFor="admin-role">Admin Role</Label>
               <Select value={newRoleId} onValueChange={setNewRoleId}>
-                <SelectTrigger id="admin-role">
+                <SelectTrigger id="admin-role" className="border-border/60">
                   <SelectValue placeholder="Select a role..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -413,10 +431,8 @@ export function AdminUsersTab() {
             </div>
           </div>
 
-          <DialogFooter className="mt-6">
-            <Button variant="outline" onClick={resetAddModal}>
-              Cancel
-            </Button>
+          <DialogFooter className="mt-2">
+            <Button variant="outline" onClick={resetAddModal} className="shadow-sm">Cancel</Button>
             <Button
               onClick={() => {
                 if (selectedUser && newRoleId) {
@@ -426,9 +442,10 @@ export function AdminUsersTab() {
                 }
               }}
               disabled={!selectedUser || !newRoleId || addMutation.isPending || addDone}
+              className="gap-2 shadow-sm"
             >
               {addDone ? (
-                <>Added <ShieldCheck className="ml-1.5 h-4 w-4" /></>
+                <>Added <ShieldCheck className="h-4 w-4" /></>
               ) : addMutation.isPending ? (
                 <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...</>
               ) : (
@@ -443,12 +460,12 @@ export function AdminUsersTab() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-red-500/20 to-red-600/10 ring-1 ring-red-200/50">
                 <AlertTriangle className="h-5 w-5 text-red-500" />
               </div>
               <div>
                 <DialogTitle>Revoke Admin Access</DialogTitle>
-                <DialogDescription className="mt-1">
+                <DialogDescription className="mt-1.5">
                   This action is permanent. The user will lose access to the admin dashboard immediately.
                 </DialogDescription>
               </div>
@@ -456,20 +473,20 @@ export function AdminUsersTab() {
           </DialogHeader>
 
           {showRevoke && (
-            <div className="flex items-center gap-3 rounded-lg border border-border-muted bg-surface-base px-3 py-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600 text-sm font-bold text-white">
+            <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-gray-50/50 px-4 py-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600 text-sm font-bold text-white shadow-sm">
                 {showRevoke.photoURL ? (
                   <img src={showRevoke.photoURL} alt="" referrerPolicy="no-referrer" className="h-full w-full rounded-full object-cover" loading="lazy" />
                 ) : (
                   showRevoke.name.charAt(0).toUpperCase()
                 )}
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-text-primary truncate">{showRevoke.name}</p>
                 <p className="text-xs text-text-secondary truncate">{showRevoke.email}</p>
               </div>
               {showRevoke.adminRole && (
-                <Badge variant="outline" className="ml-auto shrink-0 text-xs">
+                <Badge variant="outline" className="shrink-0 text-[10px]">
                   {showRevoke.adminRole.name.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
                 </Badge>
               )}
@@ -477,13 +494,12 @@ export function AdminUsersTab() {
           )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowRevoke(null)}>
-              Cancel
-            </Button>
+            <Button variant="outline" onClick={() => setShowRevoke(null)} className="shadow-sm">Cancel</Button>
             <Button
               variant="destructive"
               onClick={() => showRevoke && revokeMutation.mutate(showRevoke.id)}
               disabled={revokeMutation.isPending || revokeDone}
+              className="gap-2 shadow-sm"
             >
               {revokeDone ? (
                 <>Removed <ShieldCheck className="ml-1.5 h-4 w-4" /></>
@@ -499,3 +515,4 @@ export function AdminUsersTab() {
     </div>
   );
 }
+
