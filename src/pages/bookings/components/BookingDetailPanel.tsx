@@ -18,6 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePermission } from "@/hooks/usePermission";
 import { cn, timeAgo } from "@/lib/utils";
 import { BookingTimeline } from "./BookingTimeline";
 import type { Booking } from "@/types/booking";
@@ -70,6 +71,8 @@ function DetailRow({ icon, label, children }: { icon: React.ReactNode; label: st
 }
 
 export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onViewCustomer }: BookingDetailPanelProps) {
+  const { can } = usePermission();
+
   const statusColor: Record<string, string> = {
     PENDING: "bg-amber-50 border-amber-200 text-amber-700",
     CONFIRMED: "bg-blue-50 border-blue-200 text-blue-700",
@@ -263,7 +266,7 @@ export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onViewC
                     {booking.paymentStatus}
                   </Badge>
                 </div>
-                {booking.paymentStatus === "PENDING" && (
+                {booking.paymentStatus === "PENDING" && can('bookings.confirm-payment') && (
                   <Button
                     onClick={() => onConfirmPayment(booking)}
                     size="sm"
