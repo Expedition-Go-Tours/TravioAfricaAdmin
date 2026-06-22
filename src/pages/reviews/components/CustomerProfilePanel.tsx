@@ -250,15 +250,15 @@ export function CustomerProfilePanel({ customerId, onClose }: CustomerProfilePan
                               </div>
                             )}
                             <div className="flex items-center gap-3 text-[10px] text-slate-400 mt-1">
-                              {booking.travelDate && (
+                              {booking.selectedDate && (
                                 <span className="flex items-center gap-1">
                                   <Calendar className="h-2.5 w-2.5" />
-                                  {new Date(booking.travelDate).toLocaleDateString()}
+                                  {new Date(booking.selectedDate).toLocaleDateString()}
                                 </span>
                               )}
-                              {booking.total && (
+                              {booking.total != null && (
                                 <span className="font-medium text-slate-600">
-                                  {booking.currency || "USD"} {booking.total.toLocaleString()}
+                                  {booking.currency || "USD"} {Number(booking.total).toLocaleString()}
                                 </span>
                               )}
                             </div>
