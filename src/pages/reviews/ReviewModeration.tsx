@@ -1099,25 +1099,70 @@ export default function ReviewModerationPage() {
 
       {deleteReview && (
         <Dialog open onOpenChange={(open) => { if (!open) setDeleteReview(null); }}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-red-600">
-                <Trash2 className="h-5 w-5" /> Delete Review
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-50">
+                  <Trash2 className="h-4 w-4" />
+                </div>
+                Delete Review
               </DialogTitle>
               <DialogDescription>
-                This action cannot be undone. The review and all associated photos will be permanently removed.
+                This action cannot be undone. The review and all associated data will be permanently removed.
               </DialogDescription>
             </DialogHeader>
-            <div className="rounded-lg border border-red-200/60 bg-red-50/30 p-3 space-y-1.5">
-              <div className="flex items-center gap-2">
-                {renderStars(deleteReview.rating || 0)}
-                <span className="text-sm font-medium text-slate-900 ml-1">{deleteReview.customer?.name || "Anonymous"}</span>
+
+            <div className="rounded-xl border border-slate-200 bg-gradient-to-b from-slate-50 to-white p-4 space-y-3">
+              <div className="flex items-center gap-2 pb-1">
+                <div className="h-px flex-1 bg-slate-100" />
+                <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Review to Delete</span>
+                <div className="h-px flex-1 bg-slate-100" />
               </div>
-              {deleteReview.title && <p className="text-sm font-medium text-slate-900">{deleteReview.title}</p>}
-              {deleteReview.comment && <p className="text-xs text-slate-600 line-clamp-2">{deleteReview.comment}</p>}
-              <p className="text-xs text-slate-400">on {deleteReview.tour?.title || "Unknown tour"}</p>
+              <div className="flex items-start gap-3">
+                {renderAvatar(deleteReview.customer?.photoURL, deleteReview.customer?.name)}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-slate-900">{deleteReview.customer?.name || "Anonymous"}</p>
+                  <p className="text-xs text-slate-400">{deleteReview.createdAt ? timeAgo(deleteReview.createdAt) : ""}</p>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  {renderStars(deleteReview.rating || 0)}
+                  <span className="text-xs text-slate-400 ml-1">({deleteReview.rating || 0}/5)</span>
+                </div>
+              </div>
+              {deleteReview.title && (
+                <p className="text-sm font-medium text-slate-900">{deleteReview.title}</p>
+              )}
+              {deleteReview.comment && (
+                <div className="rounded-lg bg-white border border-slate-100 p-3">
+                  <p className="text-sm text-slate-600 leading-relaxed">{deleteReview.comment}</p>
+                </div>
+              )}
+              <div className="flex items-center gap-1.5 text-xs text-slate-400 pt-1 border-t border-slate-100">
+                <MapPin className="h-3 w-3" />
+                <span>on <span className="font-medium text-slate-500">{deleteReview.tour?.title || "Unknown tour"}</span></span>
+              </div>
             </div>
-            <DialogFooter>
+
+            <div className="rounded-xl border border-red-200/60 bg-gradient-to-b from-red-50/50 to-white p-4 space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="h-px flex-1 bg-red-100" />
+                <span className="text-[11px] font-medium text-red-500 uppercase tracking-wider">Danger Zone</span>
+                <div className="h-px flex-1 bg-red-100" />
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-100 mt-0.5">
+                  <AlertTriangle className="h-4 w-4 text-red-500" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-red-900">Permanent deletion</p>
+                  <p className="text-xs text-red-600/80 leading-relaxed">
+                    This will permanently remove the review, all associated photos, supplier response, and moderation history. This action cannot be reversed.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter className="border-t border-slate-100 pt-4">
               <Button variant="outline" onClick={() => setDeleteReview(null)} disabled={deleteMutation.isPending}>Cancel</Button>
               <Button variant="destructive" onClick={handleDeleteConfirm} disabled={deleteMutation.isPending}>
                 {deleteMutation.isPending ? <><Loader2 className="h-4 w-4 animate-spin mr-1" />Deleting...</> : "Delete Review"}
