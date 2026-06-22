@@ -15,7 +15,9 @@ const MODEL_QUERY_MAP: Record<string, string[]> = {
     "supplier",
     "suppliers",
   ],
-  Booking: [],
+  Booking: [
+    "bookings",
+  ],
   Payout: [
     "payouts",
     "payout-summary",

@@ -28,6 +28,7 @@ import PayoutsOverview from "@/pages/finance/PayoutsOverview";
 import PayoutsList from "@/pages/finance/PayoutsList";
 import PayoutMethodsPage from "@/pages/finance/PayoutMethods";
 import ReviewModerationPage from "@/pages/reviews/ReviewModeration";
+import BookingsPage from "@/pages/bookings/BookingsPage";
 import ChatPage from "@/pages/chat/ChatPage";
 import SettingsPage from "@/pages/settings/SettingsPage";
 
@@ -62,6 +63,7 @@ export default function App() {
             <Route path="suppliers/active" element={<PermissionRoute permission="suppliers.view"><ActiveSuppliersPage /></PermissionRoute>} />
             <Route path="payouts" element={<PermissionRoute permission="payouts.view"><PayoutsTabPage /></PermissionRoute>} />
             <Route path="payout-methods" element={<PermissionRoute permission="payout-methods.view"><PayoutMethodsPage /></PermissionRoute>} />
+            <Route path="bookings" element={<PermissionRoute permission="bookings.view"><BookingsPage /></PermissionRoute>} />
             <Route path="reviews" element={<PermissionRoute permission="reviews.view"><ReviewModerationPage /></PermissionRoute>} />
             <Route path="chat/suppliers" element={<PermissionRoute permission="chat.suppliers"><ChatPage /></PermissionRoute>} />
             <Route path="chat/customers" element={<PermissionRoute permission="chat.customers"><ChatPage /></PermissionRoute>} />

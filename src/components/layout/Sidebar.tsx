@@ -75,9 +75,10 @@ function getNavGroups(can: (key: string) => boolean): { group: string; items: Na
         ...(can('tours.view') ? [{ label: "Tours", path: "/admin/tours", icon: <Map className="h-4 w-4" /> }] : []),
       ].filter((i) => !i.children || i.children.length > 0),
     },
-    ...(can('suppliers.view') || can('reviews.view') || can('chat.suppliers') ? [{
+    ...(can('suppliers.view') || can('reviews.view') || can('bookings.view') || can('chat.suppliers') ? [{
       group: "Management",
       items: [
+        ...(can('bookings.view') ? [{ label: "Bookings", path: "/admin/bookings", icon: <ShoppingCart className="h-4 w-4" /> }] : []),
         ...(can('suppliers.view') ? [{ label: "Suppliers", path: "/admin/suppliers", icon: <UserPlus className="h-4 w-4" /> }] : []),
         ...(can('suppliers.view') ? [{ label: "Active Suppliers", path: "/admin/suppliers/active", icon: <UserCheck className="h-4 w-4" /> }] : []),
         ...(can('reviews.view') ? [{ label: "Reviews", path: "/admin/reviews", icon: <Star className="h-4 w-4" /> }] : []),

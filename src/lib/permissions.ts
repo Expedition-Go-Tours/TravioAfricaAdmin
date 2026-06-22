@@ -46,6 +46,7 @@ const ROUTE_PRIORITY = [
   { permission: 'analytics.view', route: '/admin/overview' },
   { permission: 'chat.customers', route: '/admin/chat/customers' },
   { permission: 'chat.suppliers', route: '/admin/chat/suppliers' },
+  { permission: 'bookings.view', route: '/admin/bookings' },
   { permission: 'reviews.view', route: '/admin/reviews' },
   { permission: 'suppliers.view', route: '/admin/suppliers' },
   { permission: 'payouts.view', route: '/admin/payouts' },
