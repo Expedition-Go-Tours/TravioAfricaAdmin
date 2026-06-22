@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
-import axios from "axios";
 import api from "@/lib/axios";
 
 export default function AuthCallback() {
@@ -24,7 +23,7 @@ export default function AuthCallback() {
 
   async function convertToCookies(accessToken: string, refreshToken: string) {
     try {
-      await axios.post("/api/auth/set-cookies", { accessToken, refreshToken });
+      await api.post("/auth/set-cookies", { accessToken, refreshToken });
     } catch {
       setStatus("Authentication failed. Redirecting...");
       setTimeout(() => navigate("/admin/login", { replace: true }), 2000);

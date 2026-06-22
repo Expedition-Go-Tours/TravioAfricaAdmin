@@ -2,8 +2,9 @@ import axios from "axios";
 import { toast } from "sonner";
 
 const api = axios.create({
-  baseURL: "/api",
+  baseURL: import.meta.env.VITE_API_URL || "/api",
   headers: { "Content-Type": "application/json" },
+  withCredentials: true,
 });
 
 let isRefreshing = false;
@@ -46,7 +47,7 @@ api.interceptors.response.use(
         isRefreshing = true;
 
         try {
-          await axios.post("/api/auth/refresh");
+          await api.post("/auth/refresh");
 
           processQueue(null);
           return api(originalRequest);

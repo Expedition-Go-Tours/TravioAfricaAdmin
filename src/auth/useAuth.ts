@@ -1,5 +1,4 @@
 import { useState, useCallback } from "react";
-import axios from "axios";
 import api from "@/lib/axios";
 
 export function useAuth() {
@@ -38,7 +37,7 @@ export function useAuth() {
     setLoading(true);
     setError(null);
     try {
-      await axios.post("/api/auth/login", { email, password });
+      await api.post("/auth/login", { email, password });
 
       const ok = await verifyAdmin();
       if (!ok) {
@@ -61,13 +60,14 @@ export function useAuth() {
   const loginWithGoogle = useCallback(async () => {
     setLoading(true);
     setError(null);
-    window.location.href = "/api/auth/google";
+    const base = import.meta.env.VITE_API_URL || "/api";
+    window.location.href = `${base}/auth/google`;
     return false;
   }, []);
 
   const logout = useCallback(async () => {
     try {
-      await axios.post("/api/auth/logout");
+      await api.post("/auth/logout");
     } catch {
       // Ignore logout errors
     }

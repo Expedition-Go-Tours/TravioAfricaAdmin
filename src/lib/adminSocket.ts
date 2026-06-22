@@ -1,12 +1,14 @@
 import { io, Socket } from "socket.io-client";
 
+const SOCKET_URL = import.meta.env.VITE_API_URL?.replace("/api", "") || "";
 const ADMIN_NOTIFICATION_EVENT = "admin-notification";
 
 let socket: Socket | null = null;
 
 export function getAdminSocket(): Socket {
   if (!socket) {
-    socket = io({
+    socket = io(SOCKET_URL, {
+      withCredentials: true,
       auth: { role: "admin" },
       reconnection: true,
       reconnectionAttempts: 10,
