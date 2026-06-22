@@ -8,7 +8,6 @@ import {
   X,
   ArrowLeft,
   RefreshCw,
-  Loader2,
   ShoppingCart,
   Clock,
   CheckCircle2,
@@ -18,19 +17,16 @@ import {
   ChevronLeft,
   ChevronRight,
   Calendar,
-  DollarSign,
   Hash,
-  User,
   MapPin,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { usePermission } from "@/hooks/usePermission";
 import { useSocketInvalidate } from "@/hooks/useSocketEvent";
 import api from "@/lib/axios";
-import { cn, timeAgo, formatCurrency } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { BookingDetailPanel } from "./components/BookingDetailPanel";
 import { ConfirmPaymentDialog } from "./components/ConfirmPaymentDialog";
 import type { Booking } from "@/types/booking";
@@ -59,8 +55,6 @@ const STATUS_PILLS = ["All", "Pending", "Confirmed", "Completed", "Cancelled"];
 export default function BookingsPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { can } = usePermission();
-
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
