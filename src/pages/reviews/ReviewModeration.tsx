@@ -1099,7 +1099,7 @@ export default function ReviewModerationPage() {
 
       {deleteReview && (
         <Dialog open onOpenChange={(open) => { if (!open) setDeleteReview(null); }}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-lg space-y-4">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-red-600">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-50">
@@ -1143,20 +1143,20 @@ export default function ReviewModerationPage() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-red-200/60 bg-gradient-to-b from-red-50/50 to-white p-4 space-y-2">
+            <div className="rounded-xl border border-red-200 bg-red-50 p-4 space-y-3">
               <div className="flex items-center gap-2">
-                <div className="h-px flex-1 bg-red-100" />
-                <span className="text-[11px] font-medium text-red-500 uppercase tracking-wider">Danger Zone</span>
-                <div className="h-px flex-1 bg-red-100" />
+                <div className="h-px flex-1 bg-red-200/60" />
+                <span className="text-[11px] font-semibold text-red-600 uppercase tracking-wider">Warning</span>
+                <div className="h-px flex-1 bg-red-200/60" />
               </div>
               <div className="flex items-start gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-100 mt-0.5">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-100">
                   <AlertTriangle className="h-4 w-4 text-red-500" />
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm font-semibold text-red-900">Permanent deletion</p>
-                  <p className="text-xs text-red-600/80 leading-relaxed">
-                    This will permanently remove the review, all associated photos, supplier response, and moderation history. This action cannot be reversed.
+                  <p className="text-sm font-semibold text-red-900">This action cannot be undone</p>
+                  <p className="text-sm text-red-700 leading-relaxed">
+                    Deleting this review will permanently remove the review, all associated photos, the supplier response, and moderation history. This cannot be reversed.
                   </p>
                 </div>
               </div>
