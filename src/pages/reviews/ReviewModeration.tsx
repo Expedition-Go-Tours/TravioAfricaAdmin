@@ -43,6 +43,7 @@ import { useSocketInvalidate } from "@/hooks/useSocketEvent";
 import { AnimatedNumber } from "@/components/shared/AnimatedNumber";
 import api from "@/lib/axios";
 import { cn, timeAgo } from "@/lib/utils";
+import { CustomerProfilePanel } from "./components/CustomerProfilePanel";
 
 interface Review {
   id: string;
@@ -123,6 +124,8 @@ export default function ReviewModerationPage() {
   const [selectedTourId, setSelectedTourId] = useState<string | null>(null);
 
   const [lightbox, setLightbox] = useState<{ images: string[]; index: number } | null>(null);
+
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
 
   const deepLinkHandled = useRef(false);
   const limit = 20;
@@ -362,9 +365,15 @@ export default function ReviewModerationPage() {
         layout
         className="bg-white rounded-xl border border-slate-200 p-5"
       >
-        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
-            {renderAvatar(review.customer?.photoURL, review.customer?.name)}
+            <button
+              onClick={() => setSelectedCustomerId(review.customer?.id || null)}
+              className="shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded-full"
+              title="View customer profile"
+            >
+              {renderAvatar(review.customer?.photoURL, review.customer?.name)}
+            </button>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className="text-sm font-semibold text-slate-900 truncate block">
@@ -1220,6 +1229,15 @@ export default function ReviewModerationPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+      )}
+
+      {selectedCustomerId && (
+        <AnimatePresence>
+          <CustomerProfilePanel
+            customerId={selectedCustomerId}
+            onClose={() => setSelectedCustomerId(null)}
+          />
+        </AnimatePresence>
       )}
     </div>
   );

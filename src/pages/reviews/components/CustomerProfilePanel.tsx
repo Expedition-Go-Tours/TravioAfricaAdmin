@@ -1,0 +1,296 @@
+import { useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
+import {
+  X,
+  Star,
+  Calendar,
+  Hash,
+  Users,
+  Ticket,
+  Mail,
+  Phone,
+  Clock,
+  ShieldCheck,
+  MapPin,
+} from "lucide-react";
+import api from "@/lib/axios";
+import { cn, timeAgo } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+
+interface CustomerProfilePanelProps {
+  customerId: string;
+  onClose: () => void;
+}
+
+const STATUS_BADGE: Record<string, "success" | "warning" | "error" | "info"> = {
+  APPROVED: "success",
+  PENDING: "warning",
+  REJECTED: "error",
+  FLAGGED: "info",
+  CONFIRMED: "info",
+  COMPLETED: "success",
+  CANCELLED: "error",
+  NO_SHOW: "warning",
+  REFUNDED: "warning",
+};
+
+export function CustomerProfilePanel({ customerId, onClose }: CustomerProfilePanelProps) {
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin", "user", customerId],
+    queryFn: () =>
+      api.get(`/admin/users/${customerId}`).then((r) => r.data?.data),
+    enabled: !!customerId,
+  });
+
+  const user = data?.user;
+  const bookings = data?.bookings || [];
+  const reviewStats = data?.reviewStats;
+  const recentReviews = data?.recentReviews || [];
+
+  const renderStars = (rating: number) => (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((s) => (
+        <Star
+          key={s}
+          className={cn("h-3 w-3", s <= rating ? "fill-amber-400 text-amber-400" : "text-slate-200")}
+        />
+      ))}
+    </div>
+  );
+
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="fixed inset-0 z-40 bg-black/10"
+        onClick={onClose}
+      />
+      <motion.div
+        initial={{ x: "100%" }}
+        animate={{ x: 0 }}
+        exit={{ x: "100%" }}
+        transition={{ type: "spring", damping: 30, stiffness: 300 }}
+        className="fixed right-0 top-0 z-50 h-full w-[420px] bg-white border-l border-slate-200 shadow-[-4px_0_16px_rgba(0,0,0,0.06)] flex flex-col"
+      >
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0">
+          <h2 className="text-sm font-semibold text-slate-900">Customer Profile</h2>
+          <button
+            onClick={onClose}
+            className="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          {isLoading ? (
+            <div className="p-5 space-y-5">
+              <div className="flex items-center gap-4">
+                <Skeleton className="h-14 w-14 rounded-full" />
+                <div className="space-y-2 flex-1">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-48" />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-16 rounded-xl" />
+                ))}
+              </div>
+              <Skeleton className="h-32 rounded-xl" />
+              <Skeleton className="h-40 rounded-xl" />
+            </div>
+          ) : user ? (
+            <div className="p-5 space-y-5">
+              <div className="flex items-start gap-4">
+                <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-indigo-100 text-lg font-bold text-indigo-600 ring-2 ring-indigo-100">
+                  {user.photoURL ? (
+                    <img src={user.photoURL} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+                  ) : null}
+                  <span className={user.photoURL ? "opacity-0" : ""}>
+                    {(user.name || "?").charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0 space-y-1">
+                  <h3 className="text-base font-semibold text-slate-900 truncate">{user.name}</h3>
+                  <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                    <span className={cn("inline-block h-1.5 w-1.5 rounded-full", user.active ? "bg-emerald-500" : "bg-slate-300")} />
+                    {user.active ? "Active" : "Inactive"}
+                    {user.lastLoginAt && (
+                      <>
+                        <span>·</span>
+                        <span>Last seen {timeAgo(user.lastLoginAt)}</span>
+                      </>
+                    )}
+                  </div>
+                  {user.email && (
+                    <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                      <Mail className="h-3 w-3" />
+                      <span className="truncate">{user.email}</span>
+                    </div>
+                  )}
+                  {user.phone && (
+                    <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                      <Phone className="h-3 w-3" />
+                      <span>{user.phone}</span>
+                    </div>
+                  )}
+                  {user.createdAt && (
+                    <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                      <Calendar className="h-3 w-3" />
+                      <span>Member since {new Date(user.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {reviewStats && (
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="rounded-xl bg-slate-50 border border-slate-100 p-3 text-center">
+                    <p className="text-lg font-bold text-slate-900">{reviewStats.totalReviews}</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">Reviews</p>
+                  </div>
+                  <div className="rounded-xl bg-slate-50 border border-slate-100 p-3 text-center">
+                    <div className="flex justify-center">{reviewStats.averageRating ? renderStars(Math.round(reviewStats.averageRating)) : <span className="text-lg font-bold text-slate-400">—</span>}</div>
+                    <p className="text-[11px] text-slate-500 mt-1">Avg Rating</p>
+                    {reviewStats.averageRating && (
+                      <p className="text-[10px] text-slate-400">{reviewStats.averageRating}/5</p>
+                    )}
+                  </div>
+                  <div className="rounded-xl bg-slate-50 border border-slate-100 p-3 text-center">
+                    <p className="text-lg font-bold text-slate-900">{bookings.length > 0 ? data?.bookings?.length || 0 : 0}</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">Bookings</p>
+                  </div>
+                </div>
+              )}
+
+              {recentReviews.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-px flex-1 bg-slate-100" />
+                    <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">
+                      Recent Reviews ({reviewStats?.totalReviews})
+                    </span>
+                    <div className="h-px flex-1 bg-slate-100" />
+                  </div>
+                  <div className="space-y-2">
+                    {recentReviews.map((review: any) => (
+                      <div key={review.id} className="rounded-lg border border-slate-100 bg-white p-3 space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            {renderStars(review.rating || 0)}
+                            <span className="text-xs text-slate-400">({review.rating}/5)</span>
+                          </div>
+                          {review.status && (
+                            <Badge variant={STATUS_BADGE[review.status] || "info"} className="text-[10px] px-1.5 py-0">
+                              {review.status}
+                            </Badge>
+                          )}
+                        </div>
+                        {review.title && (
+                          <p className="text-xs font-medium text-slate-900">{review.title}</p>
+                        )}
+                        {review.comment && (
+                          <p className="text-[11px] text-slate-500 line-clamp-2">{review.comment}</p>
+                        )}
+                        <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
+                          <span className="flex items-center gap-1">
+                            <MapPin className="h-2.5 w-2.5" />
+                            {review.tour?.title || "Unknown tour"}
+                          </span>
+                          <span>{timeAgo(review.createdAt)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {bookings.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-px flex-1 bg-slate-100" />
+                    <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">
+                      Recent Bookings
+                    </span>
+                    <div className="h-px flex-1 bg-slate-100" />
+                  </div>
+                  <div className="space-y-2">
+                    {bookings.map((booking: any) => (
+                      <div key={booking.id} className="rounded-lg border border-slate-100 bg-white p-3 space-y-2">
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-lg shrink-0 overflow-hidden bg-slate-100 border border-slate-200">
+                            {booking.tour?.coverPhoto ? (
+                              <img src={booking.tour.coverPhoto} alt="" className="w-full h-full object-cover" loading="lazy" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Ticket className="h-4 w-4 text-slate-300" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-xs font-medium text-slate-900 truncate">
+                                {booking.tour?.title || "Unknown tour"}
+                              </p>
+                              {booking.status && (
+                                <Badge variant={STATUS_BADGE[booking.status] || "info"} className="text-[10px] px-1.5 py-0 shrink-0">
+                                  {booking.status}
+                                </Badge>
+                              )}
+                            </div>
+                            {booking.bookingNumber && (
+                              <div className="flex items-center gap-1 text-[10px] text-slate-400 mt-1">
+                                <Hash className="h-2.5 w-2.5" />
+                                <span>{booking.bookingNumber}</span>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-3 text-[10px] text-slate-400 mt-1">
+                              {booking.travelDate && (
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="h-2.5 w-2.5" />
+                                  {new Date(booking.travelDate).toLocaleDateString()}
+                                </span>
+                              )}
+                              {booking.total && (
+                                <span className="font-medium text-slate-600">
+                                  {booking.currency || "USD"} {booking.total.toLocaleString()}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {!isLoading && recentReviews.length === 0 && bookings.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-50 mb-3">
+                    <Users className="h-6 w-6 text-slate-300" />
+                  </div>
+                  <p className="text-sm font-medium text-slate-900 mb-1">No activity yet</p>
+                  <p className="text-xs text-slate-500">This customer has no reviews or bookings.</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 mb-3">
+                <ShieldCheck className="h-6 w-6 text-red-400" />
+              </div>
+              <p className="text-sm font-medium text-slate-900 mb-1">Failed to load profile</p>
+              <p className="text-xs text-slate-500">Could not fetch customer details.</p>
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </>
+  );
+}
