@@ -124,7 +124,7 @@ export default function PayoutsList() {
 
   const releaseMutation = useMutation({
     mutationFn: () => api.patch(`/payouts/admin/${actionPayout?.id}/release`, {
-      method: releaseMethod,
+      payoutMethodId: releaseMethod,
       reference: releaseReference,
     }),
     onSuccess: () => {
