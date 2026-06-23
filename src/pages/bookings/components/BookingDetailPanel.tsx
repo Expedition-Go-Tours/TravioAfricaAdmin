@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import {
   X,
@@ -71,6 +73,7 @@ function DetailRow({ icon, label, children }: { icon: React.ReactNode; label: st
 }
 
 export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onViewCustomer }: BookingDetailPanelProps) {
+  const navigate = useNavigate();
   const { can } = usePermission();
 
   const statusColor: Record<string, string> = {
@@ -91,7 +94,7 @@ export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onViewC
 
   const travelerCount = Array.isArray(booking.travelers) ? booking.travelers.length : 0;
 
-  return (
+  return createPortal(
     <>
       <motion.div
         initial={{ opacity: 0 }}
@@ -170,7 +173,10 @@ export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onViewC
               </div>
             </div>
 
-            <div className="rounded-xl border border-slate-200 p-4 space-y-1">
+            <button
+              onClick={() => navigate(`/admin/tours/${booking.tour.id}`)}
+              className="w-full rounded-xl border border-slate-200 p-4 space-y-1 text-left cursor-pointer hover:border-indigo-200 hover:shadow-sm transition-all"
+            >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg shrink-0 overflow-hidden bg-slate-100 border border-slate-200">
                   {booking.tour.coverPhoto ? (
@@ -181,12 +187,12 @@ export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onViewC
                     </div>
                   )}
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-slate-900 truncate">{booking.tour.title}</p>
                   <p className="text-xs text-slate-500">by {booking.tour.supplier.name}</p>
                 </div>
               </div>
-            </div>
+            </button>
 
             <div>
               <div className="flex items-center gap-2 mb-2">
@@ -288,16 +294,24 @@ export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onViewC
                 </div>
                 <div className="rounded-xl border border-slate-200 p-4 space-y-2">
                   {booking.payouts.map((payout) => (
-                    <div key={payout.id} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Banknote className="h-4 w-4 text-slate-400" />
+                    <div key={payout.id} className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Banknote className="h-4 w-4 text-slate-400 shrink-0" />
                         <span className="text-xs font-medium text-slate-700">
                           {payout.currency} {Number(payout.amount).toLocaleString()}
                         </span>
                       </div>
-                      <Badge variant={PAYOUT_STATUS_BADGE[payout.status] || "info"} className="text-[10px] px-1.5 py-0">
-                        {payout.status}
-                      </Badge>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Badge variant={PAYOUT_STATUS_BADGE[payout.status] || "info"} className="text-[10px] px-1.5 py-0">
+                          {payout.status}
+                        </Badge>
+                        <button
+                          onClick={() => navigate(`/admin/payouts?tab=list&payoutId=${payout.id}&payoutStatus=${payout.status}`)}
+                          className="text-[10px] font-medium text-indigo-600 hover:text-indigo-800 hover:underline whitespace-nowrap"
+                        >
+                          View Payout
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -343,6 +357,7 @@ export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onViewC
           </div>
         </div>
       </motion.div>
-    </>
+    </>,
+    document.body
   );
 }

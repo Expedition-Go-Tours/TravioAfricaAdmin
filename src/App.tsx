@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { queryClient } from "@/lib/query-client";
@@ -109,7 +109,15 @@ function PermissionRoute({ permission, children }: { permission: string; childre
 
 function PayoutsTabPage() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState<"overview" | "list">("overview");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = searchParams.get("tab") === "list" ? "list" : "overview";
+
+  const switchTab = (t: "overview" | "list") => {
+    const next = new URLSearchParams(searchParams);
+    if (t === "list") next.set("tab", "list");
+    else next.delete("tab");
+    setSearchParams(next, { replace: true });
+  };
 
   return (
     <div className="space-y-6">
@@ -128,7 +136,7 @@ function PayoutsTabPage() {
                 ? "border-b-2 border-green-600 text-green-700"
                 : "text-text-secondary hover:text-green-600"
             }`}
-            onClick={() => setTab(t)}
+            onClick={() => switchTab(t)}
           >
             {t === "overview" ? "Overview" : "All Payouts"}
           </button>

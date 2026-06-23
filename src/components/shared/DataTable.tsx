@@ -36,6 +36,7 @@ interface DataTableProps<T> {
   keyExtractor: (row: T) => string;
   expandedRow?: string | null;
   renderExpanded?: (row: T) => React.ReactNode;
+  highlightedKey?: string;
 }
 
 export function DataTable<T>({
@@ -53,6 +54,7 @@ export function DataTable<T>({
   keyExtractor,
   expandedRow,
   renderExpanded,
+  highlightedKey,
 }: DataTableProps<T>) {
   if (error) {
     return (
@@ -102,16 +104,16 @@ export function DataTable<T>({
 
   return (
     <div>
-      <div className="overflow-x-auto rounded-sm border border-border-muted">
+      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-border-muted bg-gradient-to-r from-green-50 to-green-50/80">
+            <tr className="border-b border-slate-100 bg-slate-50/80">
               {columns.map((col) => (
                 <th
                   key={col.key}
                   className={cn(
-                    "px-5 py-3.5 text-left text-xs font-semibold tracking-wider text-green-800 leading-tight",
-                    col.sortable && "cursor-pointer select-none hover:text-green-900",
+                    "px-5 py-3.5 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500 leading-tight",
+                    col.sortable && "cursor-pointer select-none hover:text-slate-700",
                     col.className,
                   )}
                   onClick={() => {
@@ -130,18 +132,18 @@ export function DataTable<T>({
                     }
                   }}
                 >
-                  <span className="inline-flex items-center gap-1">
+                  <span className="inline-flex items-center gap-1.5">
                     {col.header}
                     {col.sortable && (
                       <>
                         {sortBy === col.key ? (
                           sortOrder === "asc" ? (
-                            <ChevronUp className="h-3 w-3" />
+                            <ChevronUp className="h-3 w-3 text-slate-400" />
                           ) : (
-                            <ChevronDown className="h-3 w-3" />
+                            <ChevronDown className="h-3 w-3 text-slate-400" />
                           )
                         ) : (
-                          <ChevronsUpDown className="h-3 w-3 text-text-tertiary" />
+                          <ChevronsUpDown className="h-3 w-3 text-slate-300" />
                         )}
                       </>
                     )}
@@ -160,15 +162,17 @@ export function DataTable<T>({
               const rowEl = (
                 <motion.tr
                   key={keyExtractor(row)}
+                  data-row-id={keyExtractor(row)}
                   variants={{
                     hidden: { opacity: 0, y: 6 },
                     visible: { opacity: 1, y: 0, transition: { duration: 0.25 } },
                   }}
                   className={cn(
-                    "border-b border-border-muted transition-all",
-                    onRowClick && "cursor-pointer hover:bg-green-50/40 hover:border-green-200",
-                    "even:bg-green-50/20",
-                    isExpanded && "bg-green-50/60",
+                    "border-b border-slate-100 transition-all",
+                    onRowClick && "cursor-pointer hover:bg-slate-50/60",
+                    "even:bg-slate-50/30",
+                    isExpanded && "bg-slate-100/60",
+                    highlightedKey === keyExtractor(row) && "bg-indigo-50/80 ring-1 ring-indigo-200",
                   )}
                   onClick={() => onRowClick?.(row)}
                   tabIndex={onRowClick ? 0 : undefined}
@@ -207,7 +211,7 @@ export function DataTable<T>({
         </table>
       </div>
       {pagination && pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-3 text-sm text-text-secondary">
+        <div className="flex items-center justify-between px-5 py-3 text-sm text-slate-500 border-t border-slate-100">
           <span>
             Page {pagination.page} of {pagination.totalPages} ({pagination.totalCount} total)
           </span>

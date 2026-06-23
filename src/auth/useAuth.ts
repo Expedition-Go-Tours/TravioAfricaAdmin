@@ -1,9 +1,17 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import api from "@/lib/axios";
 
 export function useAuth() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setLoading(false);
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
 
   const verifyAdmin = useCallback(async () => {
     try {
@@ -60,8 +68,12 @@ export function useAuth() {
   const loginWithGoogle = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const base = import.meta.env.VITE_API_URL || "/api";
-    window.location.href = `${base}/auth/google`;
+    try {
+      const base = import.meta.env.VITE_API_URL || "/api";
+      window.location.href = `${base}/auth/google`;
+    } catch {
+      setLoading(false);
+    }
     return false;
   }, []);
 

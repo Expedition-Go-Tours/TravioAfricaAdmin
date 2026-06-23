@@ -159,13 +159,13 @@ export default function BookingsPage() {
               </div>
               <div>
                 <p className="text-xs font-medium text-slate-500">{stat.label}</p>
-                <p className="text-xl font-bold text-slate-900">
+                <div className="text-xl font-bold text-slate-900">
                   {isLoading ? (
                     <Skeleton className="inline-block w-10 h-6 align-middle" />
                   ) : (
                     counts[stat.key] ?? 0
                   )}
-                </p>
+                </div>
               </div>
             </div>
           </motion.div>

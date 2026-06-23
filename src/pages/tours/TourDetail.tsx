@@ -1,11 +1,13 @@
+import { useState, useCallback, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
-  ArrowLeft, Map, Star, Eye, Calendar, DollarSign,
-  ChevronRight, Clock, CheckCircle, XCircle, Shield, BookOpen,
+  ArrowLeft, ChevronRight, ChevronLeft,
+  Map, Star, Eye, Calendar, DollarSign,
+  Clock, Shield, CheckCircle, XCircle, Check, X, Users, Image as ImageIcon,
+  BarChart3, TrendingUp,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { SectionError } from "@/components/shared/SectionError";
@@ -179,310 +181,448 @@ export default function TourDetailPage() {
     ? tour.totalRevenue / tour.bookingCount
     : null;
 
+  const allPhotos = useMemo(() => {
+    const set = new Set<string>();
+    if (tour?.coverPhoto) set.add(tour.coverPhoto);
+    tour?.photos?.forEach((p) => set.add(p));
+    return [...set];
+  }, [tour]);
+
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const hasMultiple = allPhotos.length > 1;
+
+  const goNext = useCallback(() => setActiveImageIndex((i) => (i + 1) % allPhotos.length), [allPhotos.length]);
+  const goPrev = useCallback(() => setActiveImageIndex((i) => (i - 1 + allPhotos.length) % allPhotos.length), [allPhotos.length]);
+
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-7 w-48" />
-        <Skeleton className="h-48 w-full rounded-sm" />
+        <Skeleton className="h-5 w-48" />
+        <Skeleton className="h-[420px] w-full rounded-xl" />
         <div className="grid grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24" />)}
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
         </div>
-        <Skeleton className="h-72 w-full" />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-6">
+            <Skeleton className="h-48 w-full rounded-xl" />
+            <Skeleton className="h-64 w-full rounded-xl" />
+          </div>
+          <div className="space-y-6">
+            <Skeleton className="h-40 w-full rounded-xl" />
+            <Skeleton className="h-32 w-full rounded-xl" />
+          </div>
+        </div>
       </div>
     );
   }
 
   if (isError) return <SectionError message="Failed to load tour details" onRetry={() => refetch()} />;
-  if (!tour) return <div className="py-12 text-center text-sm text-text-secondary">Tour not found</div>;
+  if (!tour) return <div className="py-12 text-center text-sm text-slate-500">Tour not found</div>;
 
   return (
     <div className="space-y-6">
+
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-text-tertiary">
-        <button onClick={() => navigate(-1)} className="rounded-sm bg-white p-1.5 shadow-sm hover:ring-2 hover:ring-green-300 transition-all">
-          <ArrowLeft className="h-4 w-4 text-text-primary" />
+      <div className="flex items-center gap-2 text-sm text-slate-400">
+        <button onClick={() => navigate(-1)} className="rounded-lg bg-white p-1.5 shadow-sm hover:ring-2 hover:ring-slate-300 transition-all">
+          <ArrowLeft className="h-4 w-4 text-slate-600" />
         </button>
-        <button onClick={() => navigate("/admin/tours")} className="hover:text-text-primary transition-colors">Tours</button>
+        <button onClick={() => navigate("/admin/tours")} className="hover:text-slate-700 transition-colors">Tours</button>
         <ChevronRight className="h-3 w-3" />
-        <span className="text-text-primary font-medium truncate">{tour.title || "Tour Detail"}</span>
+        <span className="text-slate-900 font-medium truncate">{tour.title || "Tour Detail"}</span>
       </div>
 
-      {/* Profile Header */}
-      <div className="rounded-sm border border-border bg-white shadow-2">
-        {tour.coverPhoto || tour.photos?.[0] ? (
-          <div className="relative h-36 rounded-t-sm overflow-hidden bg-gradient-to-r from-green-600 to-green-700">
-            <img src={tour.coverPhoto || tour.photos![0]} alt="" className="h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+      {/* Hero Section — image left + info/performance right */}
+      <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-5">
+          {/* Left: Image gallery */}
+          <div className="md:col-span-3 relative min-h-[280px] md:min-h-[55vh] bg-slate-100 group">
+            {allPhotos.length > 0 ? (
+              <>
+                <img
+                  src={allPhotos[activeImageIndex]}
+                  alt=""
+                  className="absolute inset-0 h-full w-full object-cover"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                />
+
+                {/* Navigation arrows */}
+                {hasMultiple && (
+                  <>
+                    <button
+                      onClick={goPrev}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/40 transition-all opacity-0 group-hover:opacity-100"
+                      aria-label="Previous image"
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </button>
+                    <button
+                      onClick={goNext}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/40 transition-all opacity-0 group-hover:opacity-100"
+                      aria-label="Next image"
+                    >
+                      <ChevronRight className="h-5 w-5" />
+                    </button>
+                  </>
+                )}
+
+                {/* Dot indicators */}
+                {hasMultiple && (
+                  <div className="absolute bottom-3 left-3 flex gap-1.5">
+                    {allPhotos.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setActiveImageIndex(i)}
+                        className={`h-2 rounded-full transition-all ${
+                          i === activeImageIndex ? "w-4 bg-white" : "w-2 bg-white/50 hover:bg-white/70"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center text-slate-300">
+                <ImageIcon className="h-16 w-16" />
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="relative h-20 rounded-t-sm bg-gradient-to-r from-green-600 to-green-700" />
-        )}
-        <div className="relative px-6 pb-5 pt-9">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-4 border-white bg-green-100 shadow-sm overflow-hidden">
-                {tour.coverPhoto || tour.photos?.[0] ? (
-                  <img src={tour.coverPhoto || tour.photos![0]} alt="" className="h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                ) : (
-                  <span className="text-xl font-bold text-green-700">{tour.title?.charAt(0)?.toUpperCase() || "?"}</span>
+
+          {/* Right: Tour info + Performance cards */}
+          <div className="md:col-span-2 flex flex-col p-7 sm:p-8">
+            {/* Title + Status */}
+            <div className="flex items-start gap-3 mb-3">
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 leading-tight">{tour.title || "Unknown Tour"}</h1>
+              <StatusBadge status={tour.status || "UNKNOWN"} className="shrink-0 mt-0.5" />
+            </div>
+
+            {/* Meta tags */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-slate-500">
+              {tour.category && (
+                <span className="inline-flex items-center gap-1.5">
+                  <Map className="h-3.5 w-3.5 text-slate-400" />
+                  {tour.category}
+                </span>
+              )}
+              {tour.duration && (
+                <span className="inline-flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5 text-slate-400" />
+                  {tour.duration}
+                </span>
+              )}
+              {tour.difficulty && (
+                <span className="inline-flex items-center gap-1.5">
+                  <Shield className="h-3.5 w-3.5 text-slate-400" />
+                  {tour.difficulty}
+                </span>
+              )}
+            </div>
+
+            {/* Price callout */}
+            {tour.price && (
+              <div className="mt-5 flex items-baseline gap-1.5">
+                <span className="text-3xl font-bold text-slate-900">{formatCurrency(tour.price)}</span>
+                <span className="text-sm text-slate-400">/ person</span>
+              </div>
+            )}
+
+            {/* Detail specs */}
+            <div className="mt-5 grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+              <Spec label="Category" value={tour.category} />
+              <Spec label="Duration" value={tour.duration} />
+              <Spec label="Difficulty" value={tour.difficulty} />
+              <Spec label="Group Size" value={tour.groupSize} />
+            </div>
+
+            {/* KPI cards */}
+            <div className="mt-auto">
+              <div className="border-t border-slate-100 my-5" />
+              <div className="grid grid-cols-2 gap-3">
+                {can('analytics.view') && (
+                  <KpiCard label="Revenue" value={tour.totalRevenue != null ? formatCurrency(tour.totalRevenue) : "—"} icon={<DollarSign className="h-4 w-4" />} accent="green" />
+                )}
+                {can('bookings.view') && (
+                  <KpiCard label="Bookings" value={tour.bookingCount != null ? formatNumber(tour.bookingCount) : "—"} icon={<Calendar className="h-4 w-4" />} accent="blue" />
+                )}
+                <KpiCard label="Rating" value={tour.averageRating != null ? Number(tour.averageRating).toFixed(1) : "—"} icon={<Star className="h-4 w-4" />} accent="amber" />
+                {can('analytics.view') && (
+                  <KpiCard label="Views" value={tour.viewCount != null ? formatNumber(tour.viewCount) : "—"} icon={<Eye className="h-4 w-4" />} accent="green" />
                 )}
               </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2.5 flex-wrap">
-                  <h1 className="text-lg font-semibold text-text-primary">{tour.title || "Unknown Tour"}</h1>
-                  <StatusBadge status={tour.status || "UNKNOWN"} />
-                </div>
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-text-secondary">
-                  {tour.category && (
-                    <span className="inline-flex items-center gap-1">
-                      <Map className="h-3.5 w-3.5 text-text-tertiary" />
-                      {tour.category}
-                    </span>
-                  )}
-                  {tour.duration && (
-                    <span className="inline-flex items-center gap-1">
-                      <Clock className="h-3.5 w-3.5 text-text-tertiary" />
-                      {tour.duration}
-                    </span>
-                  )}
-                  {tour.difficulty && (
-                    <span className="inline-flex items-center gap-1">
-                      <Shield className="h-3.5 w-3.5 text-text-tertiary" />
-                      {tour.difficulty}
-                    </span>
-                  )}
-                  {tour.price && (
-                    <span className="font-semibold text-green-700">
-                      {formatCurrency(tour.price)}
-                    </span>
-                  )}
-                </div>
+
+              {/* Footer info */}
+              <div className="mt-4 flex items-center justify-between text-xs text-slate-400">
+                {tour.createdAt && <span>Created {formatDate(tour.createdAt)}</span>}
+                {tour.supplier?.name && <span>by {tour.supplier.name}</span>}
               </div>
             </div>
           </div>
         </div>
+
+        {/* Thumbnail strip (full width below) */}
+        {hasMultiple && (
+          <div className="flex gap-2 overflow-x-auto px-5 py-3 border-t border-slate-100">
+            {allPhotos.map((photo, i) => (
+              <button
+                key={i}
+                onClick={() => setActiveImageIndex(i)}
+                className={`shrink-0 h-14 w-20 rounded-lg overflow-hidden border-2 transition-all ${
+                  i === activeImageIndex
+                    ? "border-slate-900 ring-1 ring-slate-900"
+                    : "border-transparent hover:border-slate-300"
+                }`}
+              >
+                <img src={photo} alt="" className="h-full w-full object-cover" />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {can('analytics.view') && (
-          <KpiCard label="Total Revenue" value={tour.totalRevenue != null ? formatCurrency(tour.totalRevenue) : "—"} icon={<DollarSign className="h-4 w-4" />} accent="green" />
-        )}
-        {can('bookings.view') && (
-          <KpiCard label="Bookings" value={tour.bookingCount != null ? formatNumber(tour.bookingCount) : "—"} icon={<Calendar className="h-4 w-4" />} accent="blue" />
-        )}
-        <KpiCard label="Avg Rating" value={tour.averageRating != null ? Number(tour.averageRating).toFixed(1) : "—"} icon={<Star className="h-4 w-4" />} accent="amber" />
-        {can('analytics.view') && (
-          <KpiCard label="Views" value={tour.viewCount != null ? formatNumber(tour.viewCount) : "—"} icon={<Eye className="h-4 w-4" />} accent="green" />
-        )}
-      </div>
-
-      {/* Main Content */}
+      {/* Main 2-col grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Left column — content */}
         <div className="lg:col-span-2 space-y-6">
+
           {/* Description */}
           {tour.description && (
-            <Card>
-              <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Description</CardTitle></CardHeader>
-              <CardContent>
-                <p className="text-sm text-text-secondary leading-relaxed">{tour.description}</p>
+            <Card className="rounded-xl border border-slate-200 shadow-sm">
+              <CardContent className="p-5 sm:p-6">
+                <p className="text-sm text-slate-600 leading-relaxed">{tour.description}</p>
               </CardContent>
             </Card>
           )}
 
-          {/* Tabs content */}
-          <Tabs defaultValue="details">
-            <TabsList className="w-full justify-start overflow-x-auto">
-              <TabsTrigger value="details"><BookOpen className="mr-1.5 h-3.5 w-3.5" /> Details</TabsTrigger>
-              <TabsTrigger value="itinerary"><Map className="mr-1.5 h-3.5 w-3.5" /> Itinerary</TabsTrigger>
-              <TabsTrigger value="inclusions"><CheckCircle className="mr-1.5 h-3.5 w-3.5" /> Inclusions</TabsTrigger>
-              <TabsTrigger value="exclusions"><XCircle className="mr-1.5 h-3.5 w-3.5" /> Exclusions</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="details">
-              <Card>
-                <CardContent className="p-0">
-                  <DetailTable
-                    rows={[
-                      { label: "Duration", value: tour.duration },
-                      { label: "Group Size", value: tour.groupSize },
-                      { label: "Difficulty", value: tour.difficulty },
-                      { label: "Price", value: tour.price ? formatCurrency(tour.price) : null, highlight: true },
-                      { label: "Category", value: tour.category },
-                      { label: "Created", value: tour.createdAt ? formatDate(tour.createdAt) : null },
-                      { label: "Updated", value: tour.updatedAt ? formatDate(tour.updatedAt) : null },
-                    ]}
-                  />
-                </CardContent>
-              </Card>
-              {tour.highlights && tour.highlights.length > 0 && (
-                <Card className="mt-6">
-                  <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Highlights</CardTitle></CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                      {tour.highlights.map((h, i) => (
-                        <div key={i} className="flex items-start gap-2 rounded-sm border border-border-muted px-3 py-2">
-                          <Star className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
-                          <span className="text-sm text-text-secondary">{h}</span>
-                        </div>
-                      ))}
+          {/* Highlights */}
+          {tour.highlights && tour.highlights.length > 0 && (
+            <Card className="rounded-xl border border-slate-200 shadow-sm">
+              <CardHeader className="border-b border-slate-100 pb-3 pl-5 pr-5 pt-4">
+                <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                  <Star className="h-4 w-4 text-amber-500" />
+                  Highlights
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-5 pt-4">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {tour.highlights.map((h, i) => (
+                    <div key={i} className="flex items-start gap-2.5">
+                      <div className="mt-[6px] h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
+                      <span className="text-sm text-slate-600 flex-1 min-w-0 break-words">{h}</span>
                     </div>
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
-
-            <TabsContent value="itinerary">
-              {tour.itinerary && tour.itinerary.length > 0 ? (
-                <Card>
-                  <CardContent className="p-0">
-                    {tour.itinerary.map((item, idx) => {
-                      const entry = item as Record<string, unknown>;
-                      const hasTime = "time" in entry || "day" in entry;
-                      const dayNumber = hasTime ? String(entry.day ?? entry.time ?? (idx + 1)) : null;
-                      const title = hasTime ? String(entry.title || entry.activity || "") : null;
-                      const description = (entry.description as string) || null;
-                      if (!hasTime && !title && description) {
-                        return (
-                          <div key={idx} className="px-5 py-4">
-                            <p className="text-sm text-text-secondary leading-relaxed whitespace-pre-line">{description}</p>
-                          </div>
-                        );
-                      }
-                      return (
-                        <div
-                          key={idx}
-                          className={`px-5 py-4 ${idx < (tour.itinerary?.length || 0) - 1 ? "border-b border-border-muted" : ""} ${idx % 2 === 0 ? "bg-white" : "bg-green-50/20"}`}
-                        >
-                          <div className="flex gap-4">
-                            <div className="flex flex-col items-center">
-                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-xs font-bold text-green-700">
-                                {dayNumber}
-                              </div>
-                              {idx < (tour.itinerary?.length || 0) - 1 && (
-                                <div className="mt-1 h-full w-px bg-green-200" />
-                              )}
-                            </div>
-                            <div className="pb-4 min-w-0">
-                              {title && <p className="text-sm font-semibold text-text-primary">{title}</p>}
-                              {description && (
-                                <p className={`mt-1 text-sm text-text-secondary leading-relaxed whitespace-pre-line ${title ? "" : ""}`}>{description}</p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </CardContent>
-                </Card>
-              ) : (
-                <Card>
-                  <CardContent className="py-8 text-center text-sm text-text-tertiary">No itinerary available</CardContent>
-                </Card>
-              )}
-            </TabsContent>
-
-            <TabsContent value="inclusions">
-              <Card>
-                <CardContent className="p-0">
-                  {tour.inclusions && tour.inclusions.length > 0 ? (
-                    <div className="divide-y divide-border-muted">
-                      {tour.inclusions.map((inc, i) => (
-                        <div key={i} className={`flex items-center gap-3 px-5 py-3 ${i % 2 === 0 ? "bg-white" : "bg-green-50/20"}`}>
-                          <CheckCircle className="h-4 w-4 shrink-0 text-green-600" />
-                          <span className="text-sm text-text-primary">{inc}</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="py-8 text-center text-sm text-text-tertiary">No inclusions listed</div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="exclusions">
-              <Card>
-                <CardContent className="p-0">
-                  {tour.exclusions && tour.exclusions.length > 0 ? (
-                    <div className="divide-y divide-border-muted">
-                      {tour.exclusions.map((exc, i) => (
-                        <div key={i} className={`flex items-center gap-3 px-5 py-3 ${i % 2 === 0 ? "bg-white" : "bg-green-50/20"}`}>
-                          <XCircle className="h-4 w-4 shrink-0 text-red-400" />
-                          <span className="text-sm text-text-secondary">{exc}</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="py-8 text-center text-sm text-text-tertiary">No exclusions listed</div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {can('suppliers.view') && (
-          <Card>
-            <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Supplier</CardTitle></CardHeader>
-            <CardContent>
-              {tour.supplier ? (
-                <div className="flex items-center gap-3">
-                  {tour.supplier.photoURL ? (
-                    <img src={tour.supplier.photoURL} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
-                  ) : (
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-sm font-bold text-amber-700">
-                      {tour.supplier.name?.charAt(0)?.toUpperCase() || "?"}
-                    </div>
-                  )}
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-text-primary">{tour.supplier.name || "Unknown"}</p>
-                    {tour.supplier.email && (
-                      <p className="text-xs text-text-tertiary truncate">{tour.supplier.email}</p>
-                    )}
-                    {tour.supplier.id && (
-                      <Link to={`/admin/suppliers/${tour.supplier.id}`} className="mt-1 inline-block text-xs text-green-600 hover:underline">
-                        View Supplier →
-                      </Link>
-                    )}
-                  </div>
+                  ))}
                 </div>
-              ) : (
-                <p className="text-sm text-text-secondary">No supplier info</p>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
           )}
 
-          {/* Performance Stats */}
-          <Card>
-            <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Performance</CardTitle></CardHeader>
+          {/* Itinerary — Viator-style timeline */}
+          <Card className="rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <CardHeader className="border-b border-slate-100 pb-4 pl-6 pr-6 pt-5">
+              <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                <Map className="h-4 w-4 text-slate-400" />
+                Itinerary
+              </CardTitle>
+            </CardHeader>
             <CardContent className="p-0">
-              <DetailTable
-                rows={[
-                  ...(can('reviews.view') ? [{ label: "Reviews", value: formatNumber(tour.reviewCount) }] : []),
-                  { label: "Avg Rating", value: tour.averageRating != null ? Number(tour.averageRating).toFixed(1) : "—" },
-                  ...(can('analytics.view') ? [{ label: "Conversion", value: conversionRate ? `${conversionRate}%` : null }, { label: "Revenue/Booking", value: revenuePerBooking ? formatCurrency(revenuePerBooking) : null, highlight: true }] : []),
-                ]}
-              />
+              {tour.itinerary && tour.itinerary.length > 0 ? (
+                <div className="divide-y divide-slate-100">
+                  {tour.itinerary.map((item, idx) => {
+                    const entry = item as Record<string, unknown>;
+                    const dayNumber = "day" in entry ? String(entry.day) : "time" in entry ? String(entry.time) : null;
+                    const title = String(entry.title || entry.activity || "");
+                    const description = (entry.description as string) || null;
+                    const isLast = idx === (tour.itinerary?.length || 0) - 1;
+                    if (!dayNumber && !title && description) {
+                      return (
+                        <div key={idx} className="px-6 py-5">
+                          <p className="text-sm text-slate-500 leading-relaxed whitespace-pre-line">{description}</p>
+                        </div>
+                      );
+                    }
+                    return (
+                      <div key={idx} className="flex gap-5 px-6 py-5 relative">
+                        <div className="flex flex-col items-center shrink-0">
+                          <div className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 border-slate-300 bg-white text-sm font-bold text-slate-700 shadow-sm">
+                            {dayNumber || idx + 1}
+                          </div>
+                          {!isLast && (
+                            <div className="absolute top-[42px] bottom-0 w-px bg-slate-200" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0 pt-1.5">
+                          {dayNumber && (
+                            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Day {dayNumber}</p>
+                          )}
+                          {title && (
+                            <p className="text-base font-semibold text-slate-900 leading-snug">{title}</p>
+                          )}
+                          {description && (
+                            <p className={`text-sm text-slate-500 leading-relaxed ${title ? "mt-2" : ""}`}>{description}</p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="px-6 py-10">
+                  <p className="text-sm text-slate-400 text-center">No itinerary available</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 gap-3">
-            {can('bookings.view') && (
-            <div className="rounded-sm border border-green-200/40 bg-gradient-to-br from-green-50 to-white p-3 text-center shadow-2">
-              <p className="text-xs text-text-secondary">Bookings</p>
-              <p className="text-xl font-bold text-green-700">{formatNumber(tour.bookingCount)}</p>
-            </div>
-            )}
-            <div className="rounded-sm border border-amber-200/40 bg-gradient-to-br from-amber-50 to-white p-3 text-center shadow-2">
-              <p className="text-xs text-text-secondary">Rating</p>
-              <p className="text-xl font-bold text-amber-700">{tour.averageRating != null ? Number(tour.averageRating).toFixed(1) : "—"}</p>
-            </div>
+          {/* Inclusions + Exclusions side by side */}
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <Card className="rounded-xl border border-slate-200 shadow-sm">
+              <CardHeader className="border-b border-slate-100 pb-3 pl-5 pr-5 pt-4">
+                <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                  <Check className="h-4 w-4 text-emerald-500" />
+                  Inclusions
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-5 pt-4">
+                {tour.inclusions && tour.inclusions.length > 0 ? (
+                  <ul className="space-y-2.5">
+                    {tour.inclusions.map((inc, i) => (
+                      <li key={i} className="flex items-start gap-2.5">
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                        <span className="text-sm text-slate-600 flex-1 min-w-0 break-words">{inc}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-slate-400 text-center py-4">None listed</p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-xl border border-slate-200 shadow-sm">
+              <CardHeader className="border-b border-slate-100 pb-3 pl-5 pr-5 pt-4">
+                <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                  <X className="h-4 w-4 text-red-400" />
+                  Exclusions
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-5 pt-4">
+                {tour.exclusions && tour.exclusions.length > 0 ? (
+                  <ul className="space-y-2.5">
+                    {tour.exclusions.map((exc, i) => (
+                      <li key={i} className="flex items-start gap-2.5">
+                        <X className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
+                        <span className="text-sm text-slate-500 flex-1 min-w-0 break-words">{exc}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-slate-400 text-center py-4">None listed</p>
+                )}
+              </CardContent>
+            </Card>
           </div>
+
+        </div>
+
+        {/* Right column — sidebar */}
+        <div className="space-y-6">
+
+          {/* Quick Info */}
+          <Card className="rounded-xl border border-slate-200 shadow-sm">
+            <CardHeader className="border-b border-slate-100 pb-3 pl-5 pr-5 pt-4">
+              <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                <Clock className="h-4 w-4 text-slate-400" />
+                Quick Info
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-5 pt-4">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                <InfoItem label="Duration" value={tour.duration} icon={<Clock className="h-3.5 w-3.5 text-slate-400" />} />
+                <InfoItem label="Group Size" value={tour.groupSize} icon={<Users className="h-3.5 w-3.5 text-slate-400" />} />
+                <InfoItem label="Difficulty" value={tour.difficulty} icon={<Shield className="h-3.5 w-3.5 text-slate-400" />} />
+                <InfoItem label="Price" value={tour.price ? formatCurrency(tour.price) : null} icon={<DollarSign className="h-3.5 w-3.5 text-slate-400" />} highlight />
+                <InfoItem label="Category" value={tour.category} icon={<Map className="h-3.5 w-3.5 text-slate-400" />} className="col-span-2" />
+                <InfoItem label="Created" value={tour.createdAt ? formatDate(tour.createdAt) : null} icon={<Calendar className="h-3.5 w-3.5 text-slate-400" />} className="col-span-2" />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Supplier */}
+          {can('suppliers.view') && (
+            <Card className="rounded-xl border border-slate-200 shadow-sm">
+              <CardHeader className="border-b border-slate-100 pb-3 pl-5 pr-5 pt-4">
+                <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                  <Users className="h-4 w-4 text-slate-400" />
+                  Supplier
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-5 pt-4">
+                {tour.supplier ? (
+                  <div className="flex items-center gap-3">
+                    {tour.supplier.photoURL ? (
+                      <img src={tour.supplier.photoURL} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
+                    ) : (
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-600">
+                        {tour.supplier.name?.charAt(0)?.toUpperCase() || "?"}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-slate-900">{tour.supplier.name || "Unknown"}</p>
+                      {tour.supplier.email && (
+                        <p className="text-xs text-slate-400 truncate">{tour.supplier.email}</p>
+                      )}
+                      {tour.supplier.id && (
+                        <Link to={`/admin/suppliers/${tour.supplier.id}`} className="mt-1 inline-block text-xs text-blue-600 hover:underline">
+                          View Supplier →
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-400">No supplier info</p>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Gallery mini */}
+          <Card className="rounded-xl border border-slate-200 shadow-sm">
+            <CardHeader className="border-b border-slate-100 pb-3 pl-5 pr-5 pt-4">
+              <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                <ImageIcon className="h-4 w-4 text-slate-400" />
+                Gallery
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-5 pt-4">
+              {allPhotos.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-3 gap-2">
+                    {allPhotos.slice(0, 6).map((photo, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setActiveImageIndex(i)}
+                        className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                          i === activeImageIndex
+                            ? "border-slate-900 ring-1 ring-slate-900"
+                            : "border-transparent hover:border-slate-300"
+                        }`}
+                      >
+                        <img src={photo} alt="" className="h-full w-full object-cover" />
+                        {i === 5 && allPhotos.length > 6 && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-xs font-semibold text-white">
+                            +{allPhotos.length - 6}
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-xs text-slate-400">{allPhotos.length} photo{allPhotos.length !== 1 ? "s" : ""}</p>
+                </>
+              ) : (
+                <p className="text-sm text-slate-400 text-center py-4">No photos</p>
+              )}
+            </CardContent>
+          </Card>
+
         </div>
       </div>
     </div>
@@ -491,50 +631,63 @@ export default function TourDetailPage() {
 
 /* ── Sub-components ── */
 
-function KpiCard({ label, value, icon, accent }: { label: string; value: string; icon: React.ReactNode; accent: "green" | "blue" | "amber" }) {
-  const accentMap = {
-    green: { bg: "bg-gradient-to-br from-green-50 to-white", border: "border-green-200/40", iconBg: "bg-green-100", iconColor: "text-green-600" },
-    blue: { bg: "bg-gradient-to-br from-blue-50 to-white", border: "border-blue-200/40", iconBg: "bg-blue-100", iconColor: "text-blue-600" },
-    amber: { bg: "bg-gradient-to-br from-amber-50 to-white", border: "border-amber-200/40", iconBg: "bg-amber-100", iconColor: "text-amber-600" },
-  };
-  const a = accentMap[accent];
+function Spec({ label, value }: { label: string; value?: string | number | null }) {
   return (
-    <div className={`rounded-sm border ${a.border} ${a.bg} p-3.5 shadow-2 transition-all hover:shadow-md`}>
+    <div>
+      <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">{label}</p>
+      {value != null ? (
+        <p className="mt-0.5 text-sm font-medium text-slate-800">{value}</p>
+      ) : (
+        <p className="mt-0.5 text-sm text-slate-300">—</p>
+      )}
+    </div>
+  );
+}
+
+function KpiCard({ label, value, icon, accent }: { label: string; value: string; icon: React.ReactNode; accent?: "green" | "blue" | "amber" }) {
+  const accentMap: Record<string, { iconBg: string; iconColor: string }> = {
+    green: { iconBg: "bg-emerald-100", iconColor: "text-emerald-600" },
+    blue: { iconBg: "bg-blue-100", iconColor: "text-blue-600" },
+    amber: { iconBg: "bg-amber-100", iconColor: "text-amber-600" },
+  };
+  const a = accentMap[accent || "green"] || accentMap.green;
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
       <div className="flex items-start justify-between">
         <div className="min-w-0">
-          <p className="text-xs text-text-secondary truncate">{label}</p>
-          <p className="mt-1 text-lg font-bold text-text-primary leading-tight">{value}</p>
+          <p className="text-xs text-slate-500 truncate">{label}</p>
+          <p className="mt-1 text-xl font-bold text-slate-900 leading-tight">{value}</p>
         </div>
-        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${a.iconBg} ${a.iconColor}`}>{icon}</div>
+        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${a.iconBg} ${a.iconColor}`}>{icon}</div>
       </div>
     </div>
   );
 }
 
-function DetailTable({ rows }: { rows: Array<{ label: string; value?: string | null; highlight?: boolean }> }) {
-  const hasValue = rows.some((r) => r.value != null);
-  if (!hasValue) return <p className="text-sm text-text-tertiary py-4 text-center">No information</p>;
-
+function InfoItem({ label, value, icon, highlight, className }: { label: string; value?: string | null; icon: React.ReactNode; highlight?: boolean; className?: string }) {
   return (
-    <table className="w-full text-sm border-collapse">
-      <tbody>
-        {rows.map((r, idx) => (
-          <tr key={r.label} className={`border-b border-border-muted transition-colors hover:bg-green-50/40 ${idx % 2 === 0 ? "bg-white" : "bg-green-50/20"}`}>
-            <td className="w-2/5 py-3 px-5 text-xs font-medium text-text-secondary uppercase tracking-wider border-r border-border-muted align-middle">
-              {r.label}
-            </td>
-            <td className="py-3 px-5 align-middle leading-relaxed">
-              {r.value ? (
-                <span className={`${r.highlight ? "font-semibold text-green-700" : "font-medium text-text-primary"}`}>
-                  {r.value}
-                </span>
-              ) : (
-                <span className="text-text-tertiary italic">—</span>
-              )}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div className={className}>
+      <div className="flex items-center gap-1.5 mb-0.5">
+        {icon}
+        <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">{label}</span>
+      </div>
+      {value != null ? (
+        <span className={`text-sm ${highlight ? "font-semibold text-slate-900" : "font-medium text-slate-700"}`}>{value}</span>
+      ) : (
+        <span className="text-sm text-slate-300">—</span>
+      )}
+    </div>
+  );
+}
+
+function PerfRow({ label, value, icon, highlight }: { label: string; value: string; icon: React.ReactNode; highlight?: boolean }) {
+  return (
+    <div className="flex items-center justify-between py-1">
+      <div className="flex items-center gap-2">
+        {icon}
+        <span className="text-xs text-slate-500">{label}</span>
+      </div>
+      <span className={`text-sm font-medium ${highlight ? "text-slate-900" : "text-slate-700"}`}>{value}</span>
+    </div>
   );
 }

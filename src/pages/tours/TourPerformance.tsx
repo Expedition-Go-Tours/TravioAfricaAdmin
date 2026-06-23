@@ -173,11 +173,11 @@ export default function TourPerformancePage() {
         /></motion.div>
       </motion.div>
 
-      <Card>
-        <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
+      <Card className="rounded-xl border border-slate-200 shadow-sm">
+        <CardHeader className="border-b border-slate-100 pb-4 pl-5 pr-5 pt-5">
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative flex-1 min-w-[200px] max-w-xs">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
                 placeholder="Search tours..."
                 value={searchQuery}
@@ -187,7 +187,7 @@ export default function TourPerformancePage() {
               {searchQuery && (
                 <button
                   onClick={() => { setSearchQuery(""); setPage(1); }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-primary"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -210,7 +210,7 @@ export default function TourPerformancePage() {
             )}
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-5 pt-4">
           <DataTable
             columns={columns}
             data={tours}

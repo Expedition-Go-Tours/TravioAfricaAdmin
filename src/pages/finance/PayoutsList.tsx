@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Download, CheckCircle, XCircle, Send, Ban, Wallet, DollarSign, Search, X } from "lucide-react";
+import { Download, CheckCircle, XCircle, Send, Ban, Wallet, DollarSign, Search, X, MapPin, Hash, Calendar } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -27,7 +27,7 @@ import { Input } from "@/components/ui/input";
 import { usePermission } from "@/hooks/usePermission";
 import { useSocketInvalidate } from "@/hooks/useSocketEvent";
 import api from "@/lib/axios";
-import { formatCurrency, formatDate, truncateId } from "@/lib/utils";
+import { formatCurrency, truncateId } from "@/lib/utils";
 
 
 interface PayoutMethod {
@@ -81,16 +81,22 @@ export default function PayoutsList() {
   useSocketInvalidate("admin:payout-update", ["admin", "payouts"]);
 
   const [page, setPage] = useState(1);
-  const [statusTab, setStatusTab] = useState("All");
+  const [searchParams] = useSearchParams();
+  const tabNames: Record<string, string> = {
+    PENDING: "Pending", APPROVED: "Approved", PROCESSING: "Processing",
+    PAID: "Paid", FAILED: "Failed", CANCELLED: "Cancelled",
+  };
+  const initialStatusTab = tabNames[searchParams.get("payoutStatus") || ""] || "All";
+  const [statusTab, setStatusTab] = useState(initialStatusTab);
   const [searchQuery, setSearchQuery] = useState("");
   const [actionPayout, setActionPayout] = useState<Payout | null>(null);
   const [actionType, setActionType] = useState<"approve" | "release" | "fail" | null>(null);
   const [failReason, setFailReason] = useState("");
   const [releaseMethod, setReleaseMethod] = useState("");
   const [releaseReference, setReleaseReference] = useState("");
-  const location = useLocation();
-  const navigate = useNavigate();
   const deepLinkHandled = useRef(false);
+  const [highlightedPayoutId, setHighlightedPayoutId] = useState<string | null>(null);
+  const tableRef = useRef<HTMLDivElement>(null);
   const limit = 20;
 
   const statusParam = statusTab === "All" ? "" : statusTab.toUpperCase();
@@ -173,38 +179,99 @@ export default function PayoutsList() {
   };
 
   const columns: Column<Payout>[] = [
-    { key: "id", header: "ID", render: (r) => <span className="font-mono text-xs text-text-tertiary">{r.id}</span> },
-    { key: "supplier", header: "Supplier", render: (r) => <span className="font-medium text-text-primary">{r.supplier?.name || "—"}</span> },
-    { key: "tour", header: "Tour", render: (r) => <span className="text-text-secondary">{r.booking?.tour?.title || r.tour?.title || "—"}</span> },
-    { key: "bookingId", header: "Booking #", render: (r) => <span className="font-mono text-xs text-text-tertiary">{r.booking?.bookingNumber || (r.bookingId ? truncateId(r.bookingId) : "—")}</span> },
-    { key: "amount", header: "Amount", render: (r) => <span className="font-semibold text-text-primary">{formatCurrency(r.amount)}</span> },
-    { key: "commission", header: "Commission", render: (r) => <span className="text-text-secondary">{formatCurrency(r.commissionAmount ?? r.commission)}</span> },
-    { key: "status", header: "Status", render: (r) => <StatusBadge status={r.status || "UNKNOWN"} /> },
-    { key: "createdAt", header: "Date", render: (r) => <span className="text-xs text-text-tertiary">{formatDate(r.createdAt)}</span> },
+    {
+      key: "supplier",
+      header: "Supplier",
+      render: (r) => {
+        const name = r.supplier?.name || "—";
+        const initials = name !== "—" ? name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2) : "—";
+        return (
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[11px] font-semibold text-slate-600">
+              {initials}
+            </div>
+            <div className="min-w-0">
+              <div className="text-sm font-medium text-slate-900 truncate">{name}</div>
+              {r.supplier?.email && <div className="text-[11px] text-slate-400 truncate">{r.supplier.email}</div>}
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      key: "tour",
+      header: "Tour",
+      render: (r) => (
+        <div className="flex items-center gap-2 min-w-0">
+          <MapPin className="h-3.5 w-3.5 text-slate-300 shrink-0" />
+          <span className="text-sm text-slate-700 truncate">{r.booking?.tour?.title || r.tour?.title || "—"}</span>
+        </div>
+      ),
+    },
+    {
+      key: "bookingId",
+      header: "Booking #",
+      render: (r) => (
+        <div className="flex items-center gap-2">
+          <Hash className="h-3 w-3 text-slate-300 shrink-0" />
+          <span className="font-mono text-xs text-slate-500">{r.booking?.bookingNumber || (r.bookingId ? truncateId(r.bookingId) : "—")}</span>
+        </div>
+      ),
+    },
+    {
+      key: "amount",
+      header: "Amount",
+      className: "text-right",
+      render: (r) => <span className="text-sm font-semibold text-slate-900 tabular-nums">{formatCurrency(r.amount)}</span>,
+    },
+    {
+      key: "commission",
+      header: "Commission",
+      className: "text-right",
+      render: (r) => <span className="text-sm text-slate-500 tabular-nums">{formatCurrency(r.commissionAmount ?? r.commission)}</span>,
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (r) => <StatusBadge status={r.status || "UNKNOWN"} />,
+    },
+    {
+      key: "createdAt",
+      header: "Date",
+      render: (r) => {
+        const d = r.createdAt ? new Date(r.createdAt) : null;
+        return (
+          <div className="flex items-center gap-2">
+            <Calendar className="h-3.5 w-3.5 text-slate-300 shrink-0" />
+            <span className="text-xs text-slate-500">{d ? d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}</span>
+          </div>
+        );
+      },
+    },
     {
       key: "actions",
       header: "",
       render: (r) => {
         const status = r.status;
         return (
-          <div className="flex gap-1">
+          <div className="flex gap-1.5 justify-end">
             {status === "PENDING" && can('payouts.approve') && (
-              <Button size="sm" variant="outline" className="gap-1" onClick={(e) => { e.stopPropagation(); setActionPayout(r); setActionType("approve"); }}>
+              <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs border-slate-200 hover:border-emerald-300 hover:text-emerald-700 hover:bg-emerald-50" onClick={(e) => { e.stopPropagation(); setActionPayout(r); setActionType("approve"); }}>
                 <CheckCircle className="h-3.5 w-3.5" /> Approve
               </Button>
             )}
             {status === "APPROVED" && can('payouts.approve') && (
               <>
-                <Button size="sm" variant="default" className="gap-1" onClick={(e) => { e.stopPropagation(); setActionPayout(r); setActionType("release"); }}>
+                <Button size="sm" variant="default" className="h-8 gap-1.5 text-xs" onClick={(e) => { e.stopPropagation(); setActionPayout(r); setActionType("release"); }}>
                   <Send className="h-3.5 w-3.5" /> Release
                 </Button>
-                <Button size="sm" variant="destructive" className="gap-1" onClick={(e) => { e.stopPropagation(); setActionPayout(r); setActionType("fail"); }}>
+                <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs border-slate-200 hover:border-red-300 hover:text-red-700 hover:bg-red-50" onClick={(e) => { e.stopPropagation(); setActionPayout(r); setActionType("fail"); }}>
                   <XCircle className="h-3.5 w-3.5" /> Fail
                 </Button>
               </>
             )}
             {status === "PROCESSING" && can('payouts.approve') && (
-              <Button size="sm" variant="destructive" className="gap-1" onClick={(e) => { e.stopPropagation(); setActionPayout(r); setActionType("fail"); }}>
+              <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs border-slate-200 hover:border-red-300 hover:text-red-700 hover:bg-red-50" onClick={(e) => { e.stopPropagation(); setActionPayout(r); setActionType("fail"); }}>
                 <Ban className="h-3.5 w-3.5" /> Fail
               </Button>
             )}
@@ -218,17 +285,31 @@ export default function PayoutsList() {
   const pagination = data?.pagination || data?.data?.pagination;
   const summary: PayoutSummary | undefined = data?.data?.summary || data?.summary;
 
-  // Deep link from notification — auto-open approve modal for specific payout
+  // Deep link from booking panel — reads payoutId + payoutStatus from URL search params
   useEffect(() => {
-    const payoutId = location.state?.payoutId as string | undefined;
-    if (!payoutId || deepLinkHandled.current || payoutsRaw.length === 0) return;
-    const found = payoutsRaw.find((p: Payout) => p.id === payoutId);
+    const payoutId = searchParams.get("payoutId");
+    if (!payoutId || deepLinkHandled.current) return;
+    deepLinkHandled.current = true;
+
+    setHighlightedPayoutId(payoutId);
+  }, [searchParams]);
+
+  // Find the highlighted payout and auto-scroll once data loads
+  useEffect(() => {
+    if (!highlightedPayoutId || payoutsRaw.length === 0) return;
+    const found = payoutsRaw.find((p: Payout) => p.id === highlightedPayoutId);
     if (found) {
-      deepLinkHandled.current = true;
-      navigate(location.pathname, { replace: true, state: {} });
-      setTimeout(() => { setActionPayout(found); setActionType("approve"); }, 0);
+      setTimeout(() => {
+        tableRef.current?.querySelector(`[data-row-id="${highlightedPayoutId}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
+
+      if (found.status === "PENDING" && can('payouts.approve')) {
+        setTimeout(() => { setActionPayout(found); setActionType("approve"); }, 200);
+      }
+
+      setTimeout(() => setHighlightedPayoutId(null), 3000);
     }
-  }, [payoutsRaw, location.pathname, location.state?.payoutId, navigate]);
+  }, [payoutsRaw, highlightedPayoutId, can]);
 
   // Filter payouts by search query
   const query = searchQuery.toLowerCase().trim();
@@ -251,7 +332,7 @@ export default function PayoutsList() {
     <div className="space-y-6">
       {/* Summary Bar */}
       {summary && (
-        <div className="rounded-sm border border-border-muted shadow-2 overflow-hidden">
+        <div className="rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="grid grid-cols-2 divide-x divide-border-muted">
             <KpiCard
               label="Total Payout Amount"
@@ -270,26 +351,27 @@ export default function PayoutsList() {
       )}
 
       <Card>
-        <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex gap-2 border-b border-border-muted flex-1">
-              {statusTabs.map((tab) => (
-                <button
-                  key={tab}
-                  className={`px-4 py-2 text-sm font-medium transition-colors focus:outline-none ${
-                    statusTab === tab
-                      ? "border-b-2 border-green-600 text-green-700"
-                      : "text-text-secondary hover:text-green-600"
-                  }`}
-                  onClick={() => { setStatusTab(tab); setPage(1); }}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
-            {/* Search Bar */}
+        <CardHeader className="border-b border-slate-100 pb-4 pl-5 pr-5 pt-5">
+          {/* Tabs Row */}
+          <div className="flex gap-2 border-b border-slate-100">
+            {statusTabs.map((tab) => (
+              <button
+                key={tab}
+                className={`px-4 pb-2.5 text-sm font-medium transition-colors focus:outline-none ${
+                  statusTab === tab
+                    ? "border-b-2 border-slate-900 text-slate-900"
+                    : "text-slate-400 hover:text-slate-600"
+                }`}
+                onClick={() => { setStatusTab(tab); setPage(1); }}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+          {/* Controls Row */}
+          <div className="flex items-center justify-between gap-4 mt-4">
             <div className="relative min-w-[200px] max-w-xs flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
                 placeholder="Search payouts..."
                 value={searchQuery}
@@ -299,30 +381,33 @@ export default function PayoutsList() {
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-primary"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
               )}
             </div>
             {can('payouts.export') && (
-              <Button variant="outline" size="sm" onClick={handleExport} className="gap-1.5">
+              <Button variant="outline" size="sm" onClick={handleExport} className="gap-1.5 border-slate-200 text-slate-600 hover:text-slate-900">
                 <Download className="h-4 w-4" /> Export CSV
               </Button>
             )}
           </div>
         </CardHeader>
-        <CardContent>
-          <DataTable
-            columns={columns}
-            data={payouts}
-            loading={isLoading}
-            error={isError ? "Failed to load payouts" : null}
-            emptyMessage="No payouts found"
-            pagination={pagination ? { page: pagination.page || page, totalPages: pagination.totalPages || 1, totalCount: pagination.totalCount || 0, onPageChange: setPage } : undefined}
-            onRetry={() => refetch()}
-            keyExtractor={(r) => r.id}
-          />
+        <CardContent className="p-5 pt-4">
+          <div ref={tableRef}>
+            <DataTable
+              columns={columns}
+              data={payouts}
+              loading={isLoading}
+              error={isError ? "Failed to load payouts" : null}
+              emptyMessage="No payouts found"
+              pagination={pagination ? { page: pagination.page || page, totalPages: pagination.totalPages || 1, totalCount: pagination.totalCount || 0, onPageChange: setPage } : undefined}
+              onRetry={() => refetch()}
+              keyExtractor={(r) => r.id}
+              highlightedKey={highlightedPayoutId || undefined}
+            />
+          </div>
         </CardContent>
       </Card>
 
