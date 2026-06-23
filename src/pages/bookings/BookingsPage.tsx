@@ -295,7 +295,8 @@ export default function BookingsPage() {
                       <th className="text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider px-4 py-3">Booking #</th>
                       <th className="text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider px-4 py-3">Customer</th>
                       <th className="text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider px-4 py-3">Tour</th>
-                      <th className="text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider px-4 py-3">Date</th>
+                      <th className="text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider px-4 py-3">Tour Date</th>
+                      <th className="text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider px-4 py-3">Created</th>
                       <th className="text-right text-[11px] font-semibold text-slate-500 uppercase tracking-wider px-4 py-3">Total</th>
                       <th className="text-center text-[11px] font-semibold text-slate-500 uppercase tracking-wider px-4 py-3">Status</th>
                       <th className="text-center text-[11px] font-semibold text-slate-500 uppercase tracking-wider px-4 py-3">Payment</th>
@@ -356,6 +357,14 @@ export default function BookingsPage() {
                             <Calendar className="h-3 w-3 text-slate-300" />
                             <span className="text-xs text-slate-600">
                               {new Date(booking.selectedDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <div className="flex items-center gap-1.5">
+                            <Clock className="h-3 w-3 text-slate-300" />
+                            <span className="text-xs text-slate-500">
+                              {new Date(booking.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                             </span>
                           </div>
                         </td>
