@@ -22,7 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { cn, formatCurrency, formatDate, formatDateTime } from "@/lib/utils";
-import type { Payout } from "@/pages/finance/PayoutsList";
+import type { Payout } from "@/types/payout";
 
 interface PayoutDetailPanelProps {
   payout: Payout;
@@ -85,6 +85,7 @@ export function PayoutDetailPanel({ payout, onClose, onApprove, onRelease, onFai
   ];
 
   const supplier = payout.supplier;
+  const photoUrl = supplier?.photoURL || supplier?.user?.photoURL;
   const businessInfo = supplier?.supplierProfile?.businessInfo;
 
   return createPortal(
@@ -150,19 +151,25 @@ export function PayoutDetailPanel({ payout, onClose, onApprove, onRelease, onFai
             <div>
               <SectionDivider label="Supplier Info" />
               <div className="flex items-start gap-3 mb-3">
-                <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-sm font-semibold text-slate-600">
-                  <span className={supplier?.photoURL ? "opacity-0" : ""}>{(supplier?.name || "?").charAt(0).toUpperCase()}</span>
-                  {supplier?.photoURL && (
-                    <img
-                      src={supplier.photoURL}
-                      alt={supplier?.name || ""}
-                      referrerPolicy="no-referrer"
-                      className="absolute inset-0 h-full w-full object-cover"
-                      loading="lazy"
-                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                    />
-                  )}
-                </div>
+                <button
+                  onClick={() => supplier?.id && navigate(`/admin/suppliers/${supplier.id}`)}
+                  className="shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded-full"
+                  title="View supplier profile"
+                >
+                  <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-sm font-semibold text-slate-600 ring-2 ring-slate-100">
+                    <span className={photoUrl ? "opacity-0" : ""}>{(supplier?.name || "?").charAt(0).toUpperCase()}</span>
+                    {photoUrl && (
+                      <img
+                        src={photoUrl}
+                        alt={supplier?.name || ""}
+                        referrerPolicy="no-referrer"
+                        className="absolute inset-0 h-full w-full object-cover"
+                        loading="lazy"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                      />
+                    )}
+                  </div>
+                </button>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-slate-900 truncate">{supplier?.name || "—"}</p>
                   {businessInfo?.legalBusinessName && businessInfo.legalBusinessName !== supplier?.name && (

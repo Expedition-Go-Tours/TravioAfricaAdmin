@@ -38,52 +38,7 @@ interface PayoutMethod {
   isDefault?: boolean;
 }
 
-export interface Payout {
-  id: string;
-  supplier?: {
-    name?: string;
-    id?: string;
-    email?: string;
-    phone?: string;
-    photoURL?: string;
-    supplierProfile?: {
-      businessInfo?: {
-        legalBusinessName?: string;
-        displayName?: string;
-        country?: string;
-        city?: string;
-        phone?: string;
-        address?: string | { city?: string; line1?: string; state?: string; postalCode?: string };
-        phoneNumber?: string;
-      };
-      payoutInfo?: Record<string, unknown>;
-    };
-  };
-  tour?: { title?: string };
-  booking?: { bookingNumber?: string; total?: string; paidAt?: string; tour?: { title?: string } };
-  bookingId?: string;
-  amount?: number | string;
-  commissionAmount?: number | string;
-  status?: string;
-  createdAt?: string;
-  paidAt?: string;
-  commission?: number | string;
-  payoutMethod?: {
-    id?: string;
-    type?: string;
-    details?: string;
-    bankName?: string;
-    accountNumber?: string;
-    isDefault?: boolean;
-    verified?: boolean;
-  };
-  reference?: string;
-  statusHistory?: Array<{
-    status: string;
-    timestamp: string;
-    note?: string;
-  }>;
-}
+import type { Payout } from "@/types/payout";
 
 interface PayoutSummary {
   totalAmount?: number;
@@ -204,7 +159,7 @@ export default function PayoutsList() {
       render: (r) => {
         const name = r.supplier?.name || "—";
         const initials = name !== "—" ? name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2) : "—";
-        const photoUrl = r.supplier?.photoURL;
+        const photoUrl = r.supplier?.photoURL || r.supplier?.user?.photoURL;
         return (
           <div className="flex items-center gap-3">
             <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-[11px] font-semibold text-slate-600">
@@ -317,36 +272,13 @@ export default function PayoutsList() {
     {
       key: "actions",
       header: "",
-      render: (r) => {
-        const status = r.status;
-        return (
-          <div className="flex gap-1.5 justify-end">
-            <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-slate-400 hover:text-slate-700" onClick={(e) => { e.stopPropagation(); setDetailPayout(r); }} title="View details">
-              <Eye className="h-3.5 w-3.5" />
-            </Button>
-            {status === "PENDING" && can('payouts.approve') && (
-              <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs border-slate-200 hover:border-emerald-300 hover:text-emerald-700 hover:bg-emerald-50" onClick={(e) => { e.stopPropagation(); setActionPayout(r); setActionType("approve"); }}>
-                <CheckCircle className="h-3.5 w-3.5" /> Approve
-              </Button>
-            )}
-            {status === "APPROVED" && can('payouts.approve') && (
-              <>
-                <Button size="sm" variant="default" className="h-8 gap-1.5 text-xs" onClick={(e) => { e.stopPropagation(); setActionPayout(r); setActionType("release"); }}>
-                  <Send className="h-3.5 w-3.5" /> Release
-                </Button>
-                <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs border-slate-200 hover:border-red-300 hover:text-red-700 hover:bg-red-50" onClick={(e) => { e.stopPropagation(); setActionPayout(r); setActionType("fail"); }}>
-                  <XCircle className="h-3.5 w-3.5" /> Fail
-                </Button>
-              </>
-            )}
-            {status === "PROCESSING" && can('payouts.approve') && (
-              <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs border-slate-200 hover:border-red-300 hover:text-red-700 hover:bg-red-50" onClick={(e) => { e.stopPropagation(); setActionPayout(r); setActionType("fail"); }}>
-                <Ban className="h-3.5 w-3.5" /> Fail
-              </Button>
-            )}
-          </div>
-        );
-      },
+      render: (r) => (
+        <div className="flex gap-1.5 justify-end">
+          <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-slate-400 hover:text-slate-700" onClick={(e) => { e.stopPropagation(); setDetailPayout(r); }} title="View details">
+            <Eye className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      ),
     },
   ];
 
