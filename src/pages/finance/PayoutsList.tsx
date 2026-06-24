@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Download, CheckCircle, XCircle, Send, Ban, Wallet, DollarSign, Search, X, MapPin, Hash, Calendar } from "lucide-react";
+import { Download, CheckCircle, XCircle, Send, Ban, Wallet, DollarSign, Search, X, MapPin, Hash, Calendar, Eye, Building2, Smartphone, Percent, Receipt } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -26,8 +26,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { usePermission } from "@/hooks/usePermission";
 import { useSocketInvalidate } from "@/hooks/useSocketEvent";
+import { PayoutDetailPanel } from "./components/PayoutDetailPanel";
 import api from "@/lib/axios";
-import { formatCurrency, truncateId } from "@/lib/utils";
+import { formatCurrency, formatNumber, truncateId } from "@/lib/utils";
 
 
 interface PayoutMethod {
@@ -37,13 +38,14 @@ interface PayoutMethod {
   isDefault?: boolean;
 }
 
-interface Payout {
+export interface Payout {
   id: string;
   supplier?: {
     name?: string;
     id?: string;
     email?: string;
     phone?: string;
+    photoURL?: string;
     supplierProfile?: {
       businessInfo?: {
         legalBusinessName?: string;
@@ -64,7 +66,23 @@ interface Payout {
   commissionAmount?: number | string;
   status?: string;
   createdAt?: string;
+  paidAt?: string;
   commission?: number | string;
+  payoutMethod?: {
+    id?: string;
+    type?: string;
+    details?: string;
+    bankName?: string;
+    accountNumber?: string;
+    isDefault?: boolean;
+    verified?: boolean;
+  };
+  reference?: string;
+  statusHistory?: Array<{
+    status: string;
+    timestamp: string;
+    note?: string;
+  }>;
 }
 
 interface PayoutSummary {
@@ -95,6 +113,7 @@ export default function PayoutsList() {
   const [releaseMethod, setReleaseMethod] = useState("");
   const [releaseReference, setReleaseReference] = useState("");
   const deepLinkHandled = useRef(false);
+  const [detailPayout, setDetailPayout] = useState<Payout | null>(null);
   const [highlightedPayoutId, setHighlightedPayoutId] = useState<string | null>(null);
   const tableRef = useRef<HTMLDivElement>(null);
   const limit = 20;
@@ -185,14 +204,28 @@ export default function PayoutsList() {
       render: (r) => {
         const name = r.supplier?.name || "—";
         const initials = name !== "—" ? name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2) : "—";
+        const photoUrl = r.supplier?.photoURL;
         return (
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[11px] font-semibold text-slate-600">
-              {initials}
+            <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-[11px] font-semibold text-slate-600">
+              <span className={photoUrl ? "opacity-0" : ""}>{initials}</span>
+              {photoUrl && (
+                <img
+                  src={photoUrl}
+                  alt={name}
+                  referrerPolicy="no-referrer"
+                  className="absolute inset-0 h-full w-full object-cover"
+                  loading="lazy"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                />
+              )}
             </div>
             <div className="min-w-0">
               <div className="text-sm font-medium text-slate-900 truncate">{name}</div>
-              {r.supplier?.email && <div className="text-[11px] text-slate-400 truncate">{r.supplier.email}</div>}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {r.supplier?.email && <div className="text-[11px] text-slate-400 truncate">{r.supplier.email}</div>}
+                {r.supplier?.phone && <div className="text-[11px] text-slate-300">· {r.supplier.phone}</div>}
+              </div>
             </div>
           </div>
         );
@@ -231,6 +264,21 @@ export default function PayoutsList() {
       render: (r) => <span className="text-sm text-slate-500 tabular-nums">{formatCurrency(r.commissionAmount ?? r.commission)}</span>,
     },
     {
+      key: "commissionPct",
+      header: "Comm. %",
+      className: "text-right",
+      render: (r) => {
+        const amt = Number(r.amount);
+        const comm = Number(r.commissionAmount ?? r.commission);
+        const pct = amt > 0 ? (comm / amt) * 100 : null;
+        return pct !== null ? (
+          <span className="text-sm text-slate-500 tabular-nums">{pct.toFixed(1)}%</span>
+        ) : (
+          <span className="text-sm text-slate-300">—</span>
+        );
+      },
+    },
+    {
       key: "status",
       header: "Status",
       render: (r) => <StatusBadge status={r.status || "UNKNOWN"} />,
@@ -249,12 +297,33 @@ export default function PayoutsList() {
       },
     },
     {
+      key: "payoutMethod",
+      header: "Method",
+      render: (r) => {
+        const m = r.payoutMethod;
+        if (!m?.type) return <span className="text-sm text-slate-300">—</span>;
+        const isBank = m.type.toLowerCase().includes("bank");
+        const isPaypal = m.type.toLowerCase().includes("paypal");
+        const Icon = isBank ? Building2 : isPaypal ? Wallet : Smartphone;
+        const iconColor = isBank ? "text-blue-400" : isPaypal ? "text-indigo-400" : "text-amber-400";
+        return (
+          <div className="flex items-center gap-1.5">
+            <Icon className={`h-3 w-3 ${iconColor} shrink-0`} />
+            <span className="text-xs text-slate-600 truncate">{m.type.replace(/_/g, " ")}</span>
+          </div>
+        );
+      },
+    },
+    {
       key: "actions",
       header: "",
       render: (r) => {
         const status = r.status;
         return (
           <div className="flex gap-1.5 justify-end">
+            <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-slate-400 hover:text-slate-700" onClick={(e) => { e.stopPropagation(); setDetailPayout(r); }} title="View details">
+              <Eye className="h-3.5 w-3.5" />
+            </Button>
             {status === "PENDING" && can('payouts.approve') && (
               <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs border-slate-200 hover:border-emerald-300 hover:text-emerald-700 hover:bg-emerald-50" onClick={(e) => { e.stopPropagation(); setActionPayout(r); setActionType("approve"); }}>
                 <CheckCircle className="h-3.5 w-3.5" /> Approve
@@ -311,6 +380,13 @@ export default function PayoutsList() {
     }
   }, [payoutsRaw, highlightedPayoutId, can]);
 
+  const avgCommission = useMemo(() => {
+    if (summary?.totalAmount && Number(summary.totalAmount) > 0) {
+      return ((Number(summary.totalCommission ?? 0) / Number(summary.totalAmount)) * 100).toFixed(1) + "%";
+    }
+    return "—";
+  }, [summary]);
+
   // Filter payouts by search query
   const query = searchQuery.toLowerCase().trim();
   const payouts = query
@@ -333,7 +409,7 @@ export default function PayoutsList() {
       {/* Summary Bar */}
       {summary && (
         <div className="rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="grid grid-cols-2 divide-x divide-border-muted">
+          <div className="grid grid-cols-2 divide-x divide-border-muted sm:grid-cols-4">
             <KpiCard
               label="Total Payout Amount"
               value={formatCurrency(summary.totalAmount ?? 0)}
@@ -344,6 +420,18 @@ export default function PayoutsList() {
               label="Total Commission"
               value={formatCurrency(summary.totalCommission ?? 0)}
               icon={<Wallet className="h-5 w-5" />}
+              accent="green"
+            />
+            <KpiCard
+              label="Total Payouts"
+              value={formatNumber(pagination?.totalCount ?? payouts.length)}
+              icon={<Receipt className="h-5 w-5" />}
+              accent="amber"
+            />
+            <KpiCard
+              label="Avg Commission"
+              value={avgCommission}
+              icon={<Percent className="h-5 w-5" />}
               accent="green"
             />
           </div>
@@ -406,6 +494,7 @@ export default function PayoutsList() {
               onRetry={() => refetch()}
               keyExtractor={(r) => r.id}
               highlightedKey={highlightedPayoutId || undefined}
+              onRowClick={(r) => setDetailPayout(r)}
             />
           </div>
         </CardContent>
@@ -605,6 +694,17 @@ export default function PayoutsList() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Detail Panel */}
+      {detailPayout && (
+        <PayoutDetailPanel
+          payout={detailPayout}
+          onClose={() => setDetailPayout(null)}
+          onApprove={(p) => { setActionPayout(p); setActionType("approve"); }}
+          onRelease={(p) => { setActionPayout(p); setActionType("release"); }}
+          onFail={(p) => { setActionPayout(p); setActionType("fail"); }}
+        />
+      )}
     </div>
   );
 }
