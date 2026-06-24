@@ -69,6 +69,7 @@ export default function PayoutsList() {
   const [releaseReference, setReleaseReference] = useState("");
   const deepLinkHandled = useRef(false);
   const [detailPayout, setDetailPayout] = useState<Payout | null>(null);
+  const [detailPayoutPhoto, setDetailPayoutPhoto] = useState<string | undefined>(undefined);
   const [highlightedPayoutId, setHighlightedPayoutId] = useState<string | null>(null);
   const tableRef = useRef<HTMLDivElement>(null);
   const limit = 20;
@@ -88,6 +89,20 @@ export default function PayoutsList() {
     queryKey: ["admin", "payout-methods", "supplier", actionPayout?.supplier?.id],
     queryFn: () => api.get(`/payout-methods/admin/suppliers/${actionPayout?.supplier?.id}`).then((r) => r.data),
     enabled: actionType === "release" && !!actionPayout?.supplier?.id,
+  });
+
+  const { data: supplierPhotoMap = {} } = useQuery<Record<string, string>>({
+    queryKey: ["admin", "suppliers", "photos"],
+    queryFn: async () => {
+      const res = await api.get("/suppliers/admin/applications?limit=1000");
+      const list = res.data?.applications || res.data?.data?.applications || [];
+      const map: Record<string, string> = {};
+      (list as Array<{ id: string; user?: { photoURL?: string } }>).forEach((s) => {
+        if (s.id && s.user?.photoURL) map[s.id] = s.user.photoURL;
+      });
+      return map;
+    },
+    staleTime: 10 * 60 * 1000,
   });
 
   const approveMutation = useMutation({
@@ -274,7 +289,7 @@ export default function PayoutsList() {
       header: "",
       render: (r) => (
         <div className="flex gap-1.5 justify-end">
-          <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-slate-400 hover:text-slate-700" onClick={(e) => { e.stopPropagation(); setDetailPayout(r); }} title="View details">
+          <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-slate-400 hover:text-slate-700" onClick={(e) => { e.stopPropagation(); setDetailPayout(r); setDetailPayoutPhoto(r.supplier?.photoURL || r.supplier?.user?.photoURL || (r.supplier?.id ? supplierPhotoMap[r.supplier.id] : undefined)); }} title="View details">
             <Eye className="h-3.5 w-3.5" />
           </Button>
         </div>
@@ -426,7 +441,7 @@ export default function PayoutsList() {
               onRetry={() => refetch()}
               keyExtractor={(r) => r.id}
               highlightedKey={highlightedPayoutId || undefined}
-              onRowClick={(r) => setDetailPayout(r)}
+              onRowClick={(r) => { setDetailPayout(r); setDetailPayoutPhoto(r.supplier?.photoURL || r.supplier?.user?.photoURL || (r.supplier?.id ? supplierPhotoMap[r.supplier.id] : undefined)); }}
             />
           </div>
         </CardContent>
@@ -631,7 +646,8 @@ export default function PayoutsList() {
       {detailPayout && (
         <PayoutDetailPanel
           payout={detailPayout}
-          onClose={() => setDetailPayout(null)}
+          supplierPhotoUrl={detailPayoutPhoto}
+          onClose={() => { setDetailPayout(null); setDetailPayoutPhoto(undefined); }}
           onApprove={(p) => { setActionPayout(p); setActionType("approve"); }}
           onRelease={(p) => { setActionPayout(p); setActionType("release"); }}
           onFail={(p) => { setActionPayout(p); setActionType("fail"); }}

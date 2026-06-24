@@ -26,6 +26,7 @@ import type { Payout } from "@/types/payout";
 
 interface PayoutDetailPanelProps {
   payout: Payout;
+  supplierPhotoUrl?: string;
   onClose: () => void;
   onApprove?: (payout: Payout) => void;
   onRelease?: (payout: Payout) => void;
@@ -54,7 +55,7 @@ function SectionDivider({ label }: { label: string }) {
   );
 }
 
-export function PayoutDetailPanel({ payout, onClose, onApprove, onRelease, onFail }: PayoutDetailPanelProps) {
+export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove, onRelease, onFail }: PayoutDetailPanelProps) {
   const navigate = useNavigate();
 
   const statusColor: Record<string, string> = {
@@ -85,7 +86,7 @@ export function PayoutDetailPanel({ payout, onClose, onApprove, onRelease, onFai
   ];
 
   const supplier = payout.supplier;
-  const photoUrl = supplier?.photoURL || supplier?.user?.photoURL;
+  const photoUrl = supplierPhotoUrl || supplier?.photoURL || supplier?.user?.photoURL;
   const businessInfo = supplier?.supplierProfile?.businessInfo;
 
   return createPortal(
