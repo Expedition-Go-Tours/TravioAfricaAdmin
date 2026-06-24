@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Download, CheckCircle, XCircle, Send, Ban, Wallet, DollarSign, Search, X, MapPin, Hash, Calendar, Eye, Building2, Smartphone, Percent, Receipt } from "lucide-react";
+import { Download, CheckCircle, XCircle, Send, Wallet, DollarSign, Search, X, MapPin, Hash, Calendar, Eye, Building2, Smartphone, Percent, Receipt } from "lucide-react";
 import {
   Select,
   SelectContent,
