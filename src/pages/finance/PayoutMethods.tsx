@@ -183,7 +183,7 @@ export default function PayoutMethodsPage() {
 
       {/* Stats row */}
       {!isLoading && !isError && (
-        <div className="rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="rounded-xl border border-border shadow-sm overflow-hidden">
           <div className="grid grid-cols-2 divide-x divide-border-muted sm:grid-cols-4">
             <KpiCard label="Total Suppliers" value={stats.total.toLocaleString()} icon={<Users className="h-5 w-5" />} accent="green" />
             <KpiCard label="With Methods" value={stats.withMethods.toLocaleString()} icon={<Wallet className="h-5 w-5" />} accent="blue" />
@@ -222,7 +222,7 @@ export default function PayoutMethodsPage() {
       )}
 
       {/* Table */}
-      <Card className="rounded-xl border border-slate-200 shadow-sm">
+      <Card className="rounded-xl border border-border shadow-sm">
         <CardContent className="p-0">
           <DataTable
             columns={columns}

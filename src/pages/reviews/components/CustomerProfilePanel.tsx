@@ -56,7 +56,7 @@ export function CustomerProfilePanel({ customerId, onClose }: CustomerProfilePan
       {[1, 2, 3, 4, 5].map((s) => (
         <Star
           key={s}
-          className={cn("h-3 w-3", s <= rating ? "fill-amber-400 text-amber-400" : "text-slate-200")}
+          className={cn("h-3 w-3", s <= rating ? "fill-amber-400 text-amber-400" : "text-text-tertiary")}
         />
       ))}
     </div>
@@ -77,13 +77,13 @@ export function CustomerProfilePanel({ customerId, onClose }: CustomerProfilePan
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
         transition={{ type: "spring", damping: 30, stiffness: 300 }}
-        className="fixed right-0 top-0 z-50 h-full w-[420px] bg-white border-l border-slate-200 shadow-[-4px_0_16px_rgba(0,0,0,0.06)] flex flex-col"
+        className="fixed right-0 top-0 z-50 h-full w-full sm:w-[420px] bg-surface-base border-l border-border shadow-[-4px_0_16px_rgba(0,0,0,0.06)] flex flex-col"
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0">
-          <h2 className="text-sm font-semibold text-slate-900">Customer Profile</h2>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
+          <h2 className="text-sm font-semibold text-text-primary">Customer Profile</h2>
           <button
             onClick={onClose}
-            className="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            className="flex h-9 w-9 sm:h-7 sm:w-7 items-center justify-center rounded-md text-text-tertiary hover:text-text-primary hover:bg-surface-muted transition-colors"
           >
             <X className="h-4 w-4" />
           </button>
@@ -119,9 +119,9 @@ export function CustomerProfilePanel({ customerId, onClose }: CustomerProfilePan
                   </span>
                 </div>
                 <div className="flex-1 min-w-0 space-y-1">
-                  <h3 className="text-base font-semibold text-slate-900 truncate">{user.name}</h3>
-                  <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                    <span className={cn("inline-block h-1.5 w-1.5 rounded-full", user.active ? "bg-emerald-500" : "bg-slate-300")} />
+                  <h3 className="text-base font-semibold text-text-primary break-words">{user.name}</h3>
+                  <div className="flex items-center gap-1.5 text-xs text-text-secondary">
+                    <span className={cn("inline-block h-1.5 w-1.5 rounded-full", user.active ? "bg-emerald-500" : "bg-text-tertiary")} />
                     {user.active ? "Active" : "Inactive"}
                     {user.lastLoginAt && (
                       <>
@@ -131,19 +131,19 @@ export function CustomerProfilePanel({ customerId, onClose }: CustomerProfilePan
                     )}
                   </div>
                   {user.email && (
-                    <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                    <div className="flex items-center gap-1.5 text-xs text-text-secondary">
                       <Mail className="h-3 w-3" />
                       <span className="truncate">{user.email}</span>
                     </div>
                   )}
                   {user.phone && (
-                    <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                    <div className="flex items-center gap-1.5 text-xs text-text-secondary">
                       <Phone className="h-3 w-3" />
                       <span>{user.phone}</span>
                     </div>
                   )}
                   {user.createdAt && (
-                    <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                    <div className="flex items-center gap-1.5 text-xs text-text-tertiary">
                       <Calendar className="h-3 w-3" />
                       <span>Member since {new Date(user.createdAt).toLocaleDateString()}</span>
                     </div>
@@ -153,33 +153,33 @@ export function CustomerProfilePanel({ customerId, onClose }: CustomerProfilePan
 
               {reviewStats && (
                 <div className="grid grid-cols-3 gap-3">
-                  <div className="rounded-xl bg-slate-50 border border-slate-100 p-3 text-center">
-                    <p className="text-lg font-bold text-slate-900">{reviewStats.totalReviews}</p>
-                    <p className="text-[11px] text-slate-500 mt-0.5">Reviews</p>
+                  <div className="rounded-xl bg-surface-muted border border-border p-3 text-center">
+                    <p className="text-lg font-bold text-text-primary">{reviewStats.totalReviews}</p>
+                    <p className="text-[11px] text-text-secondary mt-0.5">Reviews</p>
                   </div>
-                  <div className="rounded-xl bg-slate-50 border border-slate-100 p-3 text-center">
-                    <div className="flex justify-center">{reviewStats.averageRating ? renderStars(Math.round(reviewStats.averageRating)) : <span className="text-lg font-bold text-slate-400">—</span>}</div>
-                    <p className="text-[11px] text-slate-500 mt-1">Avg Rating</p>
+                  <div className="rounded-xl bg-surface-muted border border-border p-3 text-center">
+                    <div className="flex justify-center">{reviewStats.averageRating ? renderStars(Math.round(reviewStats.averageRating)) : <span className="text-lg font-bold text-text-tertiary">—</span>}</div>
+                    <p className="text-[11px] text-text-secondary mt-1">Avg Rating</p>
                     {reviewStats.averageRating && (
-                      <p className="text-[10px] text-slate-400">{reviewStats.averageRating}/5</p>
+                      <p className="text-[10px] text-text-tertiary">{reviewStats.averageRating}/5</p>
                     )}
                   </div>
-                  <div className="rounded-xl bg-slate-50 border border-slate-100 p-3 text-center">
-                    <p className="text-lg font-bold text-slate-900">{bookings.length > 0 ? data?.bookings?.length || 0 : 0}</p>
-                    <p className="text-[11px] text-slate-500 mt-0.5">Bookings</p>
+                  <div className="rounded-xl bg-surface-muted border border-border p-3 text-center">
+                    <p className="text-lg font-bold text-text-primary">{bookings.length > 0 ? data?.bookings?.length || 0 : 0}</p>
+                    <p className="text-[11px] text-text-secondary mt-0.5">Bookings</p>
                   </div>
                 </div>
               )}
 
               {(recentReviews.length > 0 || bookings.length > 0) && (
-                <div className="flex border-b border-slate-200 -mx-5 px-5">
+                <div className="flex border-b border-border -mx-5 px-5 overflow-x-auto">
                   <button
                     onClick={() => setActiveTab("reviews")}
                     className={cn(
-                      "flex items-center gap-1.5 pb-2.5 text-xs font-medium border-b-2 transition-colors",
+                      "flex items-center gap-1.5 pb-2.5 text-xs font-medium border-b-2 transition-colors whitespace-nowrap",
                       activeTab === "reviews"
                         ? "border-indigo-600 text-indigo-600"
-                        : "border-transparent text-slate-400 hover:text-slate-600"
+                        : "border-transparent text-text-tertiary hover:text-text-secondary"
                     )}
                   >
                     <MessageSquareText className="h-3.5 w-3.5" />
@@ -188,10 +188,10 @@ export function CustomerProfilePanel({ customerId, onClose }: CustomerProfilePan
                   <button
                     onClick={() => setActiveTab("bookings")}
                     className={cn(
-                      "flex items-center gap-1.5 pb-2.5 text-xs font-medium border-b-2 transition-colors ml-6",
+                      "flex items-center gap-1.5 pb-2.5 text-xs font-medium border-b-2 transition-colors ml-6 whitespace-nowrap",
                       activeTab === "bookings"
                         ? "border-indigo-600 text-indigo-600"
-                        : "border-transparent text-slate-400 hover:text-slate-600"
+                        : "border-transparent text-text-tertiary hover:text-text-secondary"
                     )}
                   >
                     <Ticket className="h-3.5 w-3.5" />
@@ -203,11 +203,11 @@ export function CustomerProfilePanel({ customerId, onClose }: CustomerProfilePan
               {activeTab === "reviews" && recentReviews.length > 0 && (
                 <div className="space-y-2">
                   {recentReviews.map((review: any) => (
-                    <div key={review.id} className="rounded-lg border border-slate-100 bg-white p-3 space-y-1.5">
+                    <div key={review.id} className="rounded-lg border border-border bg-surface-base p-3 space-y-1.5">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           {renderStars(review.rating || 0)}
-                          <span className="text-xs text-slate-400">({review.rating}/5)</span>
+                          <span className="text-xs text-text-tertiary">({review.rating}/5)</span>
                         </div>
                         {review.status && (
                           <Badge variant={STATUS_BADGE[review.status] || "info"} className="text-[10px] px-1.5 py-0">
@@ -216,12 +216,12 @@ export function CustomerProfilePanel({ customerId, onClose }: CustomerProfilePan
                         )}
                       </div>
                       {review.title && (
-                        <p className="text-xs font-medium text-slate-900">{review.title}</p>
+                        <p className="text-xs font-medium text-text-primary">{review.title}</p>
                       )}
                       {review.comment && (
-                        <p className="text-[11px] text-slate-500 line-clamp-2">{review.comment}</p>
+                        <p className="text-[11px] text-text-secondary line-clamp-2">{review.comment}</p>
                       )}
-                      <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
+                      <div className="flex items-center justify-between text-[10px] text-text-tertiary pt-0.5">
                         <span className="flex items-center gap-1">
                           <MapPin className="h-2.5 w-2.5" />
                           {review.tour?.title || "Unknown tour"}
@@ -236,20 +236,20 @@ export function CustomerProfilePanel({ customerId, onClose }: CustomerProfilePan
               {activeTab === "bookings" && bookings.length > 0 && (
                 <div className="space-y-2">
                   {bookings.map((booking: any) => (
-                    <div key={booking.id} className="rounded-lg border border-slate-100 bg-white p-3 space-y-2">
+                    <div key={booking.id} className="rounded-lg border border-border bg-surface-base p-3 space-y-2">
                       <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-lg shrink-0 overflow-hidden bg-slate-100 border border-slate-200">
+                        <div className="w-10 h-10 rounded-lg shrink-0 overflow-hidden bg-surface-muted border border-border">
                           {booking.tour?.coverPhoto ? (
                             <img src={booking.tour.coverPhoto} alt="" className="w-full h-full object-cover" loading="lazy" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
-                              <Ticket className="h-4 w-4 text-slate-300" />
+                              <Ticket className="h-4 w-4 text-text-tertiary" />
                             </div>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
-                            <p className="text-xs font-medium text-slate-900 truncate">
+                            <p className="text-xs font-medium text-text-primary truncate">
                               {booking.tour?.title || "Unknown tour"}
                             </p>
                             {booking.status && (
@@ -259,12 +259,12 @@ export function CustomerProfilePanel({ customerId, onClose }: CustomerProfilePan
                             )}
                           </div>
                           {booking.bookingNumber && (
-                            <div className="flex items-center gap-1 text-[10px] text-slate-400 mt-1">
+                            <div className="flex items-center gap-1 text-[10px] text-text-tertiary mt-1">
                               <Hash className="h-2.5 w-2.5" />
                               <span>{booking.bookingNumber}</span>
                             </div>
                           )}
-                          <div className="flex items-center gap-3 text-[10px] text-slate-400 mt-1">
+                          <div className="flex items-center gap-3 text-[10px] text-text-tertiary mt-1">
                             {booking.selectedDate && (
                               <span className="flex items-center gap-1">
                                 <Calendar className="h-2.5 w-2.5" />
@@ -272,7 +272,7 @@ export function CustomerProfilePanel({ customerId, onClose }: CustomerProfilePan
                               </span>
                             )}
                             {booking.total != null && (
-                              <span className="font-medium text-slate-600">
+                              <span className="font-medium text-text-secondary">
                                 {booking.currency || "USD"} {Number(booking.total).toLocaleString()}
                               </span>
                             )}
@@ -286,31 +286,31 @@ export function CustomerProfilePanel({ customerId, onClose }: CustomerProfilePan
 
               {activeTab === "reviews" && recentReviews.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-50 mb-3">
-                    <MessageSquareText className="h-6 w-6 text-slate-300" />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-surface-muted mb-3">
+                    <MessageSquareText className="h-6 w-6 text-text-tertiary" />
                   </div>
-                  <p className="text-sm font-medium text-slate-900 mb-1">No reviews</p>
-                  <p className="text-xs text-slate-500">This customer hasn't written any reviews yet.</p>
+                  <p className="text-sm font-medium text-text-primary mb-1">No reviews</p>
+                  <p className="text-xs text-text-secondary">This customer hasn't written any reviews yet.</p>
                 </div>
               )}
 
               {activeTab === "bookings" && bookings.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-50 mb-3">
-                    <Ticket className="h-6 w-6 text-slate-300" />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-surface-muted mb-3">
+                    <Ticket className="h-6 w-6 text-text-tertiary" />
                   </div>
-                  <p className="text-sm font-medium text-slate-900 mb-1">No bookings</p>
-                  <p className="text-xs text-slate-500">This customer has no bookings yet.</p>
+                  <p className="text-sm font-medium text-text-primary mb-1">No bookings</p>
+                  <p className="text-xs text-text-secondary">This customer has no bookings yet.</p>
                 </div>
               )}
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 mb-3">
-                <ShieldCheck className="h-6 w-6 text-red-400" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-destructive/10 mb-3">
+                <ShieldCheck className="h-6 w-6 text-destructive" />
               </div>
-              <p className="text-sm font-medium text-slate-900 mb-1">Failed to load profile</p>
-              <p className="text-xs text-slate-500">Could not fetch customer details.</p>
+              <p className="text-sm font-medium text-text-primary mb-1">Failed to load profile</p>
+              <p className="text-xs text-text-secondary">Could not fetch customer details.</p>
             </div>
           )}
         </div>

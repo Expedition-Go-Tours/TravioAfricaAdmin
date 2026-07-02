@@ -177,7 +177,7 @@ export default function PayoutsList() {
         const photoUrl = r.supplier?.photoURL || r.supplier?.user?.photoURL;
         return (
           <div className="flex items-center gap-3">
-            <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-[11px] font-semibold text-slate-600">
+            <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-muted text-[11px] font-semibold text-text-secondary">
               <span className={photoUrl ? "opacity-0" : ""}>{initials}</span>
               {photoUrl && (
                 <img
@@ -191,10 +191,10 @@ export default function PayoutsList() {
               )}
             </div>
             <div className="min-w-0">
-              <div className="text-sm font-medium text-slate-900 truncate">{name}</div>
+              <div className="text-sm font-medium text-text-primary truncate">{name}</div>
               <div className="flex items-center gap-1.5 flex-wrap">
-                {r.supplier?.email && <div className="text-[11px] text-slate-400 truncate">{r.supplier.email}</div>}
-                {r.supplier?.phone && <div className="text-[11px] text-slate-300">· {r.supplier.phone}</div>}
+                {r.supplier?.email && <div className="text-[11px] text-text-tertiary truncate">{r.supplier.email}</div>}
+                {r.supplier?.phone && <div className="text-[11px] text-text-tertiary">· {r.supplier.phone}</div>}
               </div>
             </div>
           </div>
@@ -206,8 +206,8 @@ export default function PayoutsList() {
       header: "Tour",
       render: (r) => (
         <div className="flex items-center gap-2 min-w-0">
-          <MapPin className="h-3.5 w-3.5 text-slate-300 shrink-0" />
-          <span className="text-sm text-slate-700 truncate">{r.booking?.tour?.title || r.tour?.title || "—"}</span>
+          <MapPin className="h-3.5 w-3.5 text-text-tertiary shrink-0" />
+          <span className="text-sm text-text-primary truncate">{r.booking?.tour?.title || r.tour?.title || "—"}</span>
         </div>
       ),
     },
@@ -216,8 +216,8 @@ export default function PayoutsList() {
       header: "Booking #",
       render: (r) => (
         <div className="flex items-center gap-2">
-          <Hash className="h-3 w-3 text-slate-300 shrink-0" />
-          <span className="font-mono text-xs text-slate-500">{r.booking?.bookingNumber || (r.bookingId ? truncateId(r.bookingId) : "—")}</span>
+          <Hash className="h-3 w-3 text-text-tertiary shrink-0" />
+          <span className="font-mono text-xs text-text-secondary">{r.booking?.bookingNumber || (r.bookingId ? truncateId(r.bookingId) : "—")}</span>
         </div>
       ),
     },
@@ -225,13 +225,13 @@ export default function PayoutsList() {
       key: "amount",
       header: "Amount",
       className: "text-right",
-      render: (r) => <span className="text-sm font-semibold text-slate-900 tabular-nums">{formatCurrency(r.amount)}</span>,
+      render: (r) => <span className="text-sm font-semibold text-text-primary tabular-nums">{formatCurrency(r.amount)}</span>,
     },
     {
       key: "commission",
       header: "Commission",
       className: "text-right",
-      render: (r) => <span className="text-sm text-slate-500 tabular-nums">{formatCurrency(r.commissionAmount ?? r.commission)}</span>,
+      render: (r) => <span className="text-sm text-text-secondary tabular-nums">{formatCurrency(r.commissionAmount ?? r.commission)}</span>,
     },
     {
       key: "commissionPct",
@@ -242,9 +242,9 @@ export default function PayoutsList() {
         const comm = Number(r.commissionAmount ?? r.commission);
         const pct = amt > 0 ? (comm / amt) * 100 : null;
         return pct !== null ? (
-          <span className="text-sm text-slate-500 tabular-nums">{pct.toFixed(1)}%</span>
+          <span className="text-sm text-text-secondary tabular-nums">{pct.toFixed(1)}%</span>
         ) : (
-          <span className="text-sm text-slate-300">—</span>
+          <span className="text-sm text-text-tertiary">—</span>
         );
       },
     },
@@ -260,8 +260,8 @@ export default function PayoutsList() {
         const d = r.createdAt ? new Date(r.createdAt) : null;
         return (
           <div className="flex items-center gap-2">
-            <Calendar className="h-3.5 w-3.5 text-slate-300 shrink-0" />
-            <span className="text-xs text-slate-500">{d ? d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}</span>
+            <Calendar className="h-3.5 w-3.5 text-text-tertiary shrink-0" />
+            <span className="text-xs text-text-secondary">{d ? d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}</span>
           </div>
         );
       },
@@ -271,7 +271,7 @@ export default function PayoutsList() {
       header: "Method",
       render: (r) => {
         const m = r.payoutMethod;
-        if (!m?.type) return <span className="text-sm text-slate-300">—</span>;
+        if (!m?.type) return <span className="text-sm text-text-tertiary">—</span>;
         const isBank = m.type.toLowerCase().includes("bank");
         const isPaypal = m.type.toLowerCase().includes("paypal");
         const Icon = isBank ? Building2 : isPaypal ? Wallet : Smartphone;
@@ -279,7 +279,7 @@ export default function PayoutsList() {
         return (
           <div className="flex items-center gap-1.5">
             <Icon className={`h-3 w-3 ${iconColor} shrink-0`} />
-            <span className="text-xs text-slate-600 truncate">{m.type.replace(/_/g, " ")}</span>
+            <span className="text-xs text-text-secondary truncate">{m.type.replace(/_/g, " ")}</span>
           </div>
         );
       },
@@ -289,7 +289,7 @@ export default function PayoutsList() {
       header: "",
       render: (r) => (
         <div className="flex gap-1.5 justify-end">
-          <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-slate-400 hover:text-slate-700" onClick={(e) => { e.stopPropagation(); setDetailPayout(r); setDetailPayoutPhoto(r.supplier?.photoURL || r.supplier?.user?.photoURL || (r.supplier?.id ? supplierPhotoMap[r.supplier.id] : undefined)); }} title="View details">
+          <Button size="sm" variant="ghost" className="h-9 w-9 sm:h-8 sm:w-8 p-0 text-text-tertiary hover:text-text-primary" onClick={(e) => { e.stopPropagation(); setDetailPayout(r); setDetailPayoutPhoto(r.supplier?.photoURL || r.supplier?.user?.photoURL || (r.supplier?.id ? supplierPhotoMap[r.supplier.id] : undefined)); }} title="View details">
             <Eye className="h-3.5 w-3.5" />
           </Button>
         </div>
@@ -355,7 +355,7 @@ export default function PayoutsList() {
     <div className="space-y-6">
       {/* Summary Bar */}
       {summary && (
-        <div className="rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="rounded-xl border border-border shadow-sm overflow-hidden">
           <div className="grid grid-cols-2 divide-x divide-border-muted sm:grid-cols-4">
             <KpiCard
               label="Total Payout Amount"
@@ -386,16 +386,16 @@ export default function PayoutsList() {
       )}
 
       <Card>
-        <CardHeader className="border-b border-slate-100 pb-4 pl-5 pr-5 pt-5">
+        <CardHeader className="border-b border-border pb-4 pl-5 pr-5 pt-5">
           {/* Tabs Row */}
-          <div className="flex gap-2 border-b border-slate-100">
+          <div className="flex gap-2 border-b border-border overflow-x-auto scrollbar-none">
             {statusTabs.map((tab) => (
               <button
                 key={tab}
-                className={`px-4 pb-2.5 text-sm font-medium transition-colors focus:outline-none ${
+                className={`whitespace-nowrap px-4 pb-2.5 text-sm font-medium transition-colors focus:outline-none ${
                   statusTab === tab
-                    ? "border-b-2 border-slate-900 text-slate-900"
-                    : "text-slate-400 hover:text-slate-600"
+                    ? "border-b-2 border-text-primary text-text-primary"
+                    : "text-text-tertiary hover:text-text-secondary"
                 }`}
                 onClick={() => { setStatusTab(tab); setPage(1); }}
               >
@@ -404,9 +404,9 @@ export default function PayoutsList() {
             ))}
           </div>
           {/* Controls Row */}
-          <div className="flex items-center justify-between gap-4 mt-4">
-            <div className="relative min-w-[200px] max-w-xs flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mt-4">
+            <div className="relative w-full sm:min-w-[200px] sm:max-w-xs">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" />
               <Input
                 placeholder="Search payouts..."
                 value={searchQuery}
@@ -416,14 +416,14 @@ export default function PayoutsList() {
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-secondary"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
               )}
             </div>
             {can('payouts.export') && (
-              <Button variant="outline" size="sm" onClick={handleExport} className="gap-1.5 border-slate-200 text-slate-600 hover:text-slate-900">
+              <Button variant="outline" size="sm" onClick={handleExport} className="gap-1.5 border-border text-text-secondary hover:text-text-primary w-full sm:w-auto">
                 <Download className="h-4 w-4" /> Export CSV
               </Button>
             )}

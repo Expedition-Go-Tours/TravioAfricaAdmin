@@ -256,10 +256,10 @@ export function GeneralTab() {
               })}
             </div>
             {superAdmin && (
-              <div className="flex items-center justify-between gap-4 pt-4 mt-5 border-t border-border/40">
-                <div className="text-sm">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 pt-4 mt-5 border-t border-border/40">
+                <div className="text-sm text-center sm:text-left">
                   {dirty ? (
-                    <span className="flex items-center gap-2 text-amber-700 font-medium">
+                    <span className="flex items-center justify-center sm:justify-start gap-2 text-amber-700 font-medium">
                       <span className="relative flex h-2 w-2">
                         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
                         <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
@@ -267,7 +267,7 @@ export function GeneralTab() {
                       {changed} unsaved change{changed !== 1 ? "s" : ""}
                     </span>
                   ) : (
-                    <span className="flex items-center gap-2 text-green-700">
+                    <span className="flex items-center justify-center sm:justify-start gap-2 text-green-700">
                       <span className="flex items-center justify-center w-5 h-5 rounded-full bg-green-100">
                         <svg className="h-3 w-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -277,9 +277,9 @@ export function GeneralTab() {
                     </span>
                   )}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 w-full sm:w-auto">
                   {dirty && (
-                    <Button variant="outline" size="sm" onClick={() => resetSection(section)} disabled={isSaving} className="shadow-sm">
+                    <Button variant="outline" size="sm" onClick={() => resetSection(section)} disabled={isSaving} className="shadow-sm flex-1 sm:flex-none">
                       <X className="mr-1 h-3.5 w-3.5" />
                       Reset
                     </Button>
@@ -288,7 +288,7 @@ export function GeneralTab() {
                     size="sm"
                     onClick={() => saveSection(section)}
                     disabled={(!dirty && !hasSectionErrors) || isSaving}
-                    className="gap-1.5 shadow-sm"
+                    className="gap-1.5 shadow-sm flex-1 sm:flex-none"
                   >
                     {isSaving ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />

@@ -12,14 +12,18 @@ const config: Config = {
         sans: ['"Plus Jakarta Sans"', "system-ui", "sans-serif"],
       },
       fontSize: {
-        xs: "13px",
-        sm: "14px",
-        md: "15px",
-        lg: "17px",
-        xl: "20px",
-        "2xl": "24px",
-        "3xl": "28px",
-        "4xl": "32px",
+        xs: ["13px", { lineHeight: "18px" }],
+        sm: ["14px", { lineHeight: "20px" }],
+        md: ["15px", { lineHeight: "22px" }],
+        lg: ["17px", { lineHeight: "24px" }],
+        xl: ["20px", { lineHeight: "28px" }],
+        "2xl": ["24px", { lineHeight: "32px" }],
+        "3xl": ["28px", { lineHeight: "36px" }],
+        "4xl": ["32px", { lineHeight: "40px", letterSpacing: "-0.02em" }],
+        "5xl": ["40px", { lineHeight: "48px", letterSpacing: "-0.025em" }],
+      },
+      screens: {
+        xs: "480px",
       },
       colors: {
         green: {
@@ -34,6 +38,13 @@ const config: Config = {
           800: "hsl(var(--green-800))",
           900: "hsl(var(--green-900))",
         },
+        sidebar: {
+          bg: "hsl(var(--sidebar-bg))",
+          surface: "hsl(var(--sidebar-surface))",
+          border: "hsl(var(--sidebar-border))",
+          text: "hsl(var(--sidebar-text))",
+          "text-active": "hsl(var(--sidebar-text-active))",
+        },
         text: {
           primary: "hsl(var(--text-primary))",
           secondary: "hsl(var(--text-secondary))",
@@ -45,6 +56,7 @@ const config: Config = {
           strong: "hsl(var(--success))",
         },
         border: {
+          DEFAULT: "hsl(var(--border))",
           muted: "hsl(var(--border-muted))",
         },
         status: {
@@ -94,9 +106,6 @@ const config: Config = {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
         },
-        border: {
-          DEFAULT: "hsl(var(--border))",
-        },
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         chart: {
@@ -109,12 +118,57 @@ const config: Config = {
       },
       borderRadius: {
         sm: "8px",
-        md: "16px",
-        lg: "var(--radius)",
-        xl: "calc(var(--radius) + 4px)",
+        md: "12px",
+        lg: "16px",
+        xl: "20px",
+        "2xl": "24px",
       },
       boxShadow: {
         "2": "0 0 2px rgba(145,158,171,0.2), 0 12px 24px -4px rgba(145,158,171,0.12)",
+        "soft": "0 2px 8px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)",
+        "soft-lg": "0 4px 16px rgba(0,0,0,0.04), 0 16px 48px rgba(0,0,0,0.06)",
+        "tinted": "0 2px 8px hsl(152 65% 35% / 0.08), 0 8px 24px hsl(152 65% 35% / 0.06)",
+        "tinted-lg": "0 4px 16px hsl(152 65% 35% / 0.1), 0 16px 48px hsl(152 65% 35% / 0.08)",
+        "inner-glow": "inset 0 1px 1px rgba(255,255,255,0.6)",
+      },
+      transitionTimingFunction: {
+        "spring": "cubic-bezier(0.32, 0.72, 0, 1)",
+        "spring-out": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "smooth": "cubic-bezier(0.4, 0, 0.2, 1)",
+      },
+      transitionDuration: {
+        "400": "400ms",
+        "600": "600ms",
+        "800": "800ms",
+      },
+      keyframes: {
+        "fade-in-up": {
+          "0%": { opacity: "0", transform: "translateY(16px) scale(0.98)" },
+          "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
+        },
+        "fade-in": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        "scale-in": {
+          "0%": { opacity: "0", transform: "scale(0.96)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        "slide-in-right": {
+          "0%": { transform: "translateX(100%)" },
+          "100%": { transform: "translateX(0)" },
+        },
+        "slide-out-right": {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(100%)" },
+        },
+      },
+      animation: {
+        "fade-in-up": "fade-in-up 0.6s cubic-bezier(0.32, 0.72, 0, 1)",
+        "fade-in": "fade-in 0.4s cubic-bezier(0.32, 0.72, 0, 1)",
+        "scale-in": "scale-in 0.3s cubic-bezier(0.32, 0.72, 0, 1)",
+        "slide-in-right": "slide-in-right 0.4s cubic-bezier(0.32, 0.72, 0, 1)",
+        "slide-out-right": "slide-out-right 0.4s cubic-bezier(0.32, 0.72, 0, 1)",
       },
     },
   },

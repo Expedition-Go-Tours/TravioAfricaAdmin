@@ -109,7 +109,7 @@ export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onViewC
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
         transition={{ type: "spring", damping: 30, stiffness: 300 }}
-        className="fixed right-0 top-0 z-50 h-full w-[480px] bg-white border-l border-slate-200 shadow-[-4px_0_16px_rgba(0,0,0,0.06)] flex flex-col"
+        className="fixed right-0 top-0 z-50 h-full w-full sm:w-[420px] md:w-[480px] bg-surface-base border-l border-border shadow-[-4px_0_16px_rgba(0,0,0,0.06)] flex flex-col"
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0">
           <div className="flex items-center gap-2">

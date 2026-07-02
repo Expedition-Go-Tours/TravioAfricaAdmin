@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { LogOut, Loader2, Settings, UserCircle } from "lucide-react";
+import { LogOut, Loader2, Settings, UserCircle, Menu, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/ui/NotificationBell";
 import { useAuth } from "@/auth/useAuth";
@@ -22,10 +22,15 @@ const breadcrumbMap: Record<string, string> = {
   "payout-methods": "Payout Methods",
   reviews: "Review Moderation",
   chat: "Messages",
+  bookings: "Bookings",
   settings: "Settings",
 };
 
-export function Header() {
+interface HeaderProps {
+  onMenuClick: () => void;
+}
+
+export function Header({ onMenuClick }: HeaderProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useAuth();
@@ -53,36 +58,47 @@ export function Header() {
   }, [logout]);
 
   return (
-    <motion.header
-      initial={{ opacity: 0, y: -8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-      className="flex h-[72px] items-center justify-between border-b border-green-100 bg-white px-6">
-      <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-text-secondary">
-        <Link to="/admin/overview" className="hover:text-text-primary">
-          Home
-        </Link>
-        {segments.slice(1).map((seg, idx) => {
-          const label = breadcrumbMap[seg] || seg.charAt(0).toUpperCase() + seg.slice(1);
-          return (
-            <span key={seg} className="flex items-center gap-2">
-              <span className="text-text-tertiary">/</span>
-              <span className={idx === segments.slice(1).length - 1 ? "text-text-primary font-medium" : ""}>
-                {label}
+    <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-surface-base px-3 md:px-6">
+      <div className="flex items-center gap-2 min-w-0">
+        <button
+          onClick={onMenuClick}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-text-secondary hover:bg-surface-muted transition-colors lg:hidden"
+          aria-label="Open sidebar"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+
+        <nav aria-label="Breadcrumb" className="hidden sm:flex items-center gap-1.5 text-sm text-text-secondary min-w-0">
+          <Link to="/admin/overview" className="shrink-0 hover:text-text-primary transition-colors">
+            Home
+          </Link>
+          {segments.slice(1).map((seg, idx) => {
+            const label = breadcrumbMap[seg] || seg.charAt(0).toUpperCase() + seg.slice(1);
+            const isLast = idx === segments.slice(1).length - 1;
+            return (
+              <span key={seg} className="flex items-center gap-1.5 min-w-0">
+                <ChevronRight className="h-3 w-3 shrink-0 text-text-tertiary" />
+                <span className={cn(
+                  "truncate",
+                  isLast ? "text-text-primary font-medium" : "text-text-secondary"
+                )}>
+                  {label}
+                </span>
               </span>
-            </span>
-          );
-        })}
-      </nav>
-      <div className="flex items-center gap-2">
+            );
+          })}
+        </nav>
+      </div>
+
+      <div className="flex items-center gap-1 md:gap-2">
         {hasPermission('notifications.view') && <NotificationBell />}
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-text-secondary hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="flex h-10 items-center gap-2 rounded-xl px-3 text-sm text-text-secondary hover:bg-surface-muted transition-all duration-200"
           >
             <UserCircle className="h-5 w-5" />
-            <span className="hidden sm:inline">Admin</span>
+            <span className="hidden md:inline">Admin</span>
           </button>
           <AnimatePresence>
             {menuOpen && (
@@ -90,21 +106,21 @@ export function Header() {
                 initial={{ opacity: 0, y: -4, scale: 0.96 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -4, scale: 0.96 }}
-                transition={{ duration: 0.15 }}
-                className="absolute right-0 top-full mt-1 w-48 rounded-md border border-border-muted bg-white py-1 shadow-lg z-50"
+                transition={{ duration: 0.15, ease: [0.32, 0.72, 0, 1] }}
+                className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-border bg-surface-base shadow-soft-lg py-1 z-50 overflow-hidden"
               >
                 {superAdmin && (
                   <button
                     onClick={() => { navigate("/admin/settings"); setMenuOpen(false); }}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-green-50"
+                    className="flex w-full items-center gap-3 px-3 py-2.5 text-sm text-text-primary hover:bg-surface-muted transition-colors"
                   >
-                    <Settings className="h-4 w-4" /> Settings
+                    <Settings className="h-4 w-4 text-text-tertiary" /> Settings
                   </button>
                 )}
                 <button
                   onClick={handleSignOut}
                   disabled={signingOut}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+                  className="flex w-full items-center gap-3 px-3 py-2.5 text-sm text-destructive hover:bg-destructive/5 transition-colors"
                 >
                   {signingOut ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -118,6 +134,10 @@ export function Header() {
           </AnimatePresence>
         </div>
       </div>
-    </motion.header>
+    </header>
   );
+}
+
+function cn(...classes: (string | boolean | undefined | null)[]) {
+  return classes.filter(Boolean).join(" ");
 }

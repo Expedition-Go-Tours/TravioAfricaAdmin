@@ -169,8 +169,8 @@ export function RolesTab() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between gap-4">
-        <div className="relative flex-1 max-w-xs">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+        <div className="relative w-full sm:flex-1 sm:max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-tertiary pointer-events-none" />
           <Input
             placeholder="Search roles..."
@@ -188,7 +188,7 @@ export function RolesTab() {
             </button>
           )}
         </div>
-        <Button onClick={() => openEditor(null)} className="gap-2 shadow-sm">
+        <Button onClick={() => openEditor(null)} className="gap-2 shadow-sm w-full sm:w-auto">
           <Plus className="h-4 w-4" /> Create Role
         </Button>
       </div>
@@ -242,7 +242,7 @@ export function RolesTab() {
                         </Badge>
                       ))}
                       {role.permissions.length > 4 && (
-                        <span className="text-[10px] text-text-secondary font-medium px-1.5 py-0.5 bg-gray-50 rounded">
+                        <span className="text-[10px] text-text-secondary font-medium px-1.5 py-0.5 bg-surface-muted rounded">
                           +{role.permissions.length - 4} more
                         </span>
                       )}
@@ -251,10 +251,10 @@ export function RolesTab() {
                   <td className="px-5 py-4 text-right">
                     {!role.isSystem && (
                       <div className="flex items-center justify-end gap-0.5">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-green-50 hover:text-green-700" onClick={() => openEditor(role)}>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 sm:h-8 sm:w-8 hover:bg-green-50 hover:text-green-700" onClick={() => openEditor(role)}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-400 hover:text-red-600 hover:bg-red-50" onClick={() => setShowDelete(role)}>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 sm:h-8 sm:w-8 text-red-400 hover:text-red-600 hover:bg-red-50" onClick={() => setShowDelete(role)}>
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
@@ -289,7 +289,7 @@ export function RolesTab() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="role-name">Role Name</Label>
                 <Input id="role-name" value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="e.g. Finance Admin" />
@@ -336,14 +336,14 @@ export function RolesTab() {
                               "flex items-center gap-2.5 rounded-lg px-3 py-2.5 cursor-pointer transition-colors text-sm",
                               editPerms.has(perm.id)
                                 ? "bg-green-50 border border-green-200/60"
-                                : "hover:bg-gray-50 border border-transparent",
+                                : "hover:bg-surface-muted border border-transparent",
                             )}
                           >
                             <div className={cn(
                               "w-4 h-4 rounded flex items-center justify-center shrink-0 border-2 transition-all duration-150",
                               editPerms.has(perm.id)
                                 ? "bg-green-600 border-green-600"
-                                : "border-gray-300 bg-white",
+                                : "border-border bg-surface-base",
                             )}>
                               {editPerms.has(perm.id) && (
                                 <Check className="h-3 w-3 text-white stroke-[3]" />

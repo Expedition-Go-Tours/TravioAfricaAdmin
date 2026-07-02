@@ -36,11 +36,11 @@ interface PayoutDetailPanelProps {
 function DetailRow({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between py-1.5">
-      <div className="flex items-center gap-1.5 text-xs text-slate-500">
+      <div className="flex items-center gap-1.5 text-xs text-text-secondary">
         {icon}
         <span>{label}</span>
       </div>
-      <div className="text-xs font-medium text-slate-900 text-right">{children}</div>
+      <div className="text-xs font-medium text-text-primary text-right">{children}</div>
     </div>
   );
 }
@@ -48,9 +48,9 @@ function DetailRow({ icon, label, children }: { icon: React.ReactNode; label: st
 function SectionDivider({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-2 mb-3">
-      <div className="h-px flex-1 bg-slate-100" />
-      <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">{label}</span>
-      <div className="h-px flex-1 bg-slate-100" />
+      <div className="h-px flex-1 bg-border" />
+      <span className="text-[11px] font-medium text-text-tertiary uppercase tracking-wider">{label}</span>
+      <div className="h-px flex-1 bg-border" />
     </div>
   );
 }
@@ -64,7 +64,7 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
     PROCESSING: "bg-indigo-50 border-indigo-200 text-indigo-700",
     PAID: "bg-emerald-50 border-emerald-200 text-emerald-700",
     FAILED: "bg-red-50 border-red-200 text-red-700",
-    CANCELLED: "bg-slate-50 border-slate-200 text-slate-600",
+    CANCELLED: "bg-surface-muted border-border text-text-secondary",
   };
 
   const status = payout.status || "UNKNOWN";
@@ -104,17 +104,17 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
         transition={{ type: "spring", damping: 30, stiffness: 300 }}
-        className="fixed right-0 top-0 z-50 h-full w-[480px] bg-white border-l border-slate-200 shadow-[-4px_0_16px_rgba(0,0,0,0.06)] flex flex-col"
+        className="fixed right-0 top-0 z-50 h-full w-full sm:w-[480px] bg-surface-base border-l border-border shadow-[-4px_0_16px_rgba(0,0,0,0.06)] flex flex-col"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
           <div className="flex items-center gap-2 min-w-0">
-            <Hash className="h-4 w-4 text-slate-400 shrink-0" />
-            <h2 className="text-sm font-semibold text-slate-900 truncate">Payout {payout.id.slice(0, 8)}</h2>
+            <Hash className="h-4 w-4 text-text-tertiary shrink-0" />
+            <h2 className="text-sm font-semibold text-text-primary truncate">Payout {payout.id.slice(0, 8)}</h2>
           </div>
           <button
             onClick={onClose}
-            className="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors shrink-0"
+            className="flex h-9 w-9 sm:h-7 sm:w-7 items-center justify-center rounded-md text-text-tertiary hover:text-text-primary hover:bg-surface-muted transition-colors shrink-0"
           >
             <X className="h-4 w-4" />
           </button>
@@ -122,7 +122,7 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
 
         <div className="flex-1 overflow-y-auto">
           {/* Status Banner */}
-          <div className={cn("px-5 py-3 border-b text-xs font-semibold flex items-center gap-2", statusColor[status] || "bg-slate-50")}>
+          <div className={cn("px-5 py-3 border-b text-xs font-semibold flex items-center gap-2", statusColor[status] || "bg-surface-muted")}>
             <span className={cn(
               "inline-block h-1.5 w-1.5 rounded-full",
               status === "PENDING" ? "bg-amber-500" :
@@ -130,19 +130,19 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
               status === "PROCESSING" ? "bg-indigo-500" :
               status === "PAID" ? "bg-emerald-500" :
               status === "FAILED" ? "bg-red-500" :
-              "bg-slate-400"
+              "bg-text-tertiary"
             )} />
             {status.replace(/_/g, " ")}
           </div>
 
           {/* Amount Hero */}
-          <div className="px-5 py-5 border-b border-slate-100">
-            <p className="text-[11px] text-slate-400 uppercase tracking-wider font-medium mb-1">Payout Amount</p>
-            <p className="text-3xl font-bold text-slate-900 tabular-nums">{formatCurrency(amount)}</p>
+          <div className="px-5 py-5 border-b border-border">
+            <p className="text-[11px] text-text-tertiary uppercase tracking-wider font-medium mb-1">Payout Amount</p>
+            <p className="text-3xl font-bold text-text-primary tabular-nums">{formatCurrency(amount)}</p>
             <div className="flex items-center gap-3 mt-1.5">
               <StatusBadge status={status} />
               {payout.reference && (
-                <span className="text-[11px] text-slate-400">Ref: {payout.reference}</span>
+                <span className="text-[11px] text-text-tertiary">Ref: {payout.reference}</span>
               )}
             </div>
           </div>
@@ -157,7 +157,7 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
                   className="shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded-full"
                   title="View supplier profile"
                 >
-                  <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-sm font-semibold text-slate-600 ring-2 ring-slate-100">
+                  <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-surface-muted text-sm font-semibold text-text-secondary ring-2 ring-border">
                     <span className={photoUrl ? "opacity-0" : ""}>{(supplier?.name || "?").charAt(0).toUpperCase()}</span>
                     {photoUrl && (
                       <img
@@ -172,13 +172,13 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
                   </div>
                 </button>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-slate-900 truncate">{supplier?.name || "—"}</p>
+                  <p className="text-sm font-semibold text-text-primary truncate">{supplier?.name || "—"}</p>
                   {businessInfo?.legalBusinessName && businessInfo.legalBusinessName !== supplier?.name && (
-                    <p className="text-[11px] text-slate-400 truncate">{businessInfo.legalBusinessName}</p>
+                    <p className="text-[11px] text-text-tertiary truncate">{businessInfo.legalBusinessName}</p>
                   )}
                 </div>
               </div>
-              <div className="rounded-xl border border-slate-200 p-3 space-y-0.5">
+              <div className="rounded-xl border border-border p-3 space-y-0.5">
                 <DetailRow icon={<User className="h-3 w-3" />} label="Display Name">{supplier?.name || "—"}</DetailRow>
                 {businessInfo?.legalBusinessName && (
                   <DetailRow icon={<Building2 className="h-3 w-3" />} label="Legal Name">{businessInfo.legalBusinessName}</DetailRow>
@@ -202,7 +202,7 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
             {(payout.booking || payout.tour) && (
               <div>
                 <SectionDivider label="Booking Details" />
-                <div className="rounded-xl border border-slate-200 p-3 space-y-0.5">
+                <div className="rounded-xl border border-border p-3 space-y-0.5">
                   {payout.booking?.bookingNumber && (
                     <DetailRow icon={<Hash className="h-3 w-3" />} label="Booking #">{payout.booking.bookingNumber}</DetailRow>
                   )}
@@ -225,14 +225,14 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
             {/* Commission Breakdown */}
             <div>
               <SectionDivider label="Commission Breakdown" />
-              <div className="rounded-xl border border-slate-200 p-4 space-y-2">
+              <div className="rounded-xl border border-border p-4 space-y-2">
                 <DetailRow icon={<DollarSign className="h-3 w-3" />} label="Booking Amount">{formatCurrency(amount + commission)}</DetailRow>
                 <DetailRow icon={<Percent className="h-3 w-3" />} label="Commission">
                   {formatCurrency(commission)}
-                  {commissionPct && <span className="text-slate-400 ml-1">({commissionPct})</span>}
+                  {commissionPct && <span className="text-text-tertiary ml-1">({commissionPct})</span>}
                 </DetailRow>
-                <div className="border-t border-slate-200 pt-2 mt-2 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-900">Net Payout</span>
+                <div className="border-t border-border pt-2 mt-2 flex items-center justify-between">
+                  <span className="text-xs font-semibold text-text-primary">Net Payout</span>
                   <span className="text-sm font-bold text-emerald-700 tabular-nums">{formatCurrency(netPayout)}</span>
                 </div>
               </div>
@@ -242,13 +242,13 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
             {method?.type && (
               <div>
                 <SectionDivider label="Payout Method" />
-                <div className="rounded-xl border border-slate-200 p-4 space-y-3">
+                <div className="rounded-xl border border-border p-4 space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100">
-                      <MethodIcon className="h-4.5 w-4.5 text-slate-600" />
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-muted">
+                      <MethodIcon className="h-4.5 w-4.5 text-text-secondary" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-slate-900">{method.type?.replace(/_/g, " ")}</p>
+                      <p className="text-sm font-semibold text-text-primary">{method.type?.replace(/_/g, " ")}</p>
                       <div className="flex items-center gap-2 mt-0.5">
                         {method.verified !== undefined && (
                           <span className={cn(
@@ -267,10 +267,10 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
                     </div>
                   </div>
                   {method.details && (
-                    <p className="text-xs text-slate-500">{method.details}</p>
+                    <p className="text-xs text-text-secondary">{method.details}</p>
                   )}
                   {method.bankName && (
-                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border">
                       {method.bankName && <Field label="Bank" value={method.bankName} />}
                       {method.accountNumber && <Field label="Account" value={`****${method.accountNumber.slice(-4)}`} />}
                     </div>
@@ -282,7 +282,7 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
             {/* Timeline */}
             <div>
               <SectionDivider label="Timeline" />
-              <div className="rounded-xl border border-slate-200 p-4">
+              <div className="rounded-xl border border-border p-4">
                 <div className="space-y-0">
                   {timelineSteps.map((step, idx) => {
                     const isLast = idx === timelineSteps.length - 1;
@@ -290,13 +290,13 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
                       ? "bg-indigo-500 border-indigo-200"
                       : step.date
                       ? "bg-emerald-500 border-emerald-200"
-                      : "bg-slate-200 border-slate-100";
+                      : "bg-border border-border";
                     return (
                       <div key={step.label} className="relative flex gap-3">
                         {!isLast && (
                           <div className={cn(
                             "absolute left-[11px] top-5 w-0.5 h-full -translate-x-1/2",
-                            step.date ? "bg-indigo-100" : "bg-slate-100"
+                            step.date ? "bg-indigo-100" : "bg-border"
                           )} />
                         )}
                         <div className="flex flex-col items-center shrink-0 pt-0.5">
@@ -317,12 +317,12 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
                         <div className={cn("pb-5", isLast && "pb-0")}>
                           <p className={cn(
                             "text-xs font-medium",
-                            step.active ? "text-indigo-700" : step.date ? "text-slate-900" : "text-slate-400"
+                            step.active ? "text-indigo-700" : step.date ? "text-text-primary" : "text-text-tertiary"
                           )}>
                             {step.label}
                           </p>
                           {step.date && (
-                            <p className="text-[10px] text-slate-400 mt-0.5">
+                            <p className="text-[10px] text-text-tertiary mt-0.5">
                               {new Date(step.date).toLocaleDateString("en-US", {
                                 month: "short",
                                 day: "numeric",
@@ -342,7 +342,7 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
         </div>
 
         {/* Footer Actions */}
-        <div className="border-t border-slate-100 px-5 py-4 shrink-0 space-y-2">
+        <div className="border-t border-border px-5 py-4 shrink-0 space-y-2">
           {status === "PENDING" && onApprove && (
             <Button
               onClick={() => { onApprove(payout); onClose(); }}
@@ -388,7 +388,7 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
           <Button
             onClick={onClose}
             variant="ghost"
-            className="w-full text-slate-400"
+            className="w-full text-text-tertiary"
             size="sm"
           >
             Close
@@ -402,9 +402,9 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
 
 function Field({ label, value }: { label: string; value?: string | null }) {
   return (
-    <div className="rounded-sm bg-slate-50/50 px-3 py-2">
-      <p className="text-[10px] text-slate-400 uppercase tracking-wider">{label}</p>
-      <p className="mt-0.5 text-xs font-medium text-slate-900">{value || "—"}</p>
+    <div className="rounded-sm bg-surface-muted/50 px-3 py-2">
+      <p className="text-[10px] text-text-tertiary uppercase tracking-wider">{label}</p>
+      <p className="mt-0.5 text-xs font-medium text-text-primary">{value || "—"}</p>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Sidebar } from "./Sidebar";
@@ -7,17 +7,19 @@ import { pageTransition } from "@/lib/animations";
 import { useAdminRole } from "@/auth/useAdminRole";
 
 export function AppLayout() {
-  const [collapsed, setCollapsed] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   useAdminRole(true);
 
+  const closeSidebar = useCallback(() => setSidebarOpen(false), []);
+
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-white">
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <Header />
-          <main className="flex-1 overflow-y-auto bg-white p-6">
+    <div className="flex min-h-[100dvh] flex-col bg-surface-muted/50">
+      <div className="flex flex-1">
+        <Sidebar open={sidebarOpen} onClose={closeSidebar} onOpen={() => setSidebarOpen(true)} />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <Header onMenuClick={() => setSidebarOpen(true)} />
+          <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
             <AnimatePresence mode="wait">
               <motion.div
                 key={location.pathname}
@@ -25,7 +27,7 @@ export function AppLayout() {
                 initial="initial"
                 animate="animate"
                 exit="exit"
-                className="h-full"
+                className="mx-auto w-full max-w-[1440px]"
               >
                 <Outlet />
               </motion.div>

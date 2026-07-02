@@ -79,7 +79,7 @@ function DiffBlock({ oldV, newV }: { oldV: Record<string, unknown> | null; newV:
             })}
           </div>
         ) : (
-          <div className="bg-gray-50 border border-border/40 rounded-lg p-4 text-xs text-text-tertiary italic text-center">No previous data</div>
+          <div className="bg-surface-muted border border-border/40 rounded-lg p-4 text-xs text-text-tertiary italic text-center">No previous data</div>
         )}
       </div>
       <div>
@@ -104,7 +104,7 @@ function DiffBlock({ oldV, newV }: { oldV: Record<string, unknown> | null; newV:
             })}
           </div>
         ) : (
-          <div className="bg-gray-50 border border-border/40 rounded-lg p-4 text-xs text-text-tertiary italic text-center">No new data</div>
+          <div className="bg-surface-muted border border-border/40 rounded-lg p-4 text-xs text-text-tertiary italic text-center">No new data</div>
         )}
       </div>
     </div>
@@ -267,19 +267,19 @@ export function AuditLogTab() {
               )}
             </div>
           </div>
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <div className="flex items-center gap-1.5">
-              <CalendarDays className="h-4 w-4 text-text-tertiary mr-1" />
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+              <CalendarDays className="h-4 w-4 text-text-tertiary mr-1 shrink-0" />
               {DATE_PRESETS.map((p) => (
                 <button
                   key={p.value}
                   type="button"
                   onClick={() => { setDatePreset(p.value); setPage(1); }}
                   className={cn(
-                    "px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200",
+                    "px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 whitespace-nowrap",
                     datePreset === p.value
                       ? "bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-sm"
-                      : "bg-gray-50 text-text-secondary border border-border/60 hover:bg-gray-100",
+                      : "bg-surface-muted text-text-secondary border border-border/60 hover:bg-surface-muted/80",
                   )}
                 >
                   {p.label}
@@ -306,7 +306,7 @@ export function AuditLogTab() {
                   window.URL.revokeObjectURL(url);
                 } catch { /* ignore */ }
               }}
-              className="gap-2 shadow-sm"
+              className="gap-2 shadow-sm w-full sm:w-auto"
             >
               <FileDown className="h-4 w-4" /> Export CSV
             </Button>
@@ -321,7 +321,7 @@ export function AuditLogTab() {
             <p className="text-xs text-text-secondary">Track all admin actions and configuration changes</p>
           </div>
           {totalCount > 0 && (
-            <span className="text-xs text-text-tertiary bg-gray-50 px-2.5 py-1 rounded-lg border border-border/40">
+            <span className="text-xs text-text-tertiary bg-surface-muted px-2.5 py-1 rounded-lg border border-border/40">
               {totalCount.toLocaleString()} total
             </span>
           )}
@@ -339,7 +339,7 @@ export function AuditLogTab() {
             keyExtractor={(r) => r.id}
             expandedRow={expandedId}
             renderExpanded={(entry) => (
-              <div className="px-6 py-5 bg-gradient-to-b from-gray-50/80 to-transparent">
+              <div className="px-6 py-5 bg-gradient-to-b from-surface-muted/80 to-transparent">
                 <div className="flex items-center gap-2 mb-4">
                   <span className="text-xs font-semibold text-text-primary">Details</span>
                   <Badge variant="outline" className="text-[9px] font-mono">{entry.action}</Badge>

@@ -50,8 +50,8 @@ function ImagePreview({ url, label }: { url: string; label: string }) {
   const [loaded, setLoaded] = useState(true);
   if (!url || !loaded) return null;
   return (
-    <div className="mt-2 rounded-lg border border-border/60 overflow-hidden bg-gray-50 shadow-sm">
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border-b border-border/40">
+    <div className="mt-2 rounded-lg border border-border/60 overflow-hidden bg-surface-muted shadow-sm">
+      <div className="flex items-center gap-2 px-3 py-1.5 bg-surface-muted border-b border-border/40">
         <div className="flex gap-1.5">
           <span className="w-2 h-2 rounded-full bg-red-400" />
           <span className="w-2 h-2 rounded-full bg-yellow-400" />
@@ -199,7 +199,7 @@ export function EmailTab() {
                     )}
                   </div>
                   <div className={cn(
-                    "rounded-lg border border-border/60 bg-gray-50/50 px-4 py-3 flex items-center",
+                    "rounded-lg border border-border/60 bg-surface-muted/50 px-4 py-3 flex items-center",
                     !value && "text-text-tertiary italic",
                   )}>
                     <div className={cn(
@@ -258,10 +258,10 @@ export function EmailTab() {
 
       {editing && (
         <div className="sticky bottom-6 z-20">
-          <div className="flex items-center justify-between gap-4 rounded-xl border border-border/50 bg-white/90 backdrop-blur-md px-6 py-4 shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
-            <div className="text-sm">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 rounded-xl border border-border/50 bg-white/90 backdrop-blur-md px-6 py-4 shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
+            <div className="text-sm text-center sm:text-left">
               {dirty ? (
-                <span className="flex items-center gap-2 text-amber-700 font-medium">
+                <span className="flex items-center justify-center sm:justify-start gap-2 text-amber-700 font-medium">
                   <span className="relative flex h-2 w-2">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
                     <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
@@ -269,7 +269,7 @@ export function EmailTab() {
                   {changedCount} unsaved change{changedCount !== 1 ? "s" : ""}
                 </span>
               ) : (
-                <span className="flex items-center gap-2 text-green-700">
+                <span className="flex items-center justify-center sm:justify-start gap-2 text-green-700">
                   <span className="flex items-center justify-center w-5 h-5 rounded-full bg-green-100">
                     <Save className="h-3 w-3 text-green-600" />
                   </span>
@@ -277,11 +277,11 @@ export function EmailTab() {
                 </span>
               )}
             </div>
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={handleCancel} disabled={mutation.isPending} className="px-5 shadow-sm">
+            <div className="flex gap-3 w-full sm:w-auto">
+              <Button variant="outline" onClick={handleCancel} disabled={mutation.isPending} className="px-5 shadow-sm flex-1 sm:flex-none">
                 <X className="mr-1.5 h-3.5 w-3.5" /> Cancel
               </Button>
-              <Button onClick={handleSave} disabled={!dirty || hasErrors || mutation.isPending} className="px-6 gap-2 shadow-sm">
+              <Button onClick={handleSave} disabled={!dirty || hasErrors || mutation.isPending} className="px-6 gap-2 shadow-sm flex-1 sm:flex-none">
                 {mutation.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (

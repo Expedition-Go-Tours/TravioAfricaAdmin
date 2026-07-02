@@ -183,19 +183,19 @@ export function AdminUsersTab() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-3">
-          <div className="relative">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+          <div className="relative w-full sm:w-auto">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-tertiary pointer-events-none" />
             <Input
               placeholder="Search admins..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-64 pl-9"
+              className="w-full sm:w-64 pl-9"
             />
           </div>
           <Select value={roleFilter} onValueChange={setRoleFilter}>
-            <SelectTrigger className="w-40"><SelectValue placeholder="All Roles" /></SelectTrigger>
+            <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="All Roles" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Roles</SelectItem>
               {allRoles.map((r) => (
@@ -206,7 +206,7 @@ export function AdminUsersTab() {
             </SelectContent>
           </Select>
         </div>
-        <Button onClick={() => setShowAdd(true)} className="gap-2 shadow-sm">
+        <Button onClick={() => setShowAdd(true)} className="gap-2 shadow-sm w-full sm:w-auto">
           <Plus className="h-4 w-4" /> Add Admin
         </Button>
       </div>
@@ -279,7 +279,7 @@ export function AdminUsersTab() {
                         admin.active && "bg-green-100 text-green-700 hover:bg-green-100",
                       )}
                     >
-                      <span className={cn("w-1.5 h-1.5 rounded-full mr-1.5", admin.active ? "bg-green-500" : "bg-gray-400")} />
+                      <span className={cn("w-1.5 h-1.5 rounded-full mr-1.5", admin.active ? "bg-green-500" : "bg-text-tertiary")} />
                       {admin.active ? "Active" : "Inactive"}
                     </Badge>
                   </td>
@@ -353,14 +353,14 @@ export function AdminUsersTab() {
             </div>
 
             {searchLoading && (
-              <div className="flex items-center justify-center gap-2 py-6 text-sm text-text-secondary bg-gray-50 rounded-lg border border-border/40">
+              <div className="flex items-center justify-center gap-2 py-6 text-sm text-text-secondary bg-surface-muted rounded-lg border border-border/40">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Searching users...
               </div>
             )}
 
             {!searchLoading && userSearch.length >= 2 && searchResults.length === 0 && (
-              <div className="flex flex-col items-center gap-2 py-8 text-center bg-gray-50 rounded-lg border border-border/40">
+              <div className="flex flex-col items-center gap-2 py-8 text-center bg-surface-muted rounded-lg border border-border/40">
                 <UsersIcon className="h-8 w-8 text-text-tertiary" />
                 <p className="text-sm text-text-secondary">No users found for "{userSearch}"</p>
                 <p className="text-xs text-text-tertiary">Try a different name or email</p>
@@ -406,7 +406,7 @@ export function AdminUsersTab() {
                 </div>
                 <button
                   type="button"
-                  className="shrink-0 ml-2 flex items-center justify-center w-6 h-6 rounded-md bg-green-200/50 text-green-600 hover:text-green-700 hover:bg-green-200 transition-colors"
+                  className="shrink-0 ml-2 flex items-center justify-center w-8 h-8 sm:w-6 sm:h-6 rounded-md bg-green-200/50 text-green-600 hover:text-green-700 hover:bg-green-200 transition-colors"
                   onClick={() => { setSelectedUser(null); setSearchResults([]); setUserSearch(""); }}
                 >
                   <X className="h-3.5 w-3.5" />
@@ -473,7 +473,7 @@ export function AdminUsersTab() {
           </DialogHeader>
 
           {showRevoke && (
-            <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-gray-50/50 px-4 py-3">
+            <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-surface-muted/50 px-4 py-3">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600 text-sm font-bold text-white shadow-sm">
                 {showRevoke.photoURL ? (
                   <img src={showRevoke.photoURL} alt="" referrerPolicy="no-referrer" className="h-full w-full rounded-full object-cover" loading="lazy" />

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import api from "@/lib/axios";
 import {
   LayoutDashboard,
@@ -9,19 +9,14 @@ import {
   ShoppingCart,
   Users,
   DollarSign,
-  GitFork,
   Map,
   UserCheck,
   UserPlus,
-  CreditCard,
   Banknote,
   Wallet,
   Star,
-  PanelLeftClose,
   Building,
-  PanelLeftOpen,
   ChevronDown,
-  ChevronRight,
   BarChart3,
   LineChart,
   Activity,
@@ -29,9 +24,11 @@ import {
   Target,
   MessageSquare,
   Settings,
+  X,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { fadeInLeft, listItem } from "@/lib/animations";
 import { usePermission } from "@/hooks/usePermission";
 
 interface ChildItem {
@@ -97,11 +94,14 @@ function getNavGroups(can: (key: string) => boolean): { group: string; items: Na
 }
 
 interface SidebarProps {
-  collapsed: boolean;
-  onToggle: () => void;
+  open: boolean;
+  onClose: () => void;
+  onOpen: () => void;
 }
 
-export function Sidebar({ collapsed, onToggle }: SidebarProps) {
+const springEase = [0.32, 0.72, 0, 1] as const;
+
+export function Sidebar({ open, onClose }: SidebarProps) {
   const [user, setUser] = useState<{ name?: string; email?: string; photoURL?: string } | null>(null);
   const location = useLocation();
   const { can, isSuperAdmin } = usePermission();
@@ -121,6 +121,24 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     }).catch(() => {});
   }, []);
 
+  useEffect(() => {
+    if (window.innerWidth < 1024) onClose();
+  }, [location.pathname]);
+
+  useEffect(() => {
+    function handleEscape(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    if (open) {
+      document.addEventListener("keydown", handleEscape);
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+      document.body.style.overflow = "";
+    };
+  }, [open, onClose]);
+
   const toggleMenu = (label: string) => {
     setExpandedMenus((prev) =>
       prev.includes(label) ? prev.filter((m) => m !== label) : [...prev, label],
@@ -137,16 +155,19 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   };
 
   return (
-    <aside
-      className={cn(
-        "flex h-screen flex-col bg-gradient-to-b from-green-700 to-green-800 transition-all duration-300",
-        collapsed ? "w-16" : "w-64",
-      )}
-      aria-label="Sidebar navigation"
-    >
-      <div className="flex h-[72px] items-center justify-between border-b border-white/10 px-4">
-        {!collapsed && (
-          <div className="flex items-center gap-2 truncate flex-1 justify-center">
+    <>
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-40 flex w-[260px] flex-col",
+          "bg-gradient-to-b from-green-700 to-green-800",
+          "transition-transform duration-400 ease-[cubic-bezier(0.32,0.72,0,1)]",
+          "lg:relative lg:translate-x-0",
+          open ? "translate-x-0" : "-translate-x-full",
+        )}
+        aria-label="Sidebar navigation"
+      >
+        <div className="flex h-[72px] shrink-0 items-center justify-between border-b border-white/10 px-4">
+          <div className="flex items-center gap-3 flex-1 truncate justify-center">
             <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/20 text-sm font-semibold text-white">
               <span>{user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "A"}</span>
               {user?.photoURL && (
@@ -164,97 +185,113 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               {user?.name || user?.email?.split("@")[0] || "Admin"}
             </span>
           </div>
-        )}
-        <button
-          onClick={onToggle}
-          className="rounded-sm p-1.5 text-green-200 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-        </button>
-      </div>
-      <nav className="flex-1 overflow-y-auto scrollbar-none p-2" role="navigation">
-        {[...navGroups, ...adminGroups].map((group) => (
-          <motion.div
-            key={group.group}
-            className="mb-4"
-            variants={fadeInLeft}
-            initial="hidden"
-            animate="visible"
+          <button
+            onClick={onClose}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-green-200 hover:bg-white/10 transition-colors lg:hidden"
+            aria-label="Close sidebar"
           >
-            {!collapsed && (
-              <p className="border-b border-white/10 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-green-200">
-                {group.group}
-              </p>
-            )}
-            {group.items.map((item) => {
-              if (item.children) {
-                const isOpen = expandedMenus.includes(item.label) || isChildActive(item.children);
-                return (
-                  <div key={item.label}>
-                    <motion.button
-                      whileHover={{ x: 2 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => toggleMenu(item.label)}
-                      className={cn(
-                        "flex w-full items-center gap-3 rounded-sm px-3 py-2 text-sm text-green-100 border-b border-white/5 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/40",
-                        isChildActive(item.children) && "bg-white/15 font-semibold text-white",
-                      )}
-                      aria-label={item.label}
-                      aria-expanded={isOpen}
-                    >
-                      {item.icon}
-                      {!collapsed && (
-                        <>
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto scrollbar-thin px-2 py-3" role="navigation">
+          {[...navGroups, ...adminGroups].map((group) => (
+            <div key={group.group} className="mb-4">
+              <div className="px-3 py-2">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.15em] text-green-200/70">
+                  {group.group}
+                </span>
+              </div>
+              <div className="space-y-0.5">
+                {group.items.map((item) => {
+                  if (item.children) {
+                    const isOpen = expandedMenus.includes(item.label) || isChildActive(item.children);
+                    return (
+                      <div key={item.label}>
+                        <button
+                          onClick={() => toggleMenu(item.label)}
+                          className={cn(
+                            "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200",
+                            "text-green-100 hover:bg-white/10 hover:text-white",
+                            isChildActive(item.children) && "bg-white/15 text-white font-medium",
+                          )}
+                          aria-expanded={isOpen}
+                        >
+                          <span className="flex h-5 w-5 shrink-0 items-center justify-center">
+                            {item.icon}
+                          </span>
                           <span className="flex-1 text-left">{item.label}</span>
                           <motion.span
                             animate={{ rotate: isOpen ? 0 : -90 }}
-                            transition={{ duration: 0.2 }}
+                            transition={{ duration: 0.2, ease: springEase }}
+                            className="shrink-0"
                           >
-                            {isOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                            <ChevronDown className="h-3 w-3 opacity-60" />
                           </motion.span>
-                        </>
-                      )}
-                    </motion.button>
-                    {isOpen && !collapsed && (
-                      <div className="ml-3 border-l border-white/10 pl-2 mt-1 space-y-0.5 overflow-hidden">
-                        {item.children.map((child) => (
-                          <Link
-                            key={child.path}
-                            to={child.path}
-                            className={cn(
-                              "flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-green-200 hover:bg-white/10 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/40",
-                              location.pathname === child.path && "bg-white/15 text-white font-semibold",
-                            )}
-                          >
-                            <span className="text-green-300">{child.icon}</span>
-                            <span>{child.label}</span>
-                          </Link>
-                        ))}
+                        </button>
+                        <AnimatePresence initial={false}>
+                          {isOpen && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2, ease: springEase }}
+                              className="overflow-hidden"
+                            >
+                              <div className="ml-3 border-l border-white/10 pl-2 mt-0.5 space-y-0.5">
+                                {item.children.map((child) => (
+                                  <Link
+                                    key={child.path}
+                                    to={child.path}
+                                    className={cn(
+                                      "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-200",
+                                      "text-green-200/80 hover:bg-white/10 hover:text-white",
+                                      location.pathname === child.path && "bg-white/15 text-white font-medium",
+                                    )}
+                                  >
+                                    <span className="flex h-5 w-5 shrink-0 items-center justify-center text-green-300">
+                                      {child.icon}
+                                    </span>
+                                    <span>{child.label}</span>
+                                  </Link>
+                                ))}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
-                    )}
-                  </div>
-                );
-              }
-              return (
-                <motion.div key={item.path} variants={listItem}>
-                  <Link
-                    to={item.path!}
-                    className={cn(
-                      "flex items-center gap-3 rounded-sm px-3 py-2 text-sm text-green-100 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/40",
-                      isActive(item.path) && "bg-white/15 text-white font-semibold",
-                    )}
-                    aria-label={item.label}
-                  >
-                    {item.icon}
-                    {!collapsed && <span>{item.label}</span>}
-                  </Link>
-                </motion.div>
-              );
-            })}
-          </motion.div>
-        ))}
-      </nav>
-    </aside>
+                    );
+                  }
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path!}
+                      className={cn(
+                        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200",
+                        "text-green-100 hover:bg-white/10 hover:text-white",
+                        isActive(item.path) && "bg-white/15 text-white font-medium",
+                      )}
+                    >
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center">
+                        {item.icon}
+                      </span>
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </nav>
+      </aside>
+
+      {open && (
+        <div
+          className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm lg:hidden"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+    </>
   );
 }

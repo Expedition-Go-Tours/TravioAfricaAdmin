@@ -127,10 +127,10 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <div className="flex gap-6">
-        <nav className="w-52 shrink-0">
+      <div className="flex flex-col lg:flex-row gap-6">
+        <nav className="w-full lg:w-52 lg:shrink-0">
           <div className="rounded-xl border border-border/60 bg-white shadow-sm overflow-hidden">
-            <div className="p-1.5 space-y-0.5">
+            <div className="flex lg:flex-col p-1.5 gap-0.5 overflow-x-auto scrollbar-none">
               {visibleTabs.map((tab) => {
                 const isActive = activeTab === tab.id;
                 return (
@@ -139,7 +139,7 @@ export default function SettingsPage() {
                     type="button"
                     onClick={() => setActiveTab(tab.id)}
                     className={cn(
-                      "relative w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-200",
+                      "relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-200 shrink-0",
                       isActive
                         ? "bg-gradient-to-r from-green-50 to-white text-green-800 shadow-sm"
                         : "text-text-secondary hover:text-green-700 hover:bg-green-50/40",
@@ -149,7 +149,7 @@ export default function SettingsPage() {
                       <motion.div
                         layoutId="settingsNavActive"
                         className={cn(
-                          "absolute left-0 top-1 bottom-1 w-0.5 rounded-full bg-gradient-to-b",
+                          "absolute left-0 top-1 bottom-1 w-0.5 rounded-full bg-gradient-to-b lg:block hidden",
                           TAB_ACCENTS[tab.id],
                         )}
                         transition={{ type: "spring", stiffness: 380, damping: 30 }}
@@ -159,10 +159,10 @@ export default function SettingsPage() {
                       <div className={cn("text-sm font-medium truncate", isActive ? "text-green-800" : "text-text-primary")}>
                         {tab.label}
                       </div>
-                      <div className="text-[11px] text-text-tertiary truncate leading-tight">{tab.desc}</div>
+                      <div className="text-[11px] text-text-tertiary truncate leading-tight hidden lg:block">{tab.desc}</div>
                     </div>
                     {isActive && (
-                      <ChevronRight className="h-3.5 w-3.5 text-green-400 ml-auto shrink-0" />
+                      <ChevronRight className="h-3.5 w-3.5 text-green-400 ml-auto shrink-0 hidden lg:block" />
                     )}
                   </button>
                 );

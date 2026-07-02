@@ -176,7 +176,7 @@ export function SettingsCard({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50/60 transition-colors"
+        className="w-full flex items-center justify-between px-6 py-4 hover:bg-surface-muted/60 transition-colors"
       >
         <div className="min-w-0">
           <h3 className="text-sm font-semibold text-text-primary">{title}</h3>
@@ -194,7 +194,7 @@ export function SettingsCard({
               Good
             </span>
           ) : null}
-          <div className="flex items-center justify-center w-6 h-6 rounded-md bg-gray-50 border border-border/50">
+          <div className="flex items-center justify-center w-6 h-6 rounded-md bg-surface-muted border border-border/50">
             <ChevronDown className={cn("h-3.5 w-3.5 text-text-tertiary transition-transform duration-200", open && "rotate-180")} />
           </div>
         </div>
@@ -234,10 +234,10 @@ export function SettingsSaveBar({
 }) {
   return (
     <div className="sticky bottom-6 z-20">
-      <div className="flex items-center justify-between gap-4 rounded-xl border border-border/50 bg-white/90 backdrop-blur-md px-6 py-4 shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
-        <div className="text-sm">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 rounded-xl border border-border/50 bg-white/90 backdrop-blur-md px-6 py-4 shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
+        <div className="text-sm text-center sm:text-left">
           {dirty ? (
-            <span className="flex items-center gap-2 text-amber-700 font-medium">
+            <span className="flex items-center justify-center sm:justify-start gap-2 text-amber-700 font-medium">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
@@ -245,7 +245,7 @@ export function SettingsSaveBar({
               {changedCount} unsaved change{changedCount !== 1 ? "s" : ""}
             </span>
           ) : (
-            <span className="flex items-center gap-2 text-green-700">
+            <span className="flex items-center justify-center sm:justify-start gap-2 text-green-700">
               <span className="flex items-center justify-center w-5 h-5 rounded-full bg-green-100">
                 <CheckCircle2 className="h-3 w-3 text-green-600" />
               </span>
@@ -253,12 +253,12 @@ export function SettingsSaveBar({
             </span>
           )}
         </div>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={onReset} disabled={!dirty || isPending} className="px-5 shadow-sm">
+        <div className="flex gap-3 w-full sm:w-auto">
+          <Button variant="outline" onClick={onReset} disabled={!dirty || isPending} className="px-5 shadow-sm flex-1 sm:flex-none">
             {isPending ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <X className="mr-1.5 h-3.5 w-3.5" />}
             Reset
           </Button>
-          <Button onClick={onSave} disabled={!dirty || hasErrors || isPending} className="px-6 gap-2 shadow-sm">
+          <Button onClick={onSave} disabled={!dirty || hasErrors || isPending} className="px-6 gap-2 shadow-sm flex-1 sm:flex-none">
             {isPending ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
