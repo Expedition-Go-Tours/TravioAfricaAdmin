@@ -83,8 +83,8 @@ export default function CustomerLifetimeValuePage() {
       </motion.div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-        <Card className="lg:col-span-2">
-          <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary"><Repeat className="h-4 w-4 text-green-600" /> Repeat Rate</CardTitle></CardHeader>
+        <Card className="lg:col-span-2 border-l-2 border-l-green-500/60">
+          <CardHeader className="border-b border-border pb-3"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary"><Repeat className="h-4 w-4 text-green-600" /> Repeat Rate</CardTitle></CardHeader>
           <CardContent>
             {isLoading ? (
               <Skeleton className="h-24 w-full" />
@@ -103,8 +103,8 @@ export default function CustomerLifetimeValuePage() {
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-3">
-          <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
+        <Card className="lg:col-span-3 border-l-2 border-l-green-500/60">
+          <CardHeader className="border-b border-border pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-semibold text-text-primary">Booking Distribution</CardTitle>
               {!isLoading && !isError && chartData.length > 0 && (
@@ -170,8 +170,8 @@ export default function CustomerLifetimeValuePage() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
+      <Card className="border-l-2 border-l-green-500/60">
+        <CardHeader className="border-b border-border pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-semibold text-text-primary">Top 20 Customers</CardTitle>
             <span className="text-xs text-text-tertiary">Highest spenders</span>
@@ -190,8 +190,8 @@ export default function CustomerLifetimeValuePage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
+      <Card className="border-l-2 border-l-green-500/60">
+        <CardHeader className="border-b border-border pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-semibold text-text-primary">Monthly Cohorts</CardTitle>
             <span className="text-xs text-text-tertiary">Acquisition cohort performance</span>

@@ -130,8 +130,8 @@ export default function CartAbandonmentPage() {
       </motion.div>
 
       {/* By Tour Table */}
-      <Card>
-        <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
+      <Card className="border-l-2 border-l-green-500/60">
+        <CardHeader className="border-b border-border pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
               <TrendingDown className="h-4 w-4 text-amber-500" />
@@ -154,8 +154,8 @@ export default function CartAbandonmentPage() {
       </Card>
 
       {/* Daily Trend */}
-      <Card>
-        <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
+      <Card className="border-l-2 border-l-green-500/60">
+        <CardHeader className="border-b border-border pb-3">
           <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
             <TrendingDown className="h-4 w-4 text-amber-500" />
             Daily Trend

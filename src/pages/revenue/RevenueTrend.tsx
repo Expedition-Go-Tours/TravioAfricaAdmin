@@ -48,8 +48,8 @@ export default function RevenueTrendPage() {
         <h1 className="text-lg font-semibold text-text-primary">Revenue Trend</h1>
       </div>
 
-      <Card>
-        <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
+      <Card className="border-l-2 border-l-green-500/60">
+        <CardHeader className="border-b border-border pb-3">
           <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Monthly Revenue Breakdown</CardTitle>
           <div className="flex gap-4">
             {metrics.map((m) => (

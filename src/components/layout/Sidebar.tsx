@@ -27,6 +27,9 @@ import {
   X,
   PanelLeftClose,
   PanelLeftOpen,
+  FileText,
+  FolderTree,
+  Tags,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePermission } from "@/hooks/usePermission";
@@ -72,7 +75,7 @@ function getNavGroups(can: (key: string) => boolean): { group: string; items: Na
         ...(can('tours.view') ? [{ label: "Tours", path: "/admin/tours", icon: <Map className="h-4 w-4" /> }] : []),
       ].filter((i) => !i.children || i.children.length > 0),
     },
-    ...(can('suppliers.view') || can('reviews.view') || can('bookings.view') || can('chat.suppliers') ? [{
+    ...(can('suppliers.view') || can('reviews.view') || can('bookings.view') || can('chat.suppliers') || can('blog.manage') ? [{
       group: "Management",
       items: [
         ...(can('bookings.view') ? [{ label: "Bookings", path: "/admin/bookings", icon: <ShoppingCart className="h-4 w-4" /> }] : []),
@@ -80,6 +83,15 @@ function getNavGroups(can: (key: string) => boolean): { group: string; items: Na
         ...(can('suppliers.view') ? [{ label: "Active Suppliers", path: "/admin/suppliers/active", icon: <UserCheck className="h-4 w-4" /> }] : []),
         ...(can('reviews.view') ? [{ label: "Reviews", path: "/admin/reviews", icon: <Star className="h-4 w-4" /> }] : []),
         ...(can('chat.suppliers') ? [{ label: "Supplier Messages", path: "/admin/chat/suppliers", icon: <Building className="h-4 w-4" /> }] : []),
+        ...(can('blog.manage') ? [{
+          label: "Blog",
+          icon: <FileText className="h-4 w-4" />,
+          children: [
+            { label: "Articles", path: "/admin/blog", icon: <FileText className="h-4 w-4" /> },
+            { label: "Categories", path: "/admin/blog/categories", icon: <FolderTree className="h-4 w-4" /> },
+            { label: "Tags", path: "/admin/blog/tags", icon: <Tags className="h-4 w-4" /> },
+          ],
+        }] : []),
       ],
     }] : []),
     ...(can('payouts.view') || can('payout-methods.view') ? [{
@@ -161,12 +173,12 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           "fixed inset-y-0 left-0 z-40 flex w-[260px] flex-col",
           "bg-gradient-to-b from-green-700 to-green-800",
           "transition-transform duration-400 ease-[cubic-bezier(0.32,0.72,0,1)]",
-          "lg:relative lg:translate-x-0",
+          "lg:relative lg:translate-x-0 lg:h-full",
           open ? "translate-x-0" : "-translate-x-full",
         )}
         aria-label="Sidebar navigation"
       >
-        <div className="flex h-[72px] shrink-0 items-center justify-between border-b border-white/10 px-4">
+        <div className="flex h-16 shrink-0 items-center justify-between border-b border-white/10 px-4">
           <div className="flex items-center gap-3 flex-1 truncate justify-center">
             <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/20 text-sm font-semibold text-white">
               <span>{user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "A"}</span>

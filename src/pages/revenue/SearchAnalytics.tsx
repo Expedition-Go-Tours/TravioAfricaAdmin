@@ -198,8 +198,8 @@ export default function SearchAnalyticsPage() {
       </motion.div>
 
       {/* Daily Trend Chart */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between border-b border-border pb-3 border-l-2 border-l-green-500/60">
+      <Card className="border-l-2 border-l-green-500/60">
+        <CardHeader className="flex flex-row items-center justify-between border-b border-border pb-3">
           <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
             <TrendingUp className="h-4 w-4 text-green-600" />
             Daily Search Trend
@@ -254,8 +254,8 @@ export default function SearchAnalyticsPage() {
 
       {/* Tables Grid */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
+        <Card className="border-l-2 border-l-green-500/60">
+          <CardHeader className="border-b border-border pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
                 <TrendingUp className="h-4 w-4 text-green-600" />
@@ -280,8 +280,8 @@ export default function SearchAnalyticsPage() {
             />
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
+        <Card className="border-l-2 border-l-green-500/60">
+          <CardHeader className="border-b border-border pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
                 <FileX className="h-4 w-4 text-amber-500" />

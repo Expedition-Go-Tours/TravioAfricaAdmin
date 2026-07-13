@@ -62,8 +62,8 @@ export default function PayoutsOverview() {
       </div>
 
       {/* Monthly Payout Trend Chart */}
-      <Card>
-        <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
+      <Card className="border-l-2 border-l-green-500/60">
+        <CardHeader className="border-b border-border pb-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-green-600" />
@@ -155,8 +155,8 @@ export default function PayoutsOverview() {
 
       {/* Monthly Breakdown Table */}
       {!isLoading && !isError && monthlyBreakdown.length > 0 && (
-        <Card>
-          <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60">
+        <Card className="border-l-2 border-l-green-500/60">
+          <CardHeader className="border-b border-border pb-3">
             <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
               <Calendar className="h-4 w-4 text-green-600" />
               Monthly Breakdown

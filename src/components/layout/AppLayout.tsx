@@ -14,8 +14,8 @@ export function AppLayout() {
   const closeSidebar = useCallback(() => setSidebarOpen(false), []);
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-surface-muted/50">
-      <div className="flex flex-1">
+    <div className="flex h-screen flex-col bg-surface-muted/50">
+      <div className="flex flex-1 overflow-hidden">
         <Sidebar open={sidebarOpen} onClose={closeSidebar} onOpen={() => setSidebarOpen(true)} />
         <div className="flex min-w-0 flex-1 flex-col">
           <Header onMenuClick={() => setSidebarOpen(true)} />

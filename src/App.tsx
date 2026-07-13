@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Navigate, useNavigate, useSearchParams, Outlet } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { queryClient } from "@/lib/query-client";
@@ -31,61 +31,10 @@ import ReviewModerationPage from "@/pages/reviews/ReviewModeration";
 import BookingsPage from "@/pages/bookings/BookingsPage";
 import ChatPage from "@/pages/chat/ChatPage";
 import SettingsPage from "@/pages/settings/SettingsPage";
-
-export default function App() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <DataSocketInit />
-      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <Routes>
-          <Route path="/admin/login" element={<LoginPage />} />
-          <Route path="/auth/callback" element={<AuthCallback />} />
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute>
-                <AppLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<HomeRedirect />} />
-            <Route path="overview" element={<OverviewPage />} />
-            <Route path="revenue-trend" element={<PermissionRoute permission="analytics.view"><RevenueTrendPage /></PermissionRoute>} />
-            <Route path="search-analytics" element={<PermissionRoute permission="analytics.view"><SearchAnalyticsPage /></PermissionRoute>} />
-            <Route path="cart-abandonment" element={<PermissionRoute permission="analytics.view"><CartAbandonmentPage /></PermissionRoute>} />
-            <Route path="user-growth" element={<PermissionRoute permission="users.view"><UserGrowthPage /></PermissionRoute>} />
-            <Route path="clv" element={<PermissionRoute permission="users.view"><CustomerLifetimeValuePage /></PermissionRoute>} />
-            <Route path="funnel" element={<PermissionRoute permission="users.view"><ConversionFunnelPage /></PermissionRoute>} />
-            <Route path="tours" element={<PermissionRoute permission="tours.view"><TourPerformancePage /></PermissionRoute>} />
-            <Route path="tours/:id" element={<PermissionRoute permission="tours.view"><TourDetailPage /></PermissionRoute>} />
-            <Route path="suppliers" element={<PermissionRoute permission="suppliers.view"><SupplierApplicationsPage /></PermissionRoute>} />
-            <Route path="suppliers/:id" element={<PermissionRoute permission="suppliers.view"><SupplierDetailPage /></PermissionRoute>} />
-            <Route path="suppliers/active" element={<PermissionRoute permission="suppliers.view"><ActiveSuppliersPage /></PermissionRoute>} />
-            <Route path="payouts" element={<PermissionRoute permission="payouts.view"><PayoutsTabPage /></PermissionRoute>} />
-            <Route path="payout-methods" element={<PermissionRoute permission="payout-methods.view"><PayoutMethodsPage /></PermissionRoute>} />
-            <Route path="bookings" element={<PermissionRoute permission="bookings.view"><BookingsPage /></PermissionRoute>} />
-            <Route path="reviews" element={<PermissionRoute permission="reviews.view"><ReviewModerationPage /></PermissionRoute>} />
-            <Route path="chat/suppliers" element={<PermissionRoute permission="chat.suppliers"><ChatPage /></PermissionRoute>} />
-            <Route path="chat/customers" element={<PermissionRoute permission="chat.customers"><ChatPage /></PermissionRoute>} />
-            <Route path="settings" element={<PermissionRoute permission="settings.access"><SettingsPage /></PermissionRoute>} />
-          </Route>
-          <Route path="*" element={<Navigate to={getDefaultRoute()} replace />} />
-        </Routes>
-      </BrowserRouter>
-      <Toaster
-        position="top-right"
-        richColors
-        closeButton
-        toastOptions={{
-          style: {
-            fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
-            borderRadius: "8px",
-          },
-        }}
-      />
-    </QueryClientProvider>
-  );
-}
+import BlogListPage from "@/pages/blog/BlogListPage";
+import BlogEditorPage from "@/pages/blog/BlogEditorPage";
+import CategoryManagerPage from "@/pages/blog/CategoryManagerPage";
+import TagManagerPage from "@/pages/blog/TagManagerPage";
 
 function DataSocketInit() {
   useDataSocket();
@@ -144,5 +93,70 @@ function PayoutsTabPage() {
       </div>
       {tab === "overview" ? <PayoutsOverview /> : <PayoutsList />}
     </div>
+  );
+}
+
+function AdminLayout() {
+  return (
+    <ProtectedRoute>
+      <AppLayout />
+    </ProtectedRoute>
+  );
+}
+
+const router = createBrowserRouter([
+  { path: "/admin/login", element: <LoginPage /> },
+  { path: "/auth/callback", element: <AuthCallback /> },
+  {
+    path: "/admin",
+    element: <AdminLayout />,
+    children: [
+      { index: true, element: <HomeRedirect /> },
+      { path: "overview", element: <OverviewPage /> },
+      { path: "revenue-trend", element: <PermissionRoute permission="analytics.view"><RevenueTrendPage /></PermissionRoute> },
+      { path: "search-analytics", element: <PermissionRoute permission="analytics.view"><SearchAnalyticsPage /></PermissionRoute> },
+      { path: "cart-abandonment", element: <PermissionRoute permission="analytics.view"><CartAbandonmentPage /></PermissionRoute> },
+      { path: "user-growth", element: <PermissionRoute permission="users.view"><UserGrowthPage /></PermissionRoute> },
+      { path: "clv", element: <PermissionRoute permission="users.view"><CustomerLifetimeValuePage /></PermissionRoute> },
+      { path: "funnel", element: <PermissionRoute permission="users.view"><ConversionFunnelPage /></PermissionRoute> },
+      { path: "tours", element: <PermissionRoute permission="tours.view"><TourPerformancePage /></PermissionRoute> },
+      { path: "tours/:id", element: <PermissionRoute permission="tours.view"><TourDetailPage /></PermissionRoute> },
+      { path: "suppliers", element: <PermissionRoute permission="suppliers.view"><SupplierApplicationsPage /></PermissionRoute> },
+      { path: "suppliers/:id", element: <PermissionRoute permission="suppliers.view"><SupplierDetailPage /></PermissionRoute> },
+      { path: "suppliers/active", element: <PermissionRoute permission="suppliers.view"><ActiveSuppliersPage /></PermissionRoute> },
+      { path: "payouts", element: <PermissionRoute permission="payouts.view"><PayoutsTabPage /></PermissionRoute> },
+      { path: "payout-methods", element: <PermissionRoute permission="payout-methods.view"><PayoutMethodsPage /></PermissionRoute> },
+      { path: "bookings", element: <PermissionRoute permission="bookings.view"><BookingsPage /></PermissionRoute> },
+      { path: "reviews", element: <PermissionRoute permission="reviews.view"><ReviewModerationPage /></PermissionRoute> },
+      { path: "chat/suppliers", element: <PermissionRoute permission="chat.suppliers"><ChatPage /></PermissionRoute> },
+      { path: "chat/customers", element: <PermissionRoute permission="chat.customers"><ChatPage /></PermissionRoute> },
+      { path: "settings", element: <PermissionRoute permission="settings.access"><SettingsPage /></PermissionRoute> },
+      { path: "blog", element: <PermissionRoute permission="blog.manage"><BlogListPage /></PermissionRoute> },
+      { path: "blog/new", element: <PermissionRoute permission="blog.manage"><BlogEditorPage /></PermissionRoute> },
+      { path: "blog/:id", element: <PermissionRoute permission="blog.manage"><BlogEditorPage /></PermissionRoute> },
+      { path: "blog/categories", element: <PermissionRoute permission="blog.manage"><CategoryManagerPage /></PermissionRoute> },
+      { path: "blog/tags", element: <PermissionRoute permission="blog.manage"><TagManagerPage /></PermissionRoute> },
+    ],
+  },
+  { path: "*", element: <Navigate to={getDefaultRoute()} replace /> },
+]);
+
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <DataSocketInit />
+      <RouterProvider router={router} />
+      <Toaster
+        position="top-right"
+        richColors
+        closeButton
+        toastOptions={{
+          style: {
+            fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
+            borderRadius: "8px",
+          },
+        }}
+      />
+    </QueryClientProvider>
   );
 }

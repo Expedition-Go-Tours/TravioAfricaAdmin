@@ -54,6 +54,7 @@ const ROUTE_PRIORITY = [
   { permission: 'users.view', route: '/admin/user-growth' },
   { permission: 'payout-methods.view', route: '/admin/payout-methods' },
   { permission: 'settings.access', route: '/admin/settings' },
+  { permission: 'blog.manage', route: '/admin/blog' },
 ];
 
 function flattenPermissions(raw: any): string[] {

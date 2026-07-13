@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, ChevronDown, Paperclip, ChevronRight, Trash2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
@@ -288,7 +288,7 @@ export function ChatWindow({
 
   if (!conversation) {
     return (
-      <div className={cn("flex h-full w-full flex-col items-center justify-center text-center", a.bg30)}>
+      <div className={cn("flex flex-1 w-full flex-col items-center justify-center text-center", a.bg30)}>
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm">
           <Send className={cn("h-6 w-6", a.text400)} />
         </div>

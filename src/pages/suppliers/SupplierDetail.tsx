@@ -368,8 +368,8 @@ export default function SupplierDetailPage() {
         </TabsList>
 
         <TabsContent value="overview">
-          <Card>
-            <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Performance Overview</CardTitle></CardHeader>
+          <Card className="border-l-2 border-l-green-500/60">
+            <CardHeader className="border-b border-border pb-3"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Performance Overview</CardTitle></CardHeader>
             <CardContent className="p-5">
               {overviewLoading ? (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -499,8 +499,8 @@ export default function SupplierDetailPage() {
         </TabsContent>
 
         <TabsContent value="business">
-          <Card>
-            <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Business Information</CardTitle></CardHeader>
+          <Card className="border-l-2 border-l-green-500/60">
+            <CardHeader className="border-b border-border pb-3"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Business Information</CardTitle></CardHeader>
             <CardContent>
               <DetailTable
                 rows={[
@@ -520,8 +520,8 @@ export default function SupplierDetailPage() {
         </TabsContent>
 
         <TabsContent value="operating">
-          <Card>
-            <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Operating Information</CardTitle></CardHeader>
+          <Card className="border-l-2 border-l-green-500/60">
+            <CardHeader className="border-b border-border pb-3"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Operating Information</CardTitle></CardHeader>
             <CardContent>
               <DetailTable
                 rows={[
@@ -540,8 +540,8 @@ export default function SupplierDetailPage() {
         </TabsContent>
 
         <TabsContent value="representative">
-          <Card>
-            <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Representative Information</CardTitle></CardHeader>
+          <Card className="border-l-2 border-l-green-500/60">
+            <CardHeader className="border-b border-border pb-3"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Representative Information</CardTitle></CardHeader>
             <CardContent>
               <DetailTable
                 rows={[
@@ -558,8 +558,8 @@ export default function SupplierDetailPage() {
         </TabsContent>
 
         <TabsContent value="documents">
-          <Card>
-            <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Business Documents</CardTitle></CardHeader>
+          <Card className="border-l-2 border-l-green-500/60">
+            <CardHeader className="border-b border-border pb-3"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Business Documents</CardTitle></CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {[
@@ -612,8 +612,8 @@ export default function SupplierDetailPage() {
                 <PayoutMethodCard key={method.id} method={method} />
               ))
             ) : (
-              <Card>
-                <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Payout Information</CardTitle></CardHeader>
+              <Card className="border-l-2 border-l-green-500/60">
+                <CardHeader className="border-b border-border pb-3"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Payout Information</CardTitle></CardHeader>
                 <CardContent>
                   <DetailTable
                     rows={[
@@ -632,8 +632,8 @@ export default function SupplierDetailPage() {
         </TabsContent>
 
         <TabsContent value="compliance">
-          <Card>
-            <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Compliance Checklist</CardTitle></CardHeader>
+          <Card className="border-l-2 border-l-green-500/60">
+            <CardHeader className="border-b border-border pb-3"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Compliance Checklist</CardTitle></CardHeader>
             <CardContent>
               <div className="space-y-3">
                 {[
@@ -665,8 +665,8 @@ export default function SupplierDetailPage() {
         </TabsContent>
 
         <TabsContent value="tours">
-          <Card>
-            <CardHeader className="border-b border-border pb-3 border-l-2 border-l-green-500/60"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Tours ({toursData?.pagination?.totalCount ?? "..."})</CardTitle></CardHeader>
+          <Card className="border-l-2 border-l-green-500/60">
+            <CardHeader className="border-b border-border pb-3"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Tours ({toursData?.pagination?.totalCount ?? "..."})</CardTitle></CardHeader>
             <CardContent className="p-0">
               {toursLoading ? (
                 <div className="p-4 space-y-2">

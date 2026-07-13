@@ -34,3 +34,7 @@ Backendv2/
 
 # Design references
 imagereference/
+
+# Markdown docs (keep only README)
+*.md
+!README.md

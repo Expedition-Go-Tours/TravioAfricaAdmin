@@ -355,7 +355,7 @@ export default function ChatPage() {
   );
 
   return (
-    <div className="-mx-6 -mt-6 max-sm:-mx-4 max-sm:-mt-4 flex h-[calc(100vh-72px)] overflow-hidden">
+    <div className="-mx-6 -mt-6 max-sm:-mx-4 max-sm:-mt-4 lg:-mx-8 lg:-mt-8 flex h-[calc(100dvh-64px)] overflow-hidden">
       <div className={cn(
         "flex flex-col border-r border-border/50 bg-white transition-all duration-300 overflow-hidden shrink-0",
         selectedConv ? "w-0 lg:w-[380px]" : "w-full lg:w-[380px]"
