@@ -495,7 +495,7 @@ export function ChatWindow({
               placeholder="Type a message..."
               rows={1}
               disabled={sending}
-              className={cn("w-full resize-none rounded-2xl border border-border/70 px-4 py-2.5 text-sm text-text-primary placeholder:text-text-tertiary focus-visible:outline-none focus-visible:bg-white transition-colors disabled:cursor-not-allowed disabled:opacity-50 scrollbar-none", a.bg30, a.border)}
+              className={cn("w-full resize-none rounded-2xl border border-border/70 px-4 py-2.5 text-sm text-text-primary placeholder:text-text-tertiary focus-visible:outline-none focus-visible:ring-0 focus-visible:bg-white transition-colors disabled:cursor-not-allowed disabled:opacity-50 scrollbar-none", a.bg30, a.border)}
               style={{ maxHeight: "120px" }}
             />
           </div>
