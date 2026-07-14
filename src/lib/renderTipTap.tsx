@@ -56,8 +56,11 @@ export function renderTipTapNode(node: TipTapNode, key?: number): ReactNode {
     case "heading": {
       const level = node.attrs?.level || 1;
       const styles = ["text-3xl font-bold", "text-2xl font-semibold", "text-xl font-semibold"];
-      const Tag = `h${level}` as keyof JSX.IntrinsicElements;
-      return <Tag key={key} className={`${styles[Math.min(level - 1, 2)]} text-gray-900`}>{children}</Tag>;
+      const className = `${styles[Math.min(level - 1, 2)]} text-gray-900`;
+      if (level === 1) return <h1 key={key} className={className}>{children}</h1>;
+      if (level === 2) return <h2 key={key} className={className}>{children}</h2>;
+      if (level === 3) return <h3 key={key} className={className}>{children}</h3>;
+      return <h4 key={key} className={className}>{children}</h4>;
     }
 
     case "bulletList":
