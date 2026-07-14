@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Edit, Trash2, ChevronRight, ChevronDown, FolderTree } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getCategories, createCategory, updateCategory, deleteCategory } from "@/services/blogService";
 import type { ArticleCategory } from "@/types/blog";
 import { CategoryDialog } from "./components/CategoryDialog";
@@ -10,6 +11,7 @@ export default function CategoryManagerPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<ArticleCategory | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const { data: categoriesData, isLoading } = useQuery({
@@ -54,7 +56,7 @@ export default function CategoryManagerPage() {
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingCategory(cat); setDialogOpen(true); }}>
             <Edit className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => { if (window.confirm("Delete this category?")) deleteMutation.mutate(cat.id); }}>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => setDeleteConfirm(cat.id)}>
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
@@ -103,6 +105,17 @@ export default function CategoryManagerPage() {
         onSave={async (data) => {
           await saveMutation.mutateAsync(data);
         }}
+      />
+
+      <ConfirmDialog
+        open={!!deleteConfirm}
+        onOpenChange={() => setDeleteConfirm(null)}
+        onConfirm={() => { if (deleteConfirm) deleteMutation.mutate(deleteConfirm); setDeleteConfirm(null); }}
+        title="Delete category"
+        description="Are you sure you want to delete this category? Articles in this category will become uncategorized."
+        confirmLabel="Delete"
+        confirmVariant="destructive"
+        loading={deleteMutation.isPending}
       />
     </div>
   );

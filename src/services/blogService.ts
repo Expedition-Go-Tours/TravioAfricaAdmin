@@ -36,5 +36,21 @@ export const getTags = () =>
 export const createTag = (data: { name: string; slug: string }) =>
   api.post('/blog/admin/tags', data).then((r) => r.data)
 
+export const updateTag = (id: string, data: { name?: string; slug?: string }) =>
+  api.patch(`/blog/admin/tags/${id}`, data).then((r) => r.data)
+
 export const deleteTag = (id: string) =>
   api.delete(`/blog/admin/tags/${id}`).then((r) => r.data)
+
+export const uploadBlogImage = (file: File, onProgress?: (percent: number) => void) => {
+  const formData = new FormData();
+  formData.append('image', file);
+  return api.post('/blog/admin/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    onUploadProgress: (e) => {
+      if (onProgress && e.total) {
+        onProgress(Math.round((e.loaded * 100) / e.total));
+      }
+    },
+  }).then((r) => r.data);
+};

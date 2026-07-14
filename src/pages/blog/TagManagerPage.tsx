@@ -1,12 +1,16 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Tags } from "lucide-react";
+import { Plus, Edit, Trash2, Tags } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getTags, createTag, deleteTag } from "@/services/blogService";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { getTags, createTag, updateTag, deleteTag } from "@/services/blogService";
+import type { ArticleTag } from "@/types/blog";
 import { TagDialog } from "./components/TagDialog";
 
 export default function TagManagerPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingTag, setEditingTag] = useState<ArticleTag | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const { data: tagsData, isLoading } = useQuery({
@@ -22,7 +26,10 @@ export default function TagManagerPage() {
   });
 
   const saveMutation = useMutation({
-    mutationFn: (data: any) => createTag(data),
+    mutationFn: (data: any) =>
+      data.id
+        ? updateTag(data.id, { name: data.name, slug: data.slug })
+        : createTag(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tags"] }),
   });
 
@@ -33,7 +40,7 @@ export default function TagManagerPage() {
           <h1 className="text-2xl font-semibold text-gray-900">Tags</h1>
           <p className="mt-1 text-sm text-gray-500">Manage article tags</p>
         </div>
-        <Button onClick={() => setDialogOpen(true)} className="bg-[#5645d4] hover:bg-[#4534b3]">
+        <Button onClick={() => { setEditingTag(null); setDialogOpen(true); }} className="bg-[#5645d4] hover:bg-[#4534b3]">
           <Plus className="mr-2 h-4 w-4" /> New Tag
         </Button>
       </div>
@@ -59,8 +66,14 @@ export default function TagManagerPage() {
               <span>{tag.name}</span>
               <span className="text-xs text-gray-400">({tag._count?.articles || 0})</span>
               <button
-                className="ml-1 text-gray-300 hover:text-red-500 transition-colors"
-                onClick={() => { if (window.confirm(`Delete tag "${tag.name}"?`)) deleteMutation.mutate(tag.id); }}
+                className="ml-1 text-gray-300 hover:text-[#5645d4] transition-colors"
+                onClick={() => { setEditingTag(tag); setDialogOpen(true); }}
+              >
+                <Edit className="h-3.5 w-3.5" />
+              </button>
+              <button
+                className="text-gray-300 hover:text-red-500 transition-colors"
+                onClick={() => setDeleteConfirm(tag.id)}
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
@@ -72,9 +85,21 @@ export default function TagManagerPage() {
       <TagDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
+        tag={editingTag}
         onSave={async (data) => {
           await saveMutation.mutateAsync(data);
         }}
+      />
+
+      <ConfirmDialog
+        open={!!deleteConfirm}
+        onOpenChange={() => setDeleteConfirm(null)}
+        onConfirm={() => { if (deleteConfirm) deleteMutation.mutate(deleteConfirm); setDeleteConfirm(null); }}
+        title="Delete tag"
+        description="Are you sure you want to delete this tag? It will be removed from all associated articles."
+        confirmLabel="Delete"
+        confirmVariant="destructive"
+        loading={deleteMutation.isPending}
       />
     </div>
   );

@@ -10,6 +10,7 @@ export function getAdminSocket(): Socket {
     socket = io(SOCKET_URL, {
       withCredentials: true,
       auth: { role: "admin" },
+      transports: ["websocket"],
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 3000,

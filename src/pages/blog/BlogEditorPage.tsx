@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams, useNavigate, useBlocker } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Save, Send, Image, Calendar, Clock } from "lucide-react";
@@ -23,7 +23,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { getArticleById, createArticle, updateArticle, getCategories, getTags } from "@/services/blogService";
+import api from "@/lib/axios";
 import { RichTextEditor } from "./components/RichTextEditor";
+import { ImageUploadDialog } from "./components/ImageUploadDialog";
 import type { ArticleStatus } from "@/types/blog";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -36,8 +38,6 @@ export default function BlogEditorPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const isNew = !id || id === "new";
-  const queryClient = useQueryClient();
-
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [excerpt, setExcerpt] = useState("");
@@ -50,12 +50,39 @@ export default function BlogEditorPage() {
   const [publishDate, setPublishDate] = useState("");
   const [slugError, setSlugError] = useState("");
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
-  const [imageUploadUrl, setImageUploadUrl] = useState("");
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const isNavigatingAfterSave = useRef(false);
+  const original = useRef<Record<string, any>>({});
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await api.get("/admin/me");
+        setCurrentUserId(res.data?.data?.id);
+      } catch {
+        // silently fail
+      }
+    })();
+  }, []);
+
+  const queryClient = useQueryClient();
 
   const hasUnsavedChanges = useMemo(() => {
+    if (isNavigatingAfterSave.current) return false;
     if (isNew) return !!title || !!slug || !!excerpt || !!content;
-    return true;
-  }, [isNew, title, slug, excerpt, content]);
+    return (
+      title !== original.current.title ||
+      slug !== original.current.slug ||
+      excerpt !== original.current.excerpt ||
+      JSON.stringify(content) !== JSON.stringify(original.current.body) ||
+      categoryId !== original.current.categoryId ||
+      JSON.stringify(tagIds) !== JSON.stringify(original.current.tagIds) ||
+      metaTitle !== original.current.metaTitle ||
+      metaDescription !== original.current.metaDescription ||
+      featuredImage !== original.current.featuredImage ||
+      publishDate !== original.current.publishDate
+    );
+  }, [isNew, title, slug, excerpt, content, categoryId, tagIds, metaTitle, metaDescription, featuredImage, publishDate]);
 
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
@@ -86,7 +113,7 @@ export default function BlogEditorPage() {
     queryFn: () => getTags(),
   });
 
-  const article = articleData?.data;
+  const article = articleData?.data?.article;
   const categories = categoriesData?.data?.categories || [];
   const tags = tagsData?.data?.tags || [];
 
@@ -102,6 +129,18 @@ export default function BlogEditorPage() {
       setMetaDescription(article.metaDescription || "");
       setFeaturedImage(article.featuredImage || "");
       setPublishDate(article.publishedAt ? article.publishedAt.slice(0, 10) : "");
+      original.current = {
+        title: article.title,
+        slug: article.slug,
+        excerpt: article.excerpt || "",
+        body: article.body,
+        categoryId: article.category?.id || "",
+        tagIds: article.tags?.map((t: any) => t.id) || [],
+        metaTitle: article.metaTitle || "",
+        metaDescription: article.metaDescription || "",
+        featuredImage: article.featuredImage || "",
+        publishDate: article.publishedAt ? article.publishedAt.slice(0, 10) : "",
+      };
     }
   }, [article]);
 
@@ -139,6 +178,7 @@ export default function BlogEditorPage() {
       toast.success(isNew ? "Article created" : "Article updated");
       queryClient.invalidateQueries({ queryKey: ["articles"] });
       if (!isNew) queryClient.invalidateQueries({ queryKey: ["article", id] });
+      isNavigatingAfterSave.current = true;
       navigate("/admin/blog");
     },
     onError: (err: any) => {
@@ -164,6 +204,7 @@ export default function BlogEditorPage() {
       slug: slug.trim(),
       excerpt: excerpt.trim() || undefined,
       body: content,
+      authorId: currentUserId,
       categoryId: categoryId || undefined,
       tagIds: tagIds.length > 0 ? tagIds : undefined,
       metaTitle: metaTitle.trim() || undefined,
@@ -175,27 +216,18 @@ export default function BlogEditorPage() {
       payload.publishedAt = new Date(publishDate).toISOString();
     }
     saveMutation.mutate(payload);
-  }, [title, slug, excerpt, content, categoryId, tagIds, metaTitle, metaDescription, featuredImage, publishDate, saveMutation]);
+  }, [title, slug, excerpt, content, categoryId, tagIds, metaTitle, metaDescription, featuredImage, publishDate, saveMutation, currentUserId]);
 
-  const handleFeaturedImageUpload = () => {
-    if (imageUploadUrl) {
-      setFeaturedImage(imageUploadUrl);
-      setImageDialogOpen(false);
-      setImageUploadUrl("");
-    }
+  const handleFeaturedImageSelect = (url: string) => {
+    setFeaturedImage(url);
+    setImageDialogOpen(false);
   };
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => {
-            if (hasUnsavedChanges) {
-              if (window.confirm("You have unsaved changes. Leave anyway?")) navigate("/admin/blog");
-            } else {
-              navigate("/admin/blog");
-            }
-          }}>
+          <Button variant="ghost" size="icon" onClick={() => navigate("/admin/blog")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
@@ -225,7 +257,7 @@ export default function BlogEditorPage() {
                 placeholder="Article title..."
                 value={title}
                 onChange={(e) => handleTitleChange(e.target.value)}
-                className="text-2xl font-semibold border-0 px-0 focus-visible:ring-0 placeholder:text-sm placeholder:text-[#bbb8b1] text-[#1a1a1a]"
+                className="text-2xl font-semibold border-0 px-3 focus-visible:ring-0 placeholder:text-sm placeholder:text-[#bbb8b1] text-[#1a1a1a]"
               />
             </div>
             <div className="space-y-2">
@@ -257,12 +289,12 @@ export default function BlogEditorPage() {
             <div className="space-y-3">
               <div className="space-y-2">
                 <Label className="text-[#5d5b54] text-xs">Category</Label>
-                <Select value={categoryId || "none"} onValueChange={(v) => setCategoryId(v === "none" ? "" : v)}>
+                  <Select value={categoryId || "none"} onValueChange={(v) => setCategoryId(v === "none" ? "" : v)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Uncategorized" />
+                    <SelectValue placeholder="No category" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Uncategorized</SelectItem>
+                    <SelectItem value="none">No category</SelectItem>
                     {categories?.map((c: any) => (
                       <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                     ))}
@@ -358,34 +390,12 @@ export default function BlogEditorPage() {
         </div>
       </div>
 
-      <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
-        <DialogContent className="sm:max-w-[420px]">
-          <DialogHeader>
-            <DialogTitle>Featured Image URL</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="featured-image-url">Image URL</Label>
-              <Input
-                id="featured-image-url"
-                value={imageUploadUrl}
-                onChange={(e) => setImageUploadUrl(e.target.value)}
-                placeholder="https://..."
-                autoFocus
-              />
-            </div>
-            {imageUploadUrl && (
-              <div className="rounded-lg overflow-hidden border border-[#e5e3df]">
-                <img src={imageUploadUrl} alt="Preview" className="w-full h-32 object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setImageDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleFeaturedImageUpload} disabled={!imageUploadUrl} className="bg-[#5645d4] hover:bg-[#4534b3]">Set Image</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ImageUploadDialog
+        open={imageDialogOpen}
+        onOpenChange={setImageDialogOpen}
+        onImageSelect={handleFeaturedImageSelect}
+        title="Featured Image"
+      />
 
       <Dialog open={blocker.state === "blocked"} onOpenChange={() => blocker.reset?.()}>
         <DialogContent className="sm:max-w-[400px]">

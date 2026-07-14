@@ -10,30 +10,36 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { ArticleTag } from "@/types/blog";
 
 interface TagDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (data: { name: string; slug: string }) => Promise<void>;
+  tag?: ArticleTag | null;
+  onSave: (data: { id?: string; name: string; slug: string }) => Promise<void>;
 }
 
-export function TagDialog({ open, onOpenChange, onSave }: TagDialogProps) {
+export function TagDialog({ open, onOpenChange, tag, onSave }: TagDialogProps) {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
+  const isEditing = !!tag;
+
   useEffect(() => {
     if (open) {
-      setName("");
-      setSlug("");
+      setName(tag?.name || "");
+      setSlug(tag?.slug || "");
       setError("");
     }
-  }, [open]);
+  }, [open, tag]);
 
   const handleNameChange = (value: string) => {
     setName(value);
-    setSlug(value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""));
+    if (!tag) {
+      setSlug(value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""));
+    }
   };
 
   const handleSave = async () => {
@@ -42,7 +48,7 @@ export function TagDialog({ open, onOpenChange, onSave }: TagDialogProps) {
     setSaving(true);
     setError("");
     try {
-      await onSave({ name: name.trim(), slug: slug.trim() });
+      await onSave({ id: tag?.id, name: name.trim(), slug: slug.trim() });
       onOpenChange(false);
     } catch (e: any) {
       setError(e?.response?.data?.message || "Failed to save tag");
@@ -55,8 +61,8 @@ export function TagDialog({ open, onOpenChange, onSave }: TagDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[420px]">
         <DialogHeader>
-          <DialogTitle>New Tag</DialogTitle>
-          <DialogDescription>Create a new article tag.</DialogDescription>
+          <DialogTitle>{tag ? "Edit Tag" : "New Tag"}</DialogTitle>
+          <DialogDescription>{tag ? "Update article tag." : "Create a new article tag."}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           {error && (
@@ -74,7 +80,7 @@ export function TagDialog({ open, onOpenChange, onSave }: TagDialogProps) {
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
           <Button onClick={handleSave} disabled={saving} className="bg-[#5645d4] hover:bg-[#4534b3]">
-            {saving ? "Creating..." : "Create"}
+            {saving ? "Saving..." : tag ? "Update" : "Create"}
           </Button>
         </DialogFooter>
       </DialogContent>

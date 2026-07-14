@@ -34,6 +34,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { ImageUploadDialog } from "./ImageUploadDialog";
 
 interface RichTextEditorProps {
   value: any;
@@ -92,7 +93,6 @@ export function RichTextEditor({ value, onChange, placeholder, disabled }: RichT
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
 
   const editor = useEditor({
     extensions: [
@@ -143,15 +143,8 @@ export function RichTextEditor({ value, onChange, placeholder, disabled }: RichT
     setLinkDialogOpen(false);
   };
 
-  const openImageDialog = () => {
-    setImageUrl("");
-    setImageDialogOpen(true);
-  };
-
-  const applyImage = () => {
-    if (imageUrl) {
-      editor.chain().focus().setImage({ src: imageUrl }).run();
-    }
+  const handleImageSelect = (url: string) => {
+    editor.chain().focus().setImage({ src: url }).run();
     setImageDialogOpen(false);
   };
 
@@ -183,7 +176,7 @@ export function RichTextEditor({ value, onChange, placeholder, disabled }: RichT
         {editor.isActive('link') && (
           <ToolbarButton onClick={() => editor.chain().focus().unsetLink().run()} icon={Unlink} label="Remove link" />
         )}
-        <ToolbarButton onClick={openImageDialog} icon={ImageIcon} label="Add image" />
+        <ToolbarButton onClick={() => setImageDialogOpen(true)} icon={ImageIcon} label="Add image" />
 
         <ToolbarDivider />
 
@@ -213,23 +206,12 @@ export function RichTextEditor({ value, onChange, placeholder, disabled }: RichT
         </DialogContent>
       </Dialog>
 
-      <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
-        <DialogContent className="sm:max-w-[420px]">
-          <DialogHeader>
-            <DialogTitle>Add Image</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="image-url">Image URL</Label>
-              <Input id="image-url" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." autoFocus />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setImageDialogOpen(false)}>Cancel</Button>
-            <Button onClick={applyImage} disabled={!imageUrl} className="bg-[#5645d4] hover:bg-[#4534b3]">Insert</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ImageUploadDialog
+        open={imageDialogOpen}
+        onOpenChange={setImageDialogOpen}
+        onImageSelect={handleImageSelect}
+        title="Add Image"
+      />
     </div>
   );
 }
