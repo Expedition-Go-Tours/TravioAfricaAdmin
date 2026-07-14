@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Plus, ArrowLeft } from "lucide-react";
@@ -97,12 +97,27 @@ export default function ChatPage() {
     if (adminId) setCurrentUserId(adminId);
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = document.querySelector("main");
     if (!el) return;
-    const prev = el.style.overflow;
+    const prevOverflow = el.style.overflow;
+    const prevPadding = el.style.padding;
     el.style.overflow = "clip";
-    return () => { el.style.overflow = prev; };
+    el.style.padding = "0";
+    const motionDiv = el.querySelector(":scope > div") as HTMLElement | null;
+    if (motionDiv) {
+      const prevHeight = motionDiv.style.height;
+      motionDiv.style.height = "100%";
+      return () => {
+        el.style.overflow = prevOverflow;
+        el.style.padding = prevPadding;
+        motionDiv.style.height = prevHeight;
+      };
+    }
+    return () => {
+      el.style.overflow = prevOverflow;
+      el.style.padding = prevPadding;
+    };
   }, []);
 
   useEffect(() => {
@@ -355,7 +370,7 @@ export default function ChatPage() {
   );
 
   return (
-    <div className="-mx-6 -mt-6 max-sm:-mx-4 max-sm:-mt-4 lg:-mx-8 lg:-mt-8 flex h-[calc(100dvh-64px)] overflow-hidden">
+    <div className="flex h-full overflow-hidden">
       <div className={cn(
         "flex flex-col border-r border-border/50 bg-white transition-all duration-300 overflow-hidden shrink-0",
         selectedConv ? "w-0 lg:w-[380px]" : "w-full lg:w-[380px]"
