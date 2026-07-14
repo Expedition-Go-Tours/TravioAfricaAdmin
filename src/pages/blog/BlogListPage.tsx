@@ -17,7 +17,6 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getArticles, deleteArticle, updateArticle } from "@/services/blogService";
 import type { Article, ArticleStatus } from "@/types/blog";
 import { ArticleCard } from "./components/ArticleCard";
-import { ArticlePreviewDialog } from "./components/ArticlePreviewDialog";
 
 type SortOption = "newest" | "oldest" | "popular";
 
@@ -29,7 +28,6 @@ export default function BlogListPage() {
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [page, setPage] = useState(1);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [previewId, setPreviewId] = useState<string | null>(null);
   const limit = 20;
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -167,7 +165,7 @@ export default function BlogListPage() {
             <ArticleCard
               key={article.id}
               article={article}
-              onPreview={() => setPreviewId(article.id)}
+              onPreview={() => navigate(`/admin/blog/preview/${article.id}`)}
               onEdit={() => navigate(`/admin/blog/${article.id}`)}
               onDelete={() => setDeleteConfirm(article.id)}
               onToggleStatus={() =>
@@ -242,11 +240,6 @@ export default function BlogListPage() {
         loading={deleteMutation.isPending}
       />
 
-      <ArticlePreviewDialog
-        articleId={previewId}
-        onClose={() => setPreviewId(null)}
-        onEdit={(id) => navigate(`/admin/blog/${id}`)}
-      />
     </div>
   );
 }
