@@ -95,7 +95,7 @@ export default function BlogListPage() {
                 Resources and insights
               </h1>
               <p className="mt-2 text-lg md:text-xl text-purple-700 max-w-2xl">
-                The latest industry news, interviews, technologies, and resources.
+                Discover Africa's hidden gems, travel tips, and unforgettable experiences.
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
