@@ -42,6 +42,9 @@ export const updateTag = (id: string, data: { name?: string; slug?: string }) =>
 export const deleteTag = (id: string) =>
   api.delete(`/blog/admin/tags/${id}`).then((r) => r.data)
 
+export const getRelatedArticles = (id: string, limit = 3) =>
+  api.get(`/blog/articles/${id}/related`, { params: { limit } }).then((r) => r.data)
+
 export const uploadBlogImage = (file: File, onProgress?: (percent: number) => void) => {
   const formData = new FormData();
   formData.append('image', file);

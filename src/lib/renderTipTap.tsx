@@ -91,8 +91,8 @@ export function renderTipTapNode(node: TipTapNode, key?: number): ReactNode {
 
     case "image":
       return (
-        <figure key={key} className="my-6">
-          <img src={node.attrs?.src} alt={node.attrs?.alt || ""} className="rounded-lg w-full object-cover max-h-96" />
+        <figure key={key} className="my-6 max-w-full">
+          <img src={node.attrs?.src} alt={node.attrs?.alt || ""} className="max-w-full h-auto rounded-sm" />
           {node.attrs?.title && <figcaption className="mt-2 text-center text-sm text-gray-500">{node.attrs.title}</figcaption>}
         </figure>
       );

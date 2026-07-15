@@ -36,6 +36,7 @@ import BlogPreviewPage from "@/pages/blog/BlogPreviewPage";
 import BlogEditorPage from "@/pages/blog/BlogEditorPage";
 import CategoryManagerPage from "@/pages/blog/CategoryManagerPage";
 import TagManagerPage from "@/pages/blog/TagManagerPage";
+import BlogAnalytics from "@/pages/blog/BlogAnalytics";
 
 function DataSocketInit() {
   useDataSocket();
@@ -138,6 +139,7 @@ const router = createBrowserRouter([
       { path: "blog/:id", element: <PermissionRoute permission="blog.manage"><BlogEditorPage /></PermissionRoute> },
       { path: "blog/categories", element: <PermissionRoute permission="blog.manage"><CategoryManagerPage /></PermissionRoute> },
       { path: "blog/tags", element: <PermissionRoute permission="blog.manage"><TagManagerPage /></PermissionRoute> },
+      { path: "blog/analytics", element: <PermissionRoute permission="blog.manage"><BlogAnalytics /></PermissionRoute> },
     ],
   },
   { path: "*", element: <Navigate to={getDefaultRoute()} replace /> },

@@ -44,6 +44,7 @@ export default function BlogEditorPage() {
   const [content, setContent] = useState<any>(null);
   const [categoryId, setCategoryId] = useState<string>("");
   const [tagIds, setTagIds] = useState<string[]>([]);
+  const [relatedTourIds, setRelatedTourIds] = useState<string[]>([]);
   const [metaTitle, setMetaTitle] = useState("");
   const [metaDescription, setMetaDescription] = useState("");
   const [featuredImage, setFeaturedImage] = useState("");
@@ -77,12 +78,13 @@ export default function BlogEditorPage() {
       JSON.stringify(content) !== JSON.stringify(original.current.body) ||
       categoryId !== original.current.categoryId ||
       JSON.stringify(tagIds) !== JSON.stringify(original.current.tagIds) ||
+      JSON.stringify(relatedTourIds) !== JSON.stringify(original.current.relatedTourIds) ||
       metaTitle !== original.current.metaTitle ||
       metaDescription !== original.current.metaDescription ||
       featuredImage !== original.current.featuredImage ||
       publishDate !== original.current.publishDate
     );
-  }, [isNew, title, slug, excerpt, content, categoryId, tagIds, metaTitle, metaDescription, featuredImage, publishDate]);
+  }, [isNew, title, slug, excerpt, content, categoryId, tagIds, relatedTourIds, metaTitle, metaDescription, featuredImage, publishDate]);
 
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
@@ -113,9 +115,15 @@ export default function BlogEditorPage() {
     queryFn: () => getTags(),
   });
 
+  const { data: toursData } = useQuery({
+    queryKey: ["tours-for-blog"],
+    queryFn: () => api.get("/tours?limit=500").then((r) => r.data?.data?.tours || r.data?.data || []),
+  });
+
   const article = articleData?.data?.article;
   const categories = categoriesData?.data?.categories || [];
   const tags = tagsData?.data?.tags || [];
+  const tours = Array.isArray(toursData) ? toursData : toursData?.tours || [];
 
   useEffect(() => {
     if (article) {
@@ -125,6 +133,7 @@ export default function BlogEditorPage() {
       setContent(article.body);
       setCategoryId(article.category?.id || "");
       setTagIds(article.tags?.map((t: any) => t.id) || []);
+      setRelatedTourIds(article.relatedTours?.map((rt: any) => rt.id) || []);
       setMetaTitle(article.metaTitle || "");
       setMetaDescription(article.metaDescription || "");
       setFeaturedImage(article.featuredImage || "");
@@ -136,6 +145,7 @@ export default function BlogEditorPage() {
         body: article.body,
         categoryId: article.category?.id || "",
         tagIds: article.tags?.map((t: any) => t.id) || [],
+        relatedTourIds: article.relatedTours?.map((rt: any) => rt.id) || [],
         metaTitle: article.metaTitle || "",
         metaDescription: article.metaDescription || "",
         featuredImage: article.featuredImage || "",
@@ -207,6 +217,7 @@ export default function BlogEditorPage() {
       authorId: currentUserId,
       categoryId: categoryId || undefined,
       tagIds: tagIds.length > 0 ? tagIds : undefined,
+      relatedTourIds: relatedTourIds.length > 0 ? relatedTourIds : undefined,
       metaTitle: metaTitle.trim() || undefined,
       metaDescription: metaDescription.trim() || undefined,
       featuredImage: featuredImage || undefined,
@@ -216,7 +227,7 @@ export default function BlogEditorPage() {
       payload.publishedAt = new Date(publishDate).toISOString();
     }
     saveMutation.mutate(payload);
-  }, [title, slug, excerpt, content, categoryId, tagIds, metaTitle, metaDescription, featuredImage, publishDate, saveMutation, currentUserId]);
+  }, [title, slug, excerpt, content, categoryId, tagIds, relatedTourIds, metaTitle, metaDescription, featuredImage, publishDate, saveMutation, currentUserId]);
 
   const handleFeaturedImageSelect = (url: string) => {
     setFeaturedImage(url);
@@ -224,8 +235,8 @@ export default function BlogEditorPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="max-w-5xl mx-auto space-y-6 px-2 sm:px-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => navigate("/admin/blog")}>
             <ArrowLeft className="h-5 w-5" />
@@ -241,23 +252,23 @@ export default function BlogEditorPage() {
             <span>{wordCount} words · {readTime} min read</span>
           </div>
           <Button variant="outline" onClick={() => handleSave("DRAFT")} disabled={saveMutation.isPending}>
-            <Save className="mr-2 h-4 w-4" /> {saveMutation.isPending ? "Saving..." : "Save Draft"}
+            <Save className="mr-2 h-4 w-4" /> <span className="hidden sm:inline">{saveMutation.isPending ? "Saving..." : "Save Draft"}</span><span className="sm:hidden">{saveMutation.isPending ? "Saving..." : "Draft"}</span>
           </Button>
           <Button onClick={() => handleSave("PUBLISHED")} disabled={saveMutation.isPending} className="bg-[#5645d4] hover:bg-[#4534b3]">
-            <Send className="mr-2 h-4 w-4" /> {saveMutation.isPending ? "Publishing..." : "Publish"}
+            <Send className="mr-2 h-4 w-4" /> <span className="hidden sm:inline">{saveMutation.isPending ? "Publishing..." : "Publish"}</span><span className="sm:hidden">{saveMutation.isPending ? "Publishing..." : "Publish"}</span>
           </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <div className="rounded-xl border border-[#e5e3df] bg-white p-6 space-y-4">
+          <div className="rounded-xl border border-[#e5e3df] bg-white p-4 sm:p-6 space-y-4">
             <div className="space-y-2">
               <Input
                 placeholder="Article title..."
                 value={title}
                 onChange={(e) => handleTitleChange(e.target.value)}
-                className="text-2xl font-semibold border-0 px-3 focus-visible:ring-0 placeholder:text-sm placeholder:text-[#bbb8b1] text-[#1a1a1a]"
+                className="text-lg sm:text-2xl font-semibold border-0 px-3 focus-visible:ring-0 placeholder:text-sm placeholder:text-[#bbb8b1] text-[#1a1a1a]"
               />
             </div>
             <div className="space-y-2">
@@ -284,7 +295,7 @@ export default function BlogEditorPage() {
         </div>
 
         <div className="space-y-6">
-          <div className="rounded-xl border border-[#e5e3df] bg-white p-5 space-y-4">
+          <div className="rounded-xl border border-[#e5e3df] bg-white p-4 sm:p-5 space-y-4">
             <h3 className="text-sm font-semibold text-[#37352f]">Publishing</h3>
             <div className="space-y-3">
               <div className="space-y-2">
@@ -322,6 +333,26 @@ export default function BlogEditorPage() {
                 </div>
               </div>
               <div className="space-y-2">
+                <Label className="text-[#5d5b54] text-xs">Related Tours</Label>
+                <div className="flex flex-wrap gap-1.5">
+                  {tours?.length === 0 && <p className="text-xs text-[#bbb8b1]">No tours available</p>}
+                  {tours?.map((tour: any) => (
+                    <Badge
+                      key={tour.id}
+                      variant={relatedTourIds.includes(tour.id) ? "default" : "outline"}
+                      className="cursor-pointer"
+                      onClick={() =>
+                        setRelatedTourIds((prev) =>
+                          prev.includes(tour.id) ? prev.filter((t) => t !== tour.id) : [...prev, tour.id]
+                        )
+                      }
+                    >
+                      {tour.title}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-2">
                 <Label className="text-[#5d5b54] text-xs">Publish date</Label>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#a4a097]" />
@@ -336,7 +367,7 @@ export default function BlogEditorPage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-[#e5e3df] bg-white p-5 space-y-4">
+          <div className="rounded-xl border border-[#e5e3df] bg-white p-4 sm:p-5 space-y-4">
             <h3 className="text-sm font-semibold text-[#37352f]">Featured Image</h3>
             <div className="space-y-3">
               {featuredImage && (
@@ -356,7 +387,7 @@ export default function BlogEditorPage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-[#e5e3df] bg-white p-5 space-y-4">
+          <div className="rounded-xl border border-[#e5e3df] bg-white p-4 sm:p-5 space-y-4">
             <h3 className="text-sm font-semibold text-[#37352f]">SEO</h3>
             <div className="space-y-3">
               <div className="space-y-2">
@@ -372,7 +403,7 @@ export default function BlogEditorPage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-[#e5e3df] bg-white p-5 space-y-3">
+          <div className="rounded-xl border border-[#e5e3df] bg-white p-4 sm:p-5 space-y-3">
             <h3 className="text-sm font-semibold text-[#37352f]">Stats</h3>
             <div className="flex justify-between text-xs">
               <span className="text-[#5d5b54]">Words</span>
