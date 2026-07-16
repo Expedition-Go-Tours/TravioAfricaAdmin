@@ -1,14 +1,27 @@
 import type { ReactNode } from "react";
 
+interface TipTapAttrs {
+  level?: number;
+  src?: string;
+  alt?: string;
+  title?: string;
+  href?: string;
+}
+
+interface TipTapMark {
+  type: string;
+  attrs?: TipTapAttrs;
+}
+
 interface TipTapNode {
   type: string;
   content?: TipTapNode[];
   text?: string;
-  marks?: Array<{ type: string; attrs?: Record<string, unknown> }>;
-  attrs?: Record<string, unknown>;
+  marks?: TipTapMark[];
+  attrs?: TipTapAttrs;
 }
 
-function renderMarks(text: string, marks?: Array<{ type: string; attrs?: Record<string, unknown> }>): ReactNode {
+function renderMarks(text: string, marks?: TipTapMark[]): ReactNode {
   if (!marks || marks.length === 0) return text;
   let node: ReactNode = text;
   for (const mark of marks) {

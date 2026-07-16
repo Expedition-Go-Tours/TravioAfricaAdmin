@@ -61,7 +61,7 @@ export function RevenueTrendChart({ data, loading }: RevenueTrendChartProps) {
                 fontSize: "12px",
                 boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
               }}
-              formatter={(value: number, name: string) => [formatCurrency(value), name]}
+              formatter={(value) => formatCurrency(Number(value))}
             />
             <Area 
               type="monotone" 

@@ -79,19 +79,19 @@ export default function BlogAnalytics() {
                 ) : (
                   <div className="divide-y divide-border">
                     {topViewed.map((article: Record<string, unknown>, i: number) => (
-                      <div key={article.id} className="flex items-center justify-between px-4 py-3">
+                      <div key={i} className="flex items-center justify-between px-4 py-3">
                         <div className="flex items-center gap-3 min-w-0">
                           <span className="text-xs font-medium text-text-secondary w-5 shrink-0">#{i + 1}</span>
                           <div className="min-w-0">
-                            <p className="text-sm font-medium text-text-primary truncate">{article.title}</p>
+                            <p className="text-sm font-medium text-text-primary truncate">{article.title as string}</p>
                             {article.category && (
-                              <p className="text-xs text-text-secondary">{article.category}</p>
+                              <p className="text-xs text-text-secondary">{article.category as string}</p>
                             )}
                           </div>
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0 ml-4">
                           <Eye className="h-3.5 w-3.5 text-text-secondary" />
-                          <span className="text-sm font-semibold text-text-primary">{article.viewCount}</span>
+                          <span className="text-sm font-semibold text-text-primary">{article.viewCount as string}</span>
                         </div>
                       </div>
                     ))}
@@ -129,9 +129,9 @@ export default function BlogAnalytics() {
                     </ResponsiveContainer>
                     <div className="flex flex-wrap justify-center gap-3 mt-2">
                       {categoryDistribution.map((cat: Record<string, unknown>, i: number) => (
-                        <div key={cat.categoryId} className="flex items-center gap-1.5">
+                        <div key={i} className="flex items-center gap-1.5">
                           <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: CATEGORY_COLORS[i % CATEGORY_COLORS.length] }} />
-                          <span className="text-xs text-text-secondary">{cat.categoryName} ({cat.articleCount})</span>
+                          <span className="text-xs text-text-secondary">{cat.categoryName as string} ({cat.articleCount as number})</span>
                         </div>
                       ))}
                     </div>
