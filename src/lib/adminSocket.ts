@@ -1,6 +1,10 @@
 import { io, Socket } from "socket.io-client";
 
-const SOCKET_URL = import.meta.env.VITE_API_URL?.replace("/api", "") || "";
+const SOCKET_URL = (() => {
+  const url = import.meta.env.VITE_API_URL;
+  if (!url) return "";
+  try { return new URL(url).origin; } catch { return ""; }
+})();
 const ADMIN_NOTIFICATION_EVENT = "admin-notification";
 
 let socket: Socket | null = null;

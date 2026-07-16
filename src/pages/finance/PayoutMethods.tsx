@@ -90,7 +90,7 @@ export default function PayoutMethodsPage() {
   const { data: methodsData, isLoading: methodsLoading } = useQuery({
     queryKey: ["admin", "payout-methods", "supplier", viewSupplierId],
     queryFn: () => api.get(`/payout-methods/admin/suppliers/${viewSupplierId}`).then((r) => r.data),
-    enabled: !!viewSupplierId,
+    enabled: !!viewSupplierId && can("payout-methods.view"),
   });
 
   const verifyMutation = useMutation({

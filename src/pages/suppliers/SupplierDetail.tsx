@@ -165,7 +165,7 @@ export default function SupplierDetailPage() {
   const { data: payoutData, isLoading: payoutLoading } = useQuery({
     queryKey: ["admin", "payout-methods", "supplier", user?.id],
     queryFn: () => api.get(`/payout-methods/admin/suppliers/${user?.id}`).then((r) => r.data?.data),
-    enabled: !!user?.id,
+    enabled: !!user?.id && can("payout-methods.view"),
   });
 
   const payoutMethods = payoutData?.methods || [];

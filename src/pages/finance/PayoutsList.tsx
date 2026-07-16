@@ -88,7 +88,7 @@ export default function PayoutsList() {
   const { data: methodsData } = useQuery({
     queryKey: ["admin", "payout-methods", "supplier", actionPayout?.supplier?.id],
     queryFn: () => api.get(`/payout-methods/admin/suppliers/${actionPayout?.supplier?.id}`).then((r) => r.data),
-    enabled: actionType === "release" && !!actionPayout?.supplier?.id,
+    enabled: actionType === "release" && !!actionPayout?.supplier?.id && can("payout-methods.view"),
   });
 
   const { data: supplierPhotoMap = {} } = useQuery<Record<string, string>>({
