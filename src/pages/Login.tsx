@@ -5,8 +5,28 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { GoogleOAuthProvider, useGoogleOneTapLogin } from "@react-oauth/google";
 import { useAuth } from "@/auth/useAuth";
 import { getDefaultRoute } from "@/lib/permissions";
+
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
+
+function OneTapHandler({ onSuccess }: { onSuccess: () => void }) {
+  const { loginWithGoogleOneTap } = useAuth();
+
+  useGoogleOneTapLogin({
+    onSuccess: async (credentialResponse) => {
+      const credential = credentialResponse.credential;
+      if (!credential) return;
+      const ok = await loginWithGoogleOneTap(credential);
+      if (ok) onSuccess();
+    },
+    onError: () => {},
+    cancel_on_tap_outside: false,
+  });
+
+  return null;
+}
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -20,19 +40,17 @@ export default function LoginPage() {
     }
   }, [isAuthenticated, navigate]);
 
+  const handleSuccess = () => navigate(getDefaultRoute(), { replace: true });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const success = await login(email, password);
-    if (success) {
-      navigate(getDefaultRoute(), { replace: true });
-    }
+    if (success) handleSuccess();
   };
 
   const handleGoogleLogin = async () => {
     const success = await loginWithGoogle();
-    if (success) {
-      navigate(getDefaultRoute(), { replace: true });
-    }
+    if (success) handleSuccess();
   };
 
   if (isAuthenticated) {
@@ -40,7 +58,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative flex min-h-[100dvh] items-center justify-center bg-gradient-to-br from-green-50 via-white to-green-50/60 p-4 overflow-hidden">
+    <GoogleOAuthProvider clientId={googleClientId}>
+      <OneTapHandler onSuccess={handleSuccess} />
+      <div className="relative flex min-h-[100dvh] items-center justify-center bg-gradient-to-br from-green-50 via-white to-green-50/60 p-4 overflow-hidden">
       <div className="noise-overlay" />
       <motion.div
         initial={{ opacity: 0, y: 20, scale: 0.98 }}
@@ -140,5 +160,6 @@ export default function LoginPage() {
         </div>
       </motion.div>
     </div>
+    </GoogleOAuthProvider>
   );
 }

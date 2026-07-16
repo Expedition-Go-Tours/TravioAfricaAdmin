@@ -41,19 +41,7 @@ interface RichTextEditorProps {
   onChange: (value: any) => void;
   placeholder?: string;
   disabled?: boolean;
-}
-
-function Tooltip({ children, label }: { children: React.ReactNode; label: string }) {
-  return (
-    <div className="group relative flex">
-      {children}
-      <div className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-1 -translate-x-1/2 opacity-0 transition-opacity group-hover:opacity-100">
-        <div className="whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-xs text-white shadow-lg">
-          {label}
-        </div>
-      </div>
-    </div>
-  );
+  expand?: boolean;
 }
 
 function ToolbarButton({
@@ -68,27 +56,26 @@ function ToolbarButton({
   label: string;
 }) {
   return (
-    <Tooltip label={label}>
-      <button
-        type="button"
-        onClick={onClick}
-        className={`flex h-8 w-8 items-center justify-center rounded-md text-sm transition-colors ${
-          active
-            ? "bg-purple-100 text-purple-700"
-            : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-        }`}
-      >
-        <Icon className="h-4 w-4" />
-      </button>
-    </Tooltip>
+    <button
+      type="button"
+      onClick={onClick}
+      title={label}
+      className={`flex h-8 w-8 items-center justify-center rounded-md text-sm transition-colors ${
+        active
+          ? "bg-purple-100 text-purple-700"
+          : "text-muted-foreground hover:bg-accent hover:text-foreground"
+      }`}
+    >
+      <Icon className="h-4 w-4" />
+    </button>
   );
 }
 
 function ToolbarDivider() {
-  return <div className="mx-1 h-6 w-px bg-gray-200" />;
+  return <div className="mx-1 h-5 w-px bg-border" />;
 }
 
-export function RichTextEditor({ value, onChange, placeholder, disabled }: RichTextEditorProps) {
+export function RichTextEditor({ value, onChange, placeholder, disabled, expand }: RichTextEditorProps) {
   const initialRender = useRef(true);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
@@ -148,9 +135,19 @@ export function RichTextEditor({ value, onChange, placeholder, disabled }: RichT
     setImageDialogOpen(false);
   };
 
+  const containerClass = expand
+    ? "flex flex-col h-full rounded-sm border border-border"
+    : "flex flex-col rounded-xl border border-border bg-card shadow-soft";
+  const contentAreaClass = expand
+    ? "flex-1 overflow-y-auto p-6"
+    : "p-4 sm:p-6";
+  const editorClass = expand
+    ? "prose prose-sm max-w-none focus:outline-none h-full"
+    : "prose prose-sm max-w-none focus:outline-none min-h-[400px]";
+
   return (
-    <div className="flex flex-col rounded-lg border border-gray-200 bg-white shadow-sm">
-      <div className="flex flex-wrap items-center gap-0.5 border-b border-gray-200 px-2 py-2">
+    <div className={containerClass}>
+      <div className="flex flex-wrap items-center gap-0.5 border-b border-border px-3 py-2 shrink-0">
         <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive('bold')} icon={Bold} label="Bold" />
         <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive('italic')} icon={Italic} label="Italic" />
         <ToolbarButton onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive('underline')} icon={UnderlineIcon} label="Underline" />
@@ -184,8 +181,11 @@ export function RichTextEditor({ value, onChange, placeholder, disabled }: RichT
         <ToolbarButton onClick={() => editor.chain().focus().redo().run()} icon={Redo2} label="Redo" />
       </div>
 
-      <div className="mx-auto w-full max-w-4xl p-4">
-        <EditorContent editor={editor} className="prose prose-sm max-w-none focus:outline-none" style={{ minHeight: "400px" }} />
+      <div className={contentAreaClass}>
+        <EditorContent
+          editor={editor}
+          className={editorClass}
+        />
       </div>
 
       <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
@@ -201,7 +201,7 @@ export function RichTextEditor({ value, onChange, placeholder, disabled }: RichT
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setLinkDialogOpen(false)}>Cancel</Button>
-            <Button onClick={applyLink} className="bg-[#5645d4] hover:bg-[#4534b3]">{linkUrl ? "Apply" : "Remove"}</Button>
+            <Button onClick={applyLink} className="bg-purple-700 hover:bg-purple-800">{linkUrl ? "Apply" : "Remove"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

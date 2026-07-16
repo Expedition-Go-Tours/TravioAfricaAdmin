@@ -178,9 +178,16 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         )}
         aria-label="Sidebar navigation"
       >
-        <div className="flex h-16 shrink-0 items-center justify-between border-b border-white/10 px-4">
-          <div className="flex items-center gap-3 flex-1 truncate justify-center">
-            <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/20 text-sm font-semibold text-white">
+        <div className="relative flex flex-col items-center justify-center border-b border-white/10 px-4 py-6">
+          <button
+            onClick={onClose}
+            className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-lg text-green-200 hover:bg-white/10 transition-colors lg:hidden"
+            aria-label="Close sidebar"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+          <div className="relative">
+            <div className="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-white/20 ring-2 ring-white/30 text-base font-semibold text-white">
               <span>{user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "A"}</span>
               {user?.photoURL && (
                 <img
@@ -193,17 +200,14 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 />
               )}
             </div>
-            <span className="truncate text-sm font-semibold text-white">
-              {user?.name || user?.email?.split("@")[0] || "Admin"}
-            </span>
+            <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-green-700 bg-emerald-400" />
           </div>
-          <button
-            onClick={onClose}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-green-200 hover:bg-white/10 transition-colors lg:hidden"
-            aria-label="Close sidebar"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <span className="mt-3 truncate text-sm font-semibold text-white">
+            {user?.name || user?.email?.split("@")[0] || "Admin"}
+          </span>
+          <span className="mt-0.5 truncate text-xs text-green-200/70">
+            {user?.email || ""}
+          </span>
         </div>
 
         <nav className="flex-1 overflow-y-auto scrollbar-thin px-2 py-3" role="navigation">

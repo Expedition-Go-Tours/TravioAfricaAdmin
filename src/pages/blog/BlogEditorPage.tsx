@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams, useNavigate, useBlocker } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Save, Send, Image, Calendar, Clock } from "lucide-react";
+import { Image, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -15,24 +15,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { getArticleById, createArticle, updateArticle, getCategories, getTags } from "@/services/blogService";
 import api from "@/lib/axios";
 import { RichTextEditor } from "./components/RichTextEditor";
 import { ImageUploadDialog } from "./components/ImageUploadDialog";
+import { SlugField } from "./components/SlugField";
+import { TagSelector } from "./components/TagSelector";
+import { TourSelector } from "./components/TourSelector";
+import { GoogleSnippetPreview } from "./components/GoogleSnippetPreview";
+import { ExitConfirmDialog } from "./components/ExitConfirmDialog";
+import { EditorHeader } from "./components/EditorHeader";
 import type { ArticleStatus } from "@/types/blog";
 
-const STATUS_LABELS: Record<string, string> = {
-  DRAFT: "Draft",
-  PUBLISHED: "Published",
-  ARCHIVED: "Archived",
-};
+function SectionDivider({ label }: { label: string }) {
+  return (
+    <div className="border-t border-border pt-4 mt-4">
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{label}</p>
+    </div>
+  );
+}
 
 export default function BlogEditorPage() {
   const { id } = useParams();
@@ -52,6 +53,7 @@ export default function BlogEditorPage() {
   const [slugError, setSlugError] = useState("");
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [articleStatus, setArticleStatus] = useState<string>("DRAFT");
   const isNavigatingAfterSave = useRef(false);
   const original = useRef<Record<string, any>>({});
 
@@ -99,23 +101,23 @@ export default function BlogEditorPage() {
     return () => window.removeEventListener("beforeunload", handler);
   }, [hasUnsavedChanges]);
 
-  const { data: articleData } = useQuery({
+  const { data: articleData, isLoading: articleLoading, isError: articleError } = useQuery({
     queryKey: ["article", id],
     queryFn: () => getArticleById(id!),
     enabled: !isNew,
   });
 
-  const { data: categoriesData } = useQuery({
+  const { data: categoriesData, isError: categoriesError } = useQuery({
     queryKey: ["categories"],
     queryFn: () => getCategories(),
   });
 
-  const { data: tagsData } = useQuery({
+  const { data: tagsData, isError: tagsError } = useQuery({
     queryKey: ["tags"],
     queryFn: () => getTags(),
   });
 
-  const { data: toursData } = useQuery({
+  const { data: toursData, isError: toursError } = useQuery({
     queryKey: ["tours-for-blog"],
     queryFn: () => api.get("/tours?limit=500").then((r) => r.data?.data?.tours || r.data?.data || []),
   });
@@ -138,6 +140,7 @@ export default function BlogEditorPage() {
       setMetaDescription(article.metaDescription || "");
       setFeaturedImage(article.featuredImage || "");
       setPublishDate(article.publishedAt ? article.publishedAt.slice(0, 10) : "");
+      setArticleStatus(article.status || "DRAFT");
       original.current = {
         title: article.title,
         slug: article.slug,
@@ -171,10 +174,9 @@ export default function BlogEditorPage() {
     }
   }, [isNew]);
 
-  const checkSlug = useCallback(async (value: string) => {
-    if (!value) { setSlugError(""); return; }
-    if (article?.slug === value) { setSlugError(""); return; }
-  }, [article]);
+  const checkSlug = useCallback(async (_value: string) => {
+    setSlugError("");
+  }, []);
 
   const handleSlugChange = useCallback((value: string) => {
     setSlug(value);
@@ -229,80 +231,130 @@ export default function BlogEditorPage() {
     saveMutation.mutate(payload);
   }, [title, slug, excerpt, content, categoryId, tagIds, relatedTourIds, metaTitle, metaDescription, featuredImage, publishDate, saveMutation, currentUserId]);
 
+  const saveAsDraftAndPreview = useCallback(async () => {
+    const payload: any = {
+      title: title.trim() || "Untitled",
+      slug: slug.trim() || "untitled",
+      excerpt: excerpt.trim() || undefined,
+      body: content,
+      authorId: currentUserId,
+      categoryId: categoryId || undefined,
+      tagIds: tagIds.length > 0 ? tagIds : undefined,
+      relatedTourIds: relatedTourIds.length > 0 ? relatedTourIds : undefined,
+      metaTitle: metaTitle.trim() || undefined,
+      metaDescription: metaDescription.trim() || undefined,
+      featuredImage: featuredImage || undefined,
+      status: "DRAFT",
+    };
+
+    try {
+      const res = isNew
+        ? await createArticle(payload)
+        : await updateArticle(id!, payload);
+      const savedId = res?.data?.article?.id || id;
+      queryClient.invalidateQueries({ queryKey: ["articles"] });
+      if (savedId) {
+        isNavigatingAfterSave.current = true;
+        navigate(`/admin/blog/preview/${savedId}`);
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to save draft for preview");
+    }
+  }, [isNew, id, title, slug, excerpt, content, categoryId, tagIds, relatedTourIds, metaTitle, metaDescription, featuredImage, currentUserId, navigate, queryClient]);
+
+  const canPreview = !isNew || (!!title && !!slug);
+
   const handleFeaturedImageSelect = (url: string) => {
     setFeaturedImage(url);
     setImageDialogOpen(false);
   };
 
-  return (
-    <div className="max-w-5xl mx-auto space-y-6 px-2 sm:px-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/admin/blog")}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-xl font-semibold text-[#1a1a1a]">{isNew ? "New Article" : "Edit Article"}</h1>
-            <p className="text-sm text-[#5d5b54]">{isNew ? "Draft your article" : "Update your article"}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="hidden sm:flex items-center gap-1.5 mr-2 text-xs text-[#5d5b54]">
-            <Clock className="h-3.5 w-3.5" />
-            <span>{wordCount} words · {readTime} min read</span>
-          </div>
-          <Button variant="outline" onClick={() => handleSave("DRAFT")} disabled={saveMutation.isPending}>
-            <Save className="mr-2 h-4 w-4" /> <span className="hidden sm:inline">{saveMutation.isPending ? "Saving..." : "Save Draft"}</span><span className="sm:hidden">{saveMutation.isPending ? "Saving..." : "Draft"}</span>
-          </Button>
-          <Button onClick={() => handleSave("PUBLISHED")} disabled={saveMutation.isPending} className="bg-[#5645d4] hover:bg-[#4534b3]">
-            <Send className="mr-2 h-4 w-4" /> <span className="hidden sm:inline">{saveMutation.isPending ? "Publishing..." : "Publish"}</span><span className="sm:hidden">{saveMutation.isPending ? "Publishing..." : "Publish"}</span>
-          </Button>
-        </div>
-      </div>
+  const loading = articleLoading && !isNew;
+  const showError = articleError && !isNew;
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <div className="rounded-xl border border-[#e5e3df] bg-white p-4 sm:p-6 space-y-4">
+  return (
+    <div className="h-screen flex flex-col bg-background">
+      <EditorHeader
+        isNew={isNew}
+        isPending={saveMutation.isPending}
+        onBack={() => navigate("/admin/blog")}
+        onSaveDraft={() => handleSave("DRAFT")}
+        onPublish={() => handleSave("PUBLISHED")}
+        onPreview={saveAsDraftAndPreview}
+        canPreview={canPreview}
+      />
+
+      {showError ? (
+        <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
+          <div className="rounded-sm border border-destructive/30 bg-destructive/5 p-6 max-w-md">
+            <h2 className="text-base font-semibold text-foreground mb-1">Failed to load article</h2>
+            <p className="text-sm text-muted-foreground mb-4">The article may have been removed or there was a network error.</p>
+            <Button variant="outline" size="sm" onClick={() => navigate("/admin/blog")}>Back to articles</Button>
+          </div>
+        </div>
+      ) : loading ? (
+        <div className="flex-1 flex overflow-hidden">
+          <aside className="w-[35%] min-w-[320px] max-w-[420px] border-r border-border p-5 space-y-5 overflow-y-auto">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="space-y-3">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-9 w-full" />
+              </div>
+            ))}
+          </aside>
+          <main className="flex-1 p-5">
+            <Skeleton className="h-full w-full rounded-sm" />
+          </main>
+        </div>
+      ) : (
+        <div className="flex-1 flex overflow-hidden">
+          <aside className="w-[35%] min-w-[320px] max-w-[420px] border-r border-border p-5 space-y-5 overflow-y-auto scrollbar-thin">
             <div className="space-y-2">
+              <Label className="text-sm font-medium text-foreground">Title</Label>
               <Input
                 placeholder="Article title..."
                 value={title}
                 onChange={(e) => handleTitleChange(e.target.value)}
-                className="text-lg sm:text-2xl font-semibold border-0 px-3 focus-visible:ring-0 placeholder:text-sm placeholder:text-[#bbb8b1] text-[#1a1a1a]"
+                className="text-base font-semibold"
               />
+              <p className="text-xs text-muted-foreground">{title.length} characters</p>
             </div>
-            <div className="space-y-2">
-              <Label className="text-[#37352f] text-sm font-medium">Slug</Label>
-              <div className="relative">
-                <Input
-                  value={slug}
-                  onChange={(e) => handleSlugChange(e.target.value)}
-                  placeholder="article-slug"
-                  className={slugError ? "border-red-500" : ""}
-                />
-                {slugError && <p className="text-xs text-red-500 mt-1">{slugError}</p>}
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-[#37352f] text-sm font-medium">Excerpt</Label>
-              <Textarea value={excerpt} onChange={(e) => setExcerpt(e.target.value)} placeholder="Brief summary..." rows={3} />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-[#37352f] text-sm font-medium">Content</Label>
-              <RichTextEditor value={content} onChange={setContent} />
-            </div>
-          </div>
-        </div>
 
-        <div className="space-y-6">
-          <div className="rounded-xl border border-[#e5e3df] bg-white p-4 sm:p-5 space-y-4">
-            <h3 className="text-sm font-semibold text-[#37352f]">Publishing</h3>
+            <SlugField value={slug} onChange={handleSlugChange} error={slugError} />
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-foreground">Excerpt</Label>
+              <Textarea
+                value={excerpt}
+                onChange={(e) => setExcerpt(e.target.value)}
+                placeholder="Brief summary of the article..."
+                rows={3}
+                className="resize-none"
+              />
+              <p className="text-xs text-muted-foreground">{excerpt.length}/200 characters</p>
+            </div>
+
+            <SectionDivider label="Publishing" />
+
             <div className="space-y-3">
-              <div className="space-y-2">
-                <Label className="text-[#5d5b54] text-xs">Category</Label>
-                  <Select value={categoryId || "none"} onValueChange={(v) => setCategoryId(v === "none" ? "" : v)}>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">Status</Label>
+                <Select value={articleStatus} onValueChange={setArticleStatus}>
                   <SelectTrigger>
-                    <SelectValue placeholder="No category" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="DRAFT">Draft</SelectItem>
+                    <SelectItem value="PUBLISHED">Published</SelectItem>
+                    <SelectItem value="ARCHIVED">Archived</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">Category</Label>
+                <Select value={categoryId || "none"} onValueChange={(v) => setCategoryId(v === "none" ? "" : v)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={categoriesError ? "Failed to load" : categories.length === 0 ? "No categories yet" : "No category"} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">No category</SelectItem>
@@ -311,51 +363,12 @@ export default function BlogEditorPage() {
                     ))}
                   </SelectContent>
                 </Select>
+                {categoriesError && <p className="text-xs text-destructive">Could not load categories</p>}
               </div>
-              <div className="space-y-2">
-                <Label className="text-[#5d5b54] text-xs">Tags</Label>
-                <div className="flex flex-wrap gap-1.5">
-                  {tags?.length === 0 && <p className="text-xs text-[#bbb8b1]">No tags available</p>}
-                  {tags?.map((tag: any) => (
-                    <Badge
-                      key={tag.id}
-                      variant={tagIds.includes(tag.id) ? "default" : "outline"}
-                      className="cursor-pointer"
-                      onClick={() =>
-                        setTagIds((prev) =>
-                          prev.includes(tag.id) ? prev.filter((t) => t !== tag.id) : [...prev, tag.id]
-                        )
-                      }
-                    >
-                      {tag.name}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[#5d5b54] text-xs">Related Tours</Label>
-                <div className="flex flex-wrap gap-1.5">
-                  {tours?.length === 0 && <p className="text-xs text-[#bbb8b1]">No tours available</p>}
-                  {tours?.map((tour: any) => (
-                    <Badge
-                      key={tour.id}
-                      variant={relatedTourIds.includes(tour.id) ? "default" : "outline"}
-                      className="cursor-pointer"
-                      onClick={() =>
-                        setRelatedTourIds((prev) =>
-                          prev.includes(tour.id) ? prev.filter((t) => t !== tour.id) : [...prev, tour.id]
-                        )
-                      }
-                    >
-                      {tour.title}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[#5d5b54] text-xs">Publish date</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">Publish date</Label>
                 <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#a4a097]" />
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     type="date"
                     value={publishDate}
@@ -365,61 +378,84 @@ export default function BlogEditorPage() {
                 </div>
               </div>
             </div>
-          </div>
 
-          <div className="rounded-xl border border-[#e5e3df] bg-white p-4 sm:p-5 space-y-4">
-            <h3 className="text-sm font-semibold text-[#37352f]">Featured Image</h3>
+            <SectionDivider label="Tags" />
+            {tagsError ? (
+              <p className="text-xs text-destructive">Could not load tags</p>
+            ) : (
+              <TagSelector tags={tags} selectedIds={tagIds} onChange={setTagIds} />
+            )}
+
+            <SectionDivider label="Related Tours" />
+            {toursError ? (
+              <p className="text-xs text-destructive">Could not load tours</p>
+            ) : (
+              <TourSelector tours={tours} selectedIds={relatedTourIds} onChange={setRelatedTourIds} />
+            )}
+
+            <SectionDivider label="Featured Image" />
             <div className="space-y-3">
-              {featuredImage && (
-                <div className="relative rounded-lg overflow-hidden border border-[#e5e3df]">
-                  <img src={featuredImage} alt="Featured" className="w-full h-32 object-cover" />
+              {featuredImage ? (
+                <div className="relative rounded-sm overflow-hidden border border-border aspect-[3/1]">
+                  <img src={featuredImage} alt="Featured" className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center rounded-sm border border-dashed border-muted-foreground/30 py-6 text-center">
+                  <Image className="h-5 w-5 text-muted-foreground/50 mb-1" />
+                  <p className="text-xs text-muted-foreground">No image selected</p>
                 </div>
               )}
-              <Button variant="outline" size="sm" className="w-full" onClick={() => setImageDialogOpen(true)}>
-                <Image className="mr-2 h-4 w-4" />
-                {featuredImage ? "Change Image" : "Add Image"}
-              </Button>
-              {featuredImage && (
-                <Button variant="ghost" size="sm" className="w-full text-red-500" onClick={() => setFeaturedImage("")}>
-                  Remove
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => setImageDialogOpen(true)}>
+                  <Image className="mr-1.5 h-3.5 w-3.5" />
+                  {featuredImage ? "Change" : "Add Image"}
                 </Button>
-              )}
+                {featuredImage && (
+                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setFeaturedImage("")}>
+                    Remove
+                  </Button>
+                )}
+              </div>
             </div>
-          </div>
 
-          <div className="rounded-xl border border-[#e5e3df] bg-white p-4 sm:p-5 space-y-4">
-            <h3 className="text-sm font-semibold text-[#37352f]">SEO</h3>
+            <SectionDivider label="SEO" />
             <div className="space-y-3">
-              <div className="space-y-2">
-                <Label className="text-[#5d5b54] text-xs">Meta title</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">Meta title</Label>
                 <Input value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} placeholder="SEO title" />
-                <p className="text-xs text-[#a4a097]">{metaTitle.length}/60 characters</p>
+                <p className={`text-xs ${metaTitle.length > 60 ? "text-destructive" : "text-muted-foreground"}`}>
+                  {metaTitle.length}/60
+                </p>
               </div>
-              <div className="space-y-2">
-                <Label className="text-[#5d5b54] text-xs">Meta description</Label>
-                <Textarea value={metaDescription} onChange={(e) => setMetaDescription(e.target.value)} placeholder="SEO description" rows={2} />
-                <p className="text-xs text-[#a4a097]">{metaDescription.length}/160 characters</p>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">Meta description</Label>
+                <Textarea value={metaDescription} onChange={(e) => setMetaDescription(e.target.value)} placeholder="SEO description" rows={2} className="resize-none" />
+                <p className={`text-xs ${metaDescription.length > 160 ? "text-destructive" : "text-muted-foreground"}`}>
+                  {metaDescription.length}/160
+                </p>
               </div>
+              <GoogleSnippetPreview
+                title={metaTitle || title}
+                description={metaDescription || excerpt}
+                slug={slug}
+              />
             </div>
-          </div>
 
-          <div className="rounded-xl border border-[#e5e3df] bg-white p-4 sm:p-5 space-y-3">
-            <h3 className="text-sm font-semibold text-[#37352f]">Stats</h3>
-            <div className="flex justify-between text-xs">
-              <span className="text-[#5d5b54]">Words</span>
-              <span className="text-[#1a1a1a] font-medium">{wordCount}</span>
+            <SectionDivider label="Stats" />
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <span>{wordCount.toLocaleString()} <span className="text-xs">words</span></span>
+              <span className="text-border">|</span>
+              <span>{readTime} <span className="text-xs">min read</span></span>
+              <span className="text-border">|</span>
+              <span className={content ? "text-foreground font-medium" : ""}>{content ? "Ready" : "Empty"}</span>
             </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-[#5d5b54]">Read time</span>
-              <span className="text-[#1a1a1a] font-medium">{readTime} min</span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-[#5d5b54]">Content</span>
-              <span className="text-[#1a1a1a] font-medium">{content ? "Ready" : "Empty"}</span>
-            </div>
-          </div>
+          </aside>
+
+          <main className="flex-1 flex flex-col overflow-hidden p-5 pt-5">
+            <RichTextEditor value={content} onChange={setContent} expand />
+          </main>
         </div>
-      </div>
+      )}
 
       <ImageUploadDialog
         open={imageDialogOpen}
@@ -428,18 +464,11 @@ export default function BlogEditorPage() {
         title="Featured Image"
       />
 
-      <Dialog open={blocker.state === "blocked"} onOpenChange={() => blocker.reset?.()}>
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle>Unsaved changes</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-[#5d5b54] py-2">You have unsaved changes. Are you sure you want to leave?</p>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => blocker.reset?.()}>Stay</Button>
-            <Button variant="destructive" onClick={() => blocker.proceed?.()}>Leave</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ExitConfirmDialog
+        open={blocker.state === "blocked"}
+        onStay={() => blocker.reset?.()}
+        onLeave={() => blocker.proceed?.()}
+      />
     </div>
   );
 }

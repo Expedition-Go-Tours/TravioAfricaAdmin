@@ -1,17 +1,11 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePermission } from "@/hooks/usePermission";
 import {
-  ArrowLeft,
-  DollarSign,
-  CalendarCheck,
-  UserPlus,
   Users,
-  Clock,
   MessageSquare,
   Building,
-  AlertTriangle,
   Activity,
   ArrowRight,
   X,
@@ -21,8 +15,6 @@ import {
   Banknote,
   LayoutDashboard,
   Settings,
-  TrendingUp,
-  ChevronRight,
 } from "lucide-react";
 import {
   Tooltip,
@@ -35,17 +27,22 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SectionError } from "@/components/shared/SectionError";
 import { SectionEmpty } from "@/components/shared/SectionEmpty";
+import { SparklineChart } from "@/components/shared/SparklineChart";
+import { BookingVolumeChart } from "./overview/BookingVolumeChart";
+import { LatestUpdatesPanel } from "./overview/LatestUpdatesPanel";
 import api from "@/lib/axios";
 import { getAdminSocket } from "@/lib/adminSocket";
-import { formatCurrency, formatNumber, formatDate, timeAgo } from "@/lib/utils";
-import { staggerContainer, staggerFast, fadeInUp, scaleIn } from "@/lib/animations";
+import { formatCurrency, formatNumber, formatDate } from "@/lib/utils";
+import { staggerContainer, fadeInUp } from "@/lib/animations";
+import { cn } from "@/lib/utils";
 
 interface OverviewData {
   forbidden?: boolean;
   revenue?: { today?: { revenue?: number }; yesterday?: { revenue?: number }; thisWeek?: { revenue?: number; commission?: number; supplierPayout?: number }; thisMonth?: { revenue?: number; commission?: number; supplierPayout?: number }; ytd?: { revenue?: number; commission?: number; supplierPayout?: number } };
-  bookings?: { today?: number; yesterday?: number };
+  bookings?: { today?: number; yesterday?: number; weekly?: Array<{ day: string; count: number }> };
   signups?: { today?: number; yesterday?: number };
   activeUsersLast30Days?: number;
   activeUsersPrevious30?: number;
@@ -66,7 +63,8 @@ const bookingColors: Record<string, string> = {
 
 export default function OverviewPage() {
   const navigate = useNavigate();
-  const { can } = usePermission();
+  const { can, adminRole } = usePermission();
+  const [timeFilter, setTimeFilter] = useState("last_week");
   const [showActiveUsers, setShowActiveUsers] = useState(false);
   const [showTodayBookings, setShowTodayBookings] = useState(false);
   const [showNewSignups, setShowNewSignups] = useState(false);
@@ -132,24 +130,9 @@ export default function OverviewPage() {
     },
   });
 
-  const { data: pendingReviews } = useQuery({
-    queryKey: ["admin", "reviews-pending-count"],
-    enabled: can('reviews.view'),
-    queryFn: async () => {
-      const res = await api.get("/reviews/admin/pending?page=1&limit=1");
-      const d = res.data?.data as { reviews: unknown[]; pagination: { totalCount: number }; counts?: { pending?: number } } | undefined;
-      return d ?? { reviews: [], pagination: { totalCount: 0 } };
-    },
-  });
 
-  const { data: pendingSuppliers } = useQuery({
-    queryKey: ["admin", "suppliers-pending"],
-    enabled: can('suppliers.view'),
-    queryFn: async () => {
-      const res = await api.get("/suppliers/admin/applications?status=PENDING&page=1&limit=1");
-      return (res.data?.data as { applications: unknown[]; pagination: { totalCount: number } } | undefined) ?? { applications: [], pagination: { totalCount: 0 } };
-    },
-  });
+
+
 
   const { data: activeUsersData, isLoading: activeUsersLoading } = useQuery({
     queryKey: ["admin", "active-users"],
@@ -196,7 +179,6 @@ export default function OverviewPage() {
     const refetchTodayBookings = () => queryClient.invalidateQueries({ queryKey: ["admin", "bookings", "today"] });
     const refetchRevenueTrend = () => queryClient.invalidateQueries({ queryKey: ["admin", "revenue-trend"] });
     const refetchPayoutSummary = () => queryClient.invalidateQueries({ queryKey: ["admin", "payout-summary"] });
-    const refetchPendingReviews = () => queryClient.invalidateQueries({ queryKey: ["admin", "reviews-pending-count"] });
     const refetchPendingSuppliers = () => queryClient.invalidateQueries({ queryKey: ["admin", "suppliers-pending"] });
     const onBooking = () => { refetchOverview(); refetchTodayBookings(); refetchRevenueTrend(); };
     const onSignup = () => { refetchSignups(); refetchOverview(); };
@@ -216,7 +198,6 @@ export default function OverviewPage() {
       socket.off("admin:signup", onSignup);
       socket.off("admin:new-booking", onBooking);
       socket.off("admin:new-review", refetchOverview);
-      socket.off("admin:new-tour", onTourChange);
       socket.off("admin:tour-update", onTourChange);
       socket.off("admin:supplier-application", onSupplierApp);
       socket.off("admin:supplier-status-change", onSupplierStatus);
@@ -224,485 +205,396 @@ export default function OverviewPage() {
     };
   }, [queryClient]);
 
-  const calcTrend = (current: number | undefined | null, previous: number | undefined | null, context?: string): { value: number; isPositive: boolean; text?: string } | undefined => {
+  const calcTrend = (current: number | undefined | null, previous: number | undefined | null): { value: number; isPositive: boolean } | undefined => {
     const cur = Number(current) || 0;
     if (cur === 0) return undefined;
     const prev = Number(previous) || 0;
-    if (prev === 0) return { value: 0, isPositive: true, text: context ? `${context} today` : undefined };
+    if (prev === 0) return { value: 0, isPositive: true };
     const change = ((cur - prev) / prev) * 100;
     const rounded = Math.min(Math.abs(Math.round(change)), 100);
-    const direction = change >= 0 ? "more than" : "less than";
-    const period = context === "Active Users" ? "last 30 days" : "yesterday";
-    return { value: rounded, isPositive: change >= 0, text: `${rounded}% ${direction} ${period}` };
+    return { value: rounded, isPositive: change >= 0 };
   };
+
+  // Mock sparkline data (in real app, this would come from API)
+  const bookingsSparkline = [120, 135, 142, 128, 156, 168, Number(overview?.bookings?.today) || 180];
+  const revenueSparkline = [4500, 5200, 4800, 5600, 6200, 5900, Number(overview?.revenue?.today?.revenue) || 6500];
+  const usersSparkline = [800, 820, 835, 810, 845, 860, Number(overview?.activeUsersLast30Days) || 890];
+
+  // Mock weekly booking data
+  const weeklyBookingData = overview?.bookings?.weekly || [
+    { day: "Sun", count: 145 },
+    { day: "Mon", count: 189 },
+    { day: "Tue", count: 234 },
+    { day: "Wed", count: 198 },
+    { day: "Thu", count: 267 },
+    { day: "Fri", count: 312 },
+    { day: "Sat", count: 278 },
+  ];
+
+  const weeklyTotal = weeklyBookingData.reduce((sum, d) => sum + d.count, 0);
+
+  // Transform event feed for LatestUpdatesPanel
+  const activities = (overview?.eventFeed || []).slice(0, 10).map((event, idx) => ({
+    id: String(idx),
+    type: idx % 3 === 0 ? "booking" as const : idx % 3 === 1 ? "user" as const : "update" as const,
+    title: event.message || "Activity",
+    description: event.userName || "System",
+    timestamp: event.createdAt,
+  }));
+
+  const userName = adminRole?.name?.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()) || "Admin";
 
   return (
     <motion.div
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="space-y-4 md:space-y-5"
+      className="-mx-4 md:-mx-6 lg:-mx-8 space-y-4 md:space-y-5 px-0.5 md:px-1 lg:px-1"
     >
-      <motion.div variants={fadeInUp} className="flex items-center gap-3">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface-base text-text-secondary hover:bg-surface-muted transition-all duration-200 shadow-soft"
-          aria-label="Go back"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </button>
-        <div className="pl-1">
-          <h1 className="text-xl md:text-2xl font-bold tracking-tight text-text-primary">Overview</h1>
-        </div>
-      </motion.div>
-
       {overview?.forbidden ? (
         <WelcomeDashboard />
       ) : (
-      <>
-      {/* ── KPI Row ── */}
-      <motion.div
-        variants={fadeInUp}
-        className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4"
-      >
-        {can('dashboard.revenue') && (
-          <KpiCard
-            label="Revenue Today"
-            value={overviewLoading ? "..." : formatCurrency(overview?.revenue?.today?.revenue)}
-            icon={<DollarSign className="h-4 w-4" />}
-            trend={calcTrend(
-              overview?.revenue?.today?.revenue ? Number(overview.revenue.today.revenue) : undefined,
-              overview?.revenue?.yesterday?.revenue ? Number(overview.revenue.yesterday.revenue) : undefined,
-              "Revenue"
-            )}
-            accent="green"
-          />
-        )}
-        {can('dashboard.bookings') && (
-          <KpiCard
-            label="Bookings Today"
-            value={overviewLoading ? "..." : formatNumber(overview?.bookings?.today)}
-            icon={<CalendarCheck className="h-4 w-4" />}
-            onClick={() => setShowTodayBookings(true)}
-            trend={calcTrend(overview?.bookings?.today, overview?.bookings?.yesterday, "Bookings")}
-            accent="green"
-          />
-        )}
-        {can('users.view') && (
-          <KpiCard
-            label="New Signups"
-            value={overviewLoading ? "..." : formatNumber(overview?.signups?.today)}
-            icon={<UserPlus className="h-4 w-4" />}
-            onClick={() => setShowNewSignups(true)}
-            trend={calcTrend(overview?.signups?.today, overview?.signups?.yesterday, "Signups")}
-            accent="blue"
-          />
-        )}
-        {can('users.view') && (
-          <KpiCard
-            label="Active Users (30d)"
-            value={overviewLoading ? "..." : formatNumber(overview?.activeUsersLast30Days)}
-            icon={<Users className="h-4 w-4" />}
-            onClick={() => setShowActiveUsers(true)}
-            trend={calcTrend(overview?.activeUsersLast30Days, overview?.activeUsersPrevious30, "Active Users")}
-            accent="blue"
-          />
-        )}
-        {(() => {
-          const pendingPayouts = can('payouts.view') ? (payoutSummary?.pending?.count ?? 0) : 0;
-          const pendingReviewsCount = can('reviews.view') ? (pendingReviews?.counts?.pending ?? 0) : 0;
-          const pendingSuppliersCount = can('suppliers.view') ? (pendingSuppliers?.pagination?.totalCount ?? 0) : 0;
-          const totalPending = pendingPayouts + pendingReviewsCount + pendingSuppliersCount;
-          if (totalPending === 0 && !overviewLoading) return null;
-          return (
-            <div className="rounded-xl bg-surface-base border border-border p-3.5 md:p-4 transition-all duration-200 ease-[cubic-bezier(0.32,0.72,0,1)]">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <p className="text-[11px] md:text-xs font-medium text-text-secondary uppercase tracking-[0.08em] truncate">Action Required</p>
-                  <p className="mt-1 text-lg md:text-xl font-bold text-text-primary tabular-nums">{overviewLoading ? "..." : formatNumber(totalPending)}</p>
-                </div>
-                <div className="flex h-8 w-8 md:h-9 md:w-9 shrink-0 items-center justify-center rounded-[10px] bg-amber-100 text-amber-700">
-                  <AlertTriangle className="h-4 w-4" />
-                </div>
-              </div>
-              {!overviewLoading && totalPending > 0 && (
-                <div className="mt-2.5 flex flex-col gap-1 text-[11px] md:text-xs text-text-tertiary">
-                  {pendingPayouts > 0 && <span>{formatNumber(payoutSummary?.pending?.count)} pending payout{payoutSummary?.pending?.count !== 1 ? 's' : ''}</span>}
-                  {pendingReviewsCount > 0 && <span>{formatNumber(pendingReviews?.counts?.pending)} pending review{pendingReviews?.counts?.pending !== 1 ? 's' : ''}</span>}
-                  {pendingSuppliersCount > 0 && <span>{formatNumber(pendingSuppliers?.pagination?.totalCount)} pending supplier{pendingSuppliers?.pagination?.totalCount !== 1 ? 's' : ''}</span>}
-                </div>
-              )}
+        <>
+          {/* Welcome Header */}
+          <motion.div variants={fadeInUp} className="flex items-start justify-between">
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold tracking-tight text-text-primary">
+                Hello, {userName}
+              </h1>
+              <p className="text-sm text-text-secondary mt-1">
+                Here are the latest insights from your customer interactions.
+              </p>
             </div>
-          );
-        })()}
-      </motion.div>
+            <Select value={timeFilter} onValueChange={setTimeFilter}>
+              <SelectTrigger className="w-[140px] h-9 text-xs">
+                <SelectValue placeholder="Select period" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="today">Today</SelectItem>
+                <SelectItem value="last_week">Last week</SelectItem>
+                <SelectItem value="last_month">Last month</SelectItem>
+                <SelectItem value="last_quarter">Last quarter</SelectItem>
+              </SelectContent>
+            </Select>
+          </motion.div>
 
-      {/* ── Revenue Periods ── */}
-      {can('dashboard.revenue') && (
-        <motion.div variants={fadeInUp} className="grid grid-cols-2 gap-3 md:grid-cols-2 lg:grid-cols-4">
-          {overviewLoading
-            ? Array.from({ length: 4 }).map((_, i) => (
-                <Card key={i}>
-                  <CardContent className="p-4">
-                    <Skeleton className="mb-2 h-4 w-16" />
-                    <Skeleton className="h-7 w-24" />
-                    <Skeleton className="mt-1.5 h-3 w-20" />
+          {/* KPI Cards with Sparklines */}
+          <motion.div variants={fadeInUp} className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {can('dashboard.bookings') && (
+              <KPICardWithSparkline
+                label="Bookings Today"
+                value={overviewLoading ? 0 : Number(overview?.bookings?.today) || 0}
+                trend={calcTrend(overview?.bookings?.today, overview?.bookings?.yesterday)}
+                sparklineData={bookingsSparkline}
+                sparklineColor="#10b981"
+                loading={overviewLoading}
+                onClick={() => setShowTodayBookings(true)}
+              />
+            )}
+            {can('dashboard.revenue') && (
+              <KPICardWithSparkline
+                label="Revenue Today"
+                value={overviewLoading ? 0 : Number(overview?.revenue?.today?.revenue) || 0}
+                trend={calcTrend(
+                  overview?.revenue?.today?.revenue ? Number(overview.revenue.today.revenue) : undefined,
+                  overview?.revenue?.yesterday?.revenue ? Number(overview.revenue.yesterday.revenue) : undefined
+                )}
+                sparklineData={revenueSparkline}
+                sparklineColor="#3b82f6"
+                loading={overviewLoading}
+                format="currency"
+              />
+            )}
+            {can('users.view') && (
+              <KPICardWithSparkline
+                label="Active Users (30d)"
+                value={overviewLoading ? 0 : Number(overview?.activeUsersLast30Days) || 0}
+                trend={calcTrend(overview?.activeUsersLast30Days, overview?.activeUsersPrevious30)}
+                sparklineData={usersSparkline}
+                sparklineColor="#8b5cf6"
+                loading={overviewLoading}
+                onClick={() => setShowActiveUsers(true)}
+              />
+            )}
+          </motion.div>
+
+          {/* Booking Volume Chart + Latest Updates */}
+          <motion.div variants={fadeInUp} className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <BookingVolumeChart
+                data={weeklyBookingData}
+                total={weeklyTotal}
+                trend={{ value: 8, isPositive: true }}
+                loading={overviewLoading}
+              />
+            </div>
+            <div className="lg:col-span-1">
+              <LatestUpdatesPanel
+                activities={activities}
+                loading={overviewLoading}
+              />
+            </div>
+          </motion.div>
+
+          {/* Top Tours */}
+          {can('tours.view') && (
+            <motion.div variants={fadeInUp}>
+              <Card>
+                <CardHeader className="border-b border-border/60 pb-3.5">
+                  <CardTitle className="flex items-center gap-2.5 text-[13px] font-semibold tracking-tight text-text-primary">
+                    <Map className="h-4 w-4 text-primary" />
+                    Top Tours
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0 overflow-x-auto">
+                  {overviewLoading ? (
+                    <div className="p-4 space-y-2">
+                      {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full rounded-lg" />)}
+                    </div>
+                  ) : overviewError ? (
+                    <SectionError message="Failed to load tours" onRetry={() => overviewRefetch()} />
+                  ) : !overview?.topTours?.length ? (
+                    <SectionEmpty message="No top tours data" />
+                  ) : (
+                    <div className="min-w-[600px]">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-border bg-surface-muted/40">
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary" colSpan={2}>Tour</th>
+                            <th className="px-4 py-3 text-center text-xs font-semibold text-text-secondary">Bookings</th>
+                            <th className="px-4 py-3 text-center text-xs font-semibold text-text-secondary">Revenue</th>
+                            <th className="px-4 py-3 text-center text-xs font-semibold text-text-secondary">Rating</th>
+                            <th className="px-4 py-3 text-center text-xs font-semibold text-text-secondary">Reviews</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {overview.topTours.map((tour, idx) => (
+                            <tr
+                              key={tour.id || idx}
+                              className="border-b border-border last:border-b-0 cursor-pointer hover:bg-surface-muted/20 transition-colors"
+                              onClick={() => navigate("/admin/tours")}
+                              tabIndex={0}
+                              onKeyDown={(e) => { if (e.key === "Enter") navigate("/admin/tours"); }}
+                            >
+                              <td colSpan={2} className="px-4 py-3">
+                                <div className="flex items-center gap-3">
+                                  <span className="w-5 text-center text-xs font-medium text-text-tertiary shrink-0">{idx + 1}</span>
+                                  <span className="font-medium text-text-primary truncate">{tour.title}</span>
+                                </div>
+                              </td>
+                              <td className="px-4 py-3 text-center text-text-primary">{formatNumber(tour.bookingCount)}</td>
+                              <td className="px-4 py-3 text-center text-text-primary">{formatCurrency(tour.revenue)}</td>
+                              <td className="px-4 py-3 text-center">
+                                {tour.averageRating != null ? Number(tour.averageRating).toFixed(1) : "—"}
+                              </td>
+                              <td className="px-4 py-3 text-center text-text-primary">{formatNumber(tour.reviewCount)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
+          {/* Bottom Grid: Booking Status + Payout Summary */}
+          {(can('dashboard.bookings') || can('dashboard.*') || can('payouts.view')) && (
+            <motion.div variants={fadeInUp} className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+              {can('dashboard.bookings') && (
+                <Card>
+                  <CardHeader className="border-b border-border/60 pb-3.5">
+                    <CardTitle className="flex items-center gap-2.5 text-[13px] font-semibold tracking-tight text-text-primary">
+                      <Activity className="h-4 w-4 text-primary" />
+                      Booking Status
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    {overviewLoading ? (
+                      <Skeleton className="h-48 w-full rounded-xl" />
+                    ) : overviewError ? (
+                      <SectionError message="Failed to load booking status" onRetry={() => overviewRefetch()} />
+                    ) : !overview?.bookingStatusDistribution?.length ? (
+                      <SectionEmpty message="No booking data" />
+                    ) : (
+                      <div className="flex flex-col items-center">
+                        <ResponsiveContainer width="100%" height={200}>
+                          <RePieChart>
+                            <Pie
+                              data={(overview.bookingStatusDistribution || []).map((d) => ({ name: d.status || "Unknown", value: d.count || 0 }))}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={55}
+                              outerRadius={85}
+                              dataKey="value"
+                              paddingAngle={3}
+                              stroke="none"
+                            >
+                              {(overview.bookingStatusDistribution || []).map((entry, i) => (
+                                <Cell key={entry.status || `unknown-${i}`} fill={bookingColors[entry.status || ""] || "#8a9ba8"} />
+                              ))}
+                            </Pie>
+                            <Tooltip />
+                          </RePieChart>
+                        </ResponsiveContainer>
+                        <div className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-1.5">
+                          {(overview.bookingStatusDistribution || []).map((d, i) => (
+                            <span key={d.status || `legend-${i}`} className="inline-flex items-center gap-1.5 text-xs text-text-secondary">
+                              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: bookingColors[d.status || ""] || "#8a9ba8" }} />
+                              {d.status || "Unknown"}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
-              ))
-            : (
-                <>
-                  <RevenuePeriodCard period="Today" revenue={overview?.revenue?.today?.revenue} />
-                  <RevenuePeriodCard period="This Week" revenue={overview?.revenue?.thisWeek?.revenue} commission={overview?.revenue?.thisWeek?.commission} payout={overview?.revenue?.thisWeek?.supplierPayout} />
-                  <RevenuePeriodCard period="This Month" revenue={overview?.revenue?.thisMonth?.revenue} commission={overview?.revenue?.thisMonth?.commission} payout={overview?.revenue?.thisMonth?.supplierPayout} />
-                  <RevenuePeriodCard period="Year to Date" revenue={overview?.revenue?.ytd?.revenue} commission={overview?.revenue?.ytd?.commission} payout={overview?.revenue?.ytd?.supplierPayout} />
-                </>
               )}
-        </motion.div>
-      )}
 
-      {/* ── Top Suppliers + Top Tours ── */}
-      {(can('suppliers.view') || can('tours.view')) && (
-        <motion.div variants={fadeInUp} className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-          {can('suppliers.view') && (
-            <Card className="lg:col-span-1">
-              <CardHeader className="border-b border-border/60 pb-3.5">
-                <CardTitle className="flex items-center gap-2.5 text-[13px] font-semibold tracking-tight text-text-primary">
-                  <TrendingUp className="h-4 w-4 text-primary" />
-                  Top Suppliers
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                {overviewLoading ? (
-                  <div className="p-4 space-y-3">
-                    {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full rounded-lg" />)}
-                  </div>
-                ) : overviewError ? (
-                  <SectionError message="Failed to load suppliers" onRetry={() => overviewRefetch()} />
-                ) : !overview?.topSuppliers?.length ? (
-                  <SectionEmpty message="No supplier data" />
-                ) : (
-                  <div className="divide-y divide-border">
-                    {(overview.topSuppliers || []).slice(0, 5).map((sup, idx) => (
-                      <div
-                        key={sup.id || idx}
-                        className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-surface-muted/30 transition-colors"
-                        onClick={() => navigate(`/admin/suppliers/${sup.id}`)}
-                        tabIndex={0}
-                        onKeyDown={(e) => { if (e.key === "Enter") navigate(`/admin/suppliers/${sup.id}`); }}
-                      >
-                        {sup.user?.photoURL ? (
-                          <img src={sup.user.photoURL} alt="" className="h-8 w-8 shrink-0 rounded-[10px] object-cover" />
-                        ) : (
-                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-accent text-xs font-medium text-accent-foreground">
-                            {sup.user?.name?.charAt(0)?.toUpperCase() || "S"}
-                          </span>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-text-primary truncate">{sup.user?.name || "Unknown"}</p>
-                          <p className="text-xs text-text-tertiary">{formatNumber(sup.totalBookings)} bookings</p>
+              {can('payouts.view') && (
+                <Card>
+                  <CardHeader className="border-b border-border/60 pb-3.5">
+                    <CardTitle className="flex items-center gap-2.5 text-[13px] font-semibold tracking-tight text-text-primary">
+                      <Banknote className="h-4 w-4 text-primary" />
+                      Payout Summary
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4 space-y-3">
+                    {!payoutSummary ? (
+                      <Skeleton className="h-28 w-full rounded-xl" />
+                    ) : (
+                      <>
+                        <div className="flex items-center justify-between py-2.5 border-b border-border/60">
+                          <span className="text-sm text-text-secondary">Pending</span>
+                          <span className="text-sm font-semibold text-text-primary">{formatNumber(payoutSummary.pending?.count)}</span>
                         </div>
-                        <span className="text-sm font-medium text-text-primary shrink-0">{formatCurrency(sup.totalEarnings)}</span>
+                        <div className="flex items-center justify-between py-2.5 border-b border-border/60">
+                          <span className="text-sm text-text-secondary">Paid This Month</span>
+                          <span className="text-sm font-semibold text-text-primary">{formatNumber(payoutSummary.paidThisMonth?.count)}</span>
+                        </div>
+                        <div className="text-xs text-text-tertiary space-y-1.5 pt-1">
+                          <div className="flex justify-between"><span>Pending total</span><span className="font-medium text-text-primary">{formatCurrency(payoutSummary.pending?.totalAmount)}</span></div>
+                          <div className="flex justify-between"><span>Paid total</span><span className="font-medium text-text-primary">{formatCurrency(payoutSummary.paidThisMonth?.totalAmount)}</span></div>
+                        </div>
+                        <Button variant="outline" size="sm" className="w-full h-10 rounded-xl group" onClick={() => navigate("/admin/payouts")}>
+                          View All Payouts
+                          <ArrowRight className="ml-1.5 h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                        </Button>
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+            </motion.div>
+          )}
+
+          {/* Dialogs */}
+          {showActiveUsers && (
+            <ModalShell title="Active Users (30d)" onClose={() => setShowActiveUsers(false)}>
+              {activeUsersLoading ? (
+                <div className="p-6 space-y-3">
+                  {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-xl" />)}
+                </div>
+              ) : !activeUsersData?.length ? (
+                <div className="py-12 text-center text-sm text-text-tertiary">No active users in the last 30 days</div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {activeUsersData.map((user) => (
+                    <div key={user.id} className="flex items-start gap-3 px-4 py-3">
+                      {user.photoURL ? (
+                        <img src={user.photoURL} alt="" className="h-8 w-8 shrink-0 rounded-[10px] object-cover mt-0.5" />
+                      ) : (
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-surface-muted text-xs font-medium text-text-secondary mt-0.5">
+                          {user.name?.charAt(0)?.toUpperCase() || "?"}
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-text-primary truncate">{user.name || "Unknown"}</p>
+                        <p className="text-xs text-text-tertiary truncate">{user.email || "—"}</p>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {can('tours.view') && (
-            <Card className="lg:col-span-2">
-              <CardHeader className="border-b border-border/60 pb-3.5">
-                <CardTitle className="flex items-center gap-2.5 text-[13px] font-semibold tracking-tight text-text-primary">
-                  <Map className="h-4 w-4 text-primary" />
-                  Top Tours
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0 overflow-x-auto">
-                {overviewLoading ? (
-                  <div className="p-4 space-y-2">
-                    {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full rounded-lg" />)}
-                  </div>
-                ) : overviewError ? (
-                  <SectionError message="Failed to load tours" onRetry={() => overviewRefetch()} />
-                ) : !overview?.topTours?.length ? (
-                  <SectionEmpty message="No top tours data" />
-                ) : (
-                  <div className="min-w-[600px]">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-border bg-surface-muted/40">
-                          <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary" colSpan={2}>Tour</th>
-                          <th className="px-4 py-3 text-center text-xs font-semibold text-text-secondary">Bookings</th>
-                          <th className="px-4 py-3 text-center text-xs font-semibold text-text-secondary">Revenue</th>
-                          <th className="px-4 py-3 text-center text-xs font-semibold text-text-secondary">Rating</th>
-                          <th className="px-4 py-3 text-center text-xs font-semibold text-text-secondary">Reviews</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {overview.topTours.map((tour, idx) => (
-                          <tr
-                            key={tour.id || idx}
-                            className="border-b border-border last:border-b-0 cursor-pointer hover:bg-surface-muted/20 transition-colors"
-                            onClick={() => navigate("/admin/tours")}
-                            tabIndex={0}
-                            onKeyDown={(e) => { if (e.key === "Enter") navigate("/admin/tours"); }}
-                          >
-                            <td colSpan={2} className="px-4 py-3">
-                              <div className="flex items-center gap-3">
-                                <span className="w-5 text-center text-xs font-medium text-text-tertiary shrink-0">{idx + 1}</span>
-                                <span className="font-medium text-text-primary truncate">{tour.title}</span>
-                              </div>
-                            </td>
-                            <td className="px-4 py-3 text-center text-text-primary">{formatNumber(tour.bookingCount)}</td>
-                            <td className="px-4 py-3 text-center text-text-primary">{formatCurrency(tour.revenue)}</td>
-                            <td className="px-4 py-3 text-center">
-                              {tour.averageRating != null ? Number(tour.averageRating).toFixed(1) : "—"}
-                            </td>
-                            <td className="px-4 py-3 text-center text-text-primary">{formatNumber(tour.reviewCount)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-        </motion.div>
-      )}
-
-      {/* ── Bottom Grid ── */}
-      {(can('dashboard.bookings') || can('dashboard.*') || can('payouts.view')) && (
-        <motion.div variants={fadeInUp} className="grid grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-3">
-          {can('dashboard.bookings') && (
-            <Card className="xl:col-span-1">
-              <CardHeader className="border-b border-border/60 pb-3.5">
-                <CardTitle className="flex items-center gap-2.5 text-[13px] font-semibold tracking-tight text-text-primary">
-                  <Activity className="h-4 w-4 text-primary" />
-                  Booking Status
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-4">
-                {overviewLoading ? (
-                  <Skeleton className="h-48 w-full rounded-xl" />
-                ) : overviewError ? (
-                  <SectionError message="Failed to load booking status" onRetry={() => overviewRefetch()} />
-                ) : !overview?.bookingStatusDistribution?.length ? (
-                  <SectionEmpty message="No booking data" />
-                ) : (
-                  <div className="flex flex-col items-center">
-                    <ResponsiveContainer width="100%" height={200}>
-                      <RePieChart>
-                        <Pie
-                          data={(overview.bookingStatusDistribution || []).map((d) => ({ name: d.status || "Unknown", value: d.count || 0 }))}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={55}
-                          outerRadius={85}
-                          dataKey="value"
-                          paddingAngle={3}
-                          stroke="none"
-                        >
-                          {(overview.bookingStatusDistribution || []).map((entry, i) => (
-                            <Cell key={entry.status || `unknown-${i}`} fill={bookingColors[entry.status || ""] || "#8a9ba8"} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                      </RePieChart>
-                    </ResponsiveContainer>
-                    <div className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-1.5">
-                      {(overview.bookingStatusDistribution || []).map((d, i) => (
-                        <span key={d.status || `legend-${i}`} className="inline-flex items-center gap-1.5 text-xs text-text-secondary">
-                          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: bookingColors[d.status || ""] || "#8a9ba8" }} />
-                          {d.status || "Unknown"}
-                        </span>
-                      ))}
+                      {user.lastLoginAt && (
+                        <span className="shrink-0 text-xs text-text-tertiary whitespace-nowrap pt-1">{formatDate(user.lastLoginAt)}</span>
+                      )}
                     </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                  ))}
+                </div>
+              )}
+            </ModalShell>
           )}
 
-          {can('dashboard.*') && (
-            <Card className="xl:col-span-1">
-              <CardHeader className="border-b border-border/60 pb-3.5">
-                <CardTitle className="flex items-center gap-2.5 text-[13px] font-semibold tracking-tight text-text-primary">
-                  <Activity className="h-4 w-4 text-primary" />
-                  Recent Activity
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                {overviewLoading ? (
-                  <div className="p-4 space-y-3">
-                    {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-6 w-full rounded-lg" />)}
-                  </div>
-                ) : overviewError ? (
-                  <SectionError message="Failed to load activity" onRetry={() => overviewRefetch()} />
-                ) : !overview?.eventFeed?.length ? (
-                  <SectionEmpty message="No recent activity" />
-                ) : (
-                  <div className="max-h-72 overflow-y-auto scrollbar-thin divide-y divide-border">
-                    {overview.eventFeed.map((event, idx) => (
-                      <div key={idx} className="px-4 py-3">
-                        <p className="text-sm text-text-primary">{event.message}</p>
-                        <p className="text-xs text-text-tertiary mt-1">
-                          {event.userName && <>{event.userName} · </>}
-                          {timeAgo(event.createdAt)}
-                        </p>
+          {showTodayBookings && (
+            <ModalShell title="Today's Bookings" onClose={() => setShowTodayBookings(false)} wide>
+              {todayBookingsLoading ? (
+                <div className="p-6 space-y-3">
+                  {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
+                </div>
+              ) : !todayBookings?.length ? (
+                <div className="py-12 text-center text-sm text-text-tertiary">No bookings today</div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {todayBookings.map((booking) => (
+                    <div key={booking.id} className="px-4 py-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <div>
+                          <p className="text-sm text-text-primary truncate">{booking.customer?.name || "Unknown"}</p>
+                          <p className="text-xs text-text-tertiary truncate">{booking.bookingNumber}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-text-primary truncate">{booking.tour?.title || "—"}</p>
+                          <p className="text-xs text-text-tertiary truncate">{booking.tour?.supplier?.name || "—"}</p>
+                        </div>
+                        <div className="sm:text-right">
+                          <p className="text-sm text-text-primary">{formatCurrency(booking.total)} {booking.currency}</p>
+                          <p className="text-xs text-text-tertiary mt-0.5">{booking.status}</p>
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {can('payouts.view') && (
-            <Card className="xl:col-span-1">
-              <CardHeader className="border-b border-border/60 pb-3.5">
-                <CardTitle className="flex items-center gap-2.5 text-[13px] font-semibold tracking-tight text-text-primary">
-                  <Banknote className="h-4 w-4 text-primary" />
-                  Payout Summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-4 space-y-3">
-                {!payoutSummary ? (
-                  <Skeleton className="h-28 w-full rounded-xl" />
-                ) : (
-                  <>
-                    <div className="flex items-center justify-between py-2.5 border-b border-border/60">
-                      <span className="text-sm text-text-secondary">Pending</span>
-                      <span className="text-sm font-semibold text-text-primary">{formatNumber(payoutSummary.pending?.count)}</span>
                     </div>
-                    <div className="flex items-center justify-between py-2.5 border-b border-border/60">
-                      <span className="text-sm text-text-secondary">Paid This Month</span>
-                      <span className="text-sm font-semibold text-text-primary">{formatNumber(payoutSummary.paidThisMonth?.count)}</span>
-                    </div>
-                    <div className="text-xs text-text-tertiary space-y-1.5 pt-1">
-                      <div className="flex justify-between"><span>Pending total</span><span className="font-medium text-text-primary">{formatCurrency(payoutSummary.pending?.totalAmount)}</span></div>
-                      <div className="flex justify-between"><span>Paid total</span><span className="font-medium text-text-primary">{formatCurrency(payoutSummary.paidThisMonth?.totalAmount)}</span></div>
-                    </div>
-                    <Button variant="outline" size="sm" className="w-full h-10 rounded-xl group" onClick={() => navigate("/admin/payouts")}>
-                      View All Payouts
-                      <ArrowRight className="ml-1.5 h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-                    </Button>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          )}
-        </motion.div>
-      )}
-
-      {/* ── Dialogs ── */}
-      {showActiveUsers && (
-        <ModalShell title="Active Users (30d)" onClose={() => setShowActiveUsers(false)}>
-          {activeUsersLoading ? (
-            <div className="p-6 space-y-3">
-              {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-xl" />)}
-            </div>
-          ) : !activeUsersData?.length ? (
-            <div className="py-12 text-center text-sm text-text-tertiary">No active users in the last 30 days</div>
-          ) : (
-            <div className="divide-y divide-border">
-              {activeUsersData.map((user) => (
-                <div key={user.id} className="flex items-start gap-3 px-4 py-3">
-                  {user.photoURL ? (
-                    <img src={user.photoURL} alt="" className="h-8 w-8 shrink-0 rounded-[10px] object-cover mt-0.5" />
-                  ) : (
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-surface-muted text-xs font-medium text-text-secondary mt-0.5">
-                      {user.name?.charAt(0)?.toUpperCase() || "?"}
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-text-primary truncate">{user.name || "Unknown"}</p>
-                    <p className="text-xs text-text-tertiary truncate">{user.email || "—"}</p>
-                  </div>
-                  {user.lastLoginAt && (
-                    <span className="shrink-0 text-xs text-text-tertiary whitespace-nowrap pt-1">{formatDate(user.lastLoginAt)}</span>
-                  )}
+                  ))}
                 </div>
-              ))}
-            </div>
+              )}
+            </ModalShell>
           )}
-        </ModalShell>
-      )}
 
-      {showTodayBookings && (
-        <ModalShell title="Today's Bookings" onClose={() => setShowTodayBookings(false)} wide>
-          {todayBookingsLoading ? (
-            <div className="p-6 space-y-3">
-              {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
-            </div>
-          ) : !todayBookings?.length ? (
-            <div className="py-12 text-center text-sm text-text-tertiary">No bookings today</div>
-          ) : (
-            <div className="divide-y divide-border">
-              {todayBookings.map((booking) => (
-                <div key={booking.id} className="px-4 py-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    <div>
-                      <p className="text-sm text-text-primary truncate">{booking.customer?.name || "Unknown"}</p>
-                      <p className="text-xs text-text-tertiary truncate">{booking.bookingNumber}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-text-primary truncate">{booking.tour?.title || "—"}</p>
-                      <p className="text-xs text-text-tertiary truncate">{booking.tour?.supplier?.name || "—"}</p>
-                    </div>
-                    <div className="sm:text-right">
-                      <p className="text-sm text-text-primary">{formatCurrency(booking.total)} {booking.currency}</p>
-                      <p className="text-xs text-text-tertiary mt-0.5">{booking.status}</p>
-                    </div>
-                  </div>
+          {showNewSignups && (
+            <ModalShell title="New Signups (Today)" onClose={() => setShowNewSignups(false)}>
+              {newSignupsLoading ? (
+                <div className="p-6 space-y-3">
+                  {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-xl" />)}
                 </div>
-              ))}
-            </div>
-          )}
-        </ModalShell>
-      )}
-
-      {showNewSignups && (
-        <ModalShell title="New Signups (Today)" onClose={() => setShowNewSignups(false)}>
-          {newSignupsLoading ? (
-            <div className="p-6 space-y-3">
-              {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-xl" />)}
-            </div>
-          ) : !newSignupsData?.length ? (
-            <div className="py-12 text-center text-sm text-text-tertiary">No new signups today</div>
-          ) : (
-            <div className="divide-y divide-border">
-              {newSignupsData.map((user) => (
-                <div key={user.id} className="flex items-start gap-3 px-4 py-3">
-                  {user.photoURL ? (
-                    <img src={user.photoURL} alt="" className="h-8 w-8 shrink-0 rounded-[10px] object-cover mt-0.5" />
-                  ) : (
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-surface-muted text-xs font-medium text-text-secondary mt-0.5">
-                      {user.name?.charAt(0)?.toUpperCase() || "?"}
+              ) : !newSignupsData?.length ? (
+                <div className="py-12 text-center text-sm text-text-tertiary">No new signups today</div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {newSignupsData.map((user) => (
+                    <div key={user.id} className="flex items-start gap-3 px-4 py-3">
+                      {user.photoURL ? (
+                        <img src={user.photoURL} alt="" className="h-8 w-8 shrink-0 rounded-[10px] object-cover mt-0.5" />
+                      ) : (
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-surface-muted text-xs font-medium text-text-secondary mt-0.5">
+                          {user.name?.charAt(0)?.toUpperCase() || "?"}
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-text-primary truncate">{user.name || "Unknown"}</p>
+                        <p className="text-xs text-text-tertiary truncate">{user.email || "—"}</p>
+                      </div>
+                      {user.createdAt && (
+                        <span className="shrink-0 text-xs text-text-tertiary whitespace-nowrap pt-1">{formatDate(user.createdAt)}</span>
+                      )}
                     </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-text-primary truncate">{user.name || "Unknown"}</p>
-                    <p className="text-xs text-text-tertiary truncate">{user.email || "—"}</p>
-                  </div>
-                  {user.createdAt && (
-                    <span className="shrink-0 text-xs text-text-tertiary whitespace-nowrap pt-1">{formatDate(user.createdAt)}</span>
-                  )}
+                  ))}
                 </div>
-              ))}
-            </div>
+              )}
+            </ModalShell>
           )}
-        </ModalShell>
-      )}
-      </>
+        </>
       )}
     </motion.div>
   );
 }
 
-/* ── Modal Shell ── */
+/* Modal Shell */
 function ModalShell({ title, children, onClose, wide }: { title: string; children: React.ReactNode; onClose: () => void; wide?: boolean }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-0 sm:p-4" onClick={onClose}>
@@ -737,7 +629,7 @@ function ModalShell({ title, children, onClose, wide }: { title: string; childre
   );
 }
 
-/* ── Welcome Dashboard ── */
+/* Welcome Dashboard */
 function WelcomeDashboard() {
   const navigate = useNavigate();
   const { can, adminRole } = usePermission();
@@ -793,32 +685,32 @@ function WelcomeDashboard() {
   );
 }
 
-/* ── KPI Card ── */
-const accentIconBg: Record<string, string> = {
-  green: "bg-accent text-accent-foreground",
-  blue: "bg-blue-100 text-blue-700",
-  amber: "bg-amber-100 text-amber-700",
-};
-
-function KpiCard({
+/* KPI Card with Sparkline */
+function KPICardWithSparkline({
   label,
   value,
-  icon,
   trend,
+  sparklineData,
+  sparklineColor,
+  loading,
+  format,
   onClick,
-  accent = "green",
 }: {
   label: string;
-  value: string;
-  icon: React.ReactNode;
-  trend?: { value: number; isPositive: boolean; text?: string };
+  value: number;
+  trend?: { value: number; isPositive: boolean };
+  sparklineData: number[];
+  sparklineColor: string;
+  loading: boolean;
+  format?: "currency" | "number";
   onClick?: () => void;
-  accent?: string;
 }) {
+  const displayValue = format === "currency" ? formatCurrency(value) : formatNumber(value);
+
   return (
     <div
       className={cn(
-        "relative rounded-xl bg-surface-base border border-border p-3.5 md:p-4 transition-all duration-200 ease-[cubic-bezier(0.32,0.72,0,1)]",
+        "rounded-xl bg-surface-base border border-border p-4 transition-all duration-200 ease-[cubic-bezier(0.32,0.72,0,1)]",
         onClick ? "cursor-pointer hover:shadow-soft hover:-translate-y-0.5" : "",
       )}
       onClick={onClick}
@@ -826,45 +718,30 @@ function KpiCard({
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={onClick ? (e) => { if (e.key === "Enter") onClick(); } : undefined}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <p className="text-[11px] md:text-xs font-medium text-text-secondary uppercase tracking-[0.08em] truncate">{label}</p>
-          <p className="mt-1 text-lg md:text-xl font-bold text-text-primary tabular-nums">{value}</p>
-          {trend && trend.value > 0 && (
-            <p className={cn("mt-1 text-[11px] md:text-xs font-medium", trend.isPositive ? "text-status-active" : "text-destructive")}>
-              {trend.isPositive ? "↑" : "↓"} {trend.value}%
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <p className="text-xs font-medium text-text-secondary uppercase tracking-[0.08em]">{label}</p>
+          {loading ? (
+            <Skeleton className="h-7 w-24 mt-2" />
+          ) : (
+            <p className="mt-2 text-2xl font-bold text-text-primary tabular-nums">{displayValue}</p>
+          )}
+          {!loading && trend && (
+            <p className={cn("mt-1 text-xs font-medium", trend.isPositive ? "text-status-active" : "text-status-rejected")}>
+              {trend.isPositive ? "↑" : "↓"} {trend.value}% vs last period
             </p>
           )}
         </div>
-        <div className={cn(
-          "flex h-8 w-8 md:h-9 md:w-9 shrink-0 items-center justify-center rounded-[10px]",
-          accentIconBg[accent] || accentIconBg.green
-        )}>
-          {icon}
+        <div className="w-24 h-10">
+          {loading ? (
+            <Skeleton className="h-full w-full" />
+          ) : (
+            <SparklineChart data={sparklineData} color={sparklineColor} height={40} />
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-/* ── Revenue Period Card ── */
-function RevenuePeriodCard({ period, revenue, commission, payout }: { period: string; revenue?: number; commission?: number; payout?: number }) {
-  return (
-    <div className="rounded-xl border border-border/80 bg-surface-base shadow-soft transition-all duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] hover:shadow-soft hover:-translate-y-0.5">
-      <div className="p-4 md:p-5">
-        <p className="text-[11px] md:text-xs font-semibold text-text-secondary uppercase tracking-[0.08em] mb-1">{period}</p>
-        <p className="text-xl md:text-2xl font-bold text-text-primary tabular-nums">{formatCurrency(revenue)}</p>
-        {(commission !== undefined || payout !== undefined) && (
-          <div className="mt-2 flex flex-col gap-0.5 text-[11px] md:text-xs text-text-tertiary">
-            {commission !== undefined && <span>Comm: {formatCurrency(commission)}</span>}
-            {payout !== undefined && <span>Payout: {formatCurrency(payout)}</span>}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
 
-function cn(...classes: (string | boolean | undefined | null)[]) {
-  return classes.filter(Boolean).join(" ");
-}

@@ -77,6 +77,30 @@ export function useAuth() {
     return false;
   }, []);
 
+  const loginWithGoogleOneTap = useCallback(async (credential: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await api.post("/auth/google/onetap", { credential });
+
+      const ok = await verifyAdmin();
+      if (!ok) {
+        clearAuthTokens();
+      }
+      return ok;
+    } catch (err: unknown) {
+      if (err && typeof err === "object") {
+        const axiosErr = err as { response?: { data?: { message?: string } } };
+        setError(axiosErr.response?.data?.message || "Google sign-in failed");
+      } else {
+        setError("Unable to connect. Check your internet.");
+      }
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [verifyAdmin]);
+
   const logout = useCallback(async () => {
     try {
       await api.post("/auth/logout");
@@ -89,7 +113,7 @@ export function useAuth() {
 
   const isAuthenticated = !!localStorage.getItem("adminRoleId");
 
-  return { login, loginWithGoogle, logout, loading, error, isAuthenticated };
+  return { login, loginWithGoogle, loginWithGoogleOneTap, logout, loading, error, isAuthenticated };
 }
 
 function clearAuthTokens() {
