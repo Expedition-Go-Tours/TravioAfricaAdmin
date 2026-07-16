@@ -84,7 +84,7 @@ export default function BlogAnalytics() {
                           <span className="text-xs font-medium text-text-secondary w-5 shrink-0">#{i + 1}</span>
                           <div className="min-w-0">
                             <p className="text-sm font-medium text-text-primary truncate">{article.title as string}</p>
-                            {article.category && (
+                            {!!article.category && (
                               <p className="text-xs text-text-secondary">{article.category as string}</p>
                             )}
                           </div>
