@@ -4,11 +4,11 @@ interface TipTapNode {
   type: string;
   content?: TipTapNode[];
   text?: string;
-  marks?: Array<{ type: string; attrs?: Record<string, any> }>;
-  attrs?: Record<string, any>;
+  marks?: Array<{ type: string; attrs?: Record<string, unknown> }>;
+  attrs?: Record<string, unknown>;
 }
 
-function renderMarks(text: string, marks?: Array<{ type: string; attrs?: Record<string, any> }>): ReactNode {
+function renderMarks(text: string, marks?: Array<{ type: string; attrs?: Record<string, unknown> }>): ReactNode {
   if (!marks || marks.length === 0) return text;
   let node: ReactNode = text;
   for (const mark of marks) {
@@ -30,7 +30,7 @@ function renderMarks(text: string, marks?: Array<{ type: string; attrs?: Record<
         break;
       case "link":
         node = (
-          <a key={Math.random()} href={mark.attrs?.href} target="_blank" rel="noopener noreferrer" className="text-[#5645d4] underline hover:text-[#4534b3]">
+          <a key={Math.random()} href={mark.attrs?.href as string | undefined} target="_blank" rel="noopener noreferrer" className="text-[#5645d4] underline hover:text-[#4534b3]">
             {node}
           </a>
         );
@@ -108,7 +108,7 @@ export function renderTipTapNode(node: TipTapNode, key?: number): ReactNode {
   }
 }
 
-export function renderTipTap(json: any): ReactNode {
+export function renderTipTap(json: TipTapNode | null): ReactNode {
   if (!json) return null;
   return renderTipTapNode(json);
 }

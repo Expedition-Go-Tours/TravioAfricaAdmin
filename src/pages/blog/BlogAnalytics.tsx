@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Eye, Share2, FileText, BookMarked, Archive } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SectionError } from "@/components/shared/SectionError";
@@ -78,7 +78,7 @@ export default function BlogAnalytics() {
                   <SectionEmpty message="No article view data yet" />
                 ) : (
                   <div className="divide-y divide-border">
-                    {topViewed.map((article: any, i: number) => (
+                    {topViewed.map((article: Record<string, unknown>, i: number) => (
                       <div key={article.id} className="flex items-center justify-between px-4 py-3">
                         <div className="flex items-center gap-3 min-w-0">
                           <span className="text-xs font-medium text-text-secondary w-5 shrink-0">#{i + 1}</span>
@@ -120,7 +120,7 @@ export default function BlogAnalytics() {
                           outerRadius={90}
                           innerRadius={50}
                         >
-                          {categoryDistribution.map((_: any, i: number) => (
+                          {categoryDistribution.map((_: Record<string, unknown>, i: number) => (
                             <Cell key={i} fill={CATEGORY_COLORS[i % CATEGORY_COLORS.length]} />
                           ))}
                         </Pie>
@@ -128,7 +128,7 @@ export default function BlogAnalytics() {
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="flex flex-wrap justify-center gap-3 mt-2">
-                      {categoryDistribution.map((cat: any, i: number) => (
+                      {categoryDistribution.map((cat: Record<string, unknown>, i: number) => (
                         <div key={cat.categoryId} className="flex items-center gap-1.5">
                           <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: CATEGORY_COLORS[i % CATEGORY_COLORS.length] }} />
                           <span className="text-xs text-text-secondary">{cat.categoryName} ({cat.articleCount})</span>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "@/lib/axios";
@@ -18,15 +18,11 @@ import {
   Building,
   ChevronDown,
   BarChart3,
-  LineChart,
-  Activity,
   UserCog,
   Target,
   MessageSquare,
   Settings,
   X,
-  PanelLeftClose,
-  PanelLeftOpen,
   FileText,
   FolderTree,
   Tags,
@@ -116,6 +112,8 @@ const springEase = [0.32, 0.72, 0, 1] as const;
 export function Sidebar({ open, onClose }: SidebarProps) {
   const [user, setUser] = useState<{ name?: string; email?: string; photoURL?: string } | null>(null);
   const location = useLocation();
+  const onCloseRef = useRef(onClose);
+  useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
   const { can, isSuperAdmin } = usePermission();
   const [expandedMenus, setExpandedMenus] = useState<string[]>(["Revenue", "Users"]);
   const navGroups = getNavGroups(can);
@@ -134,12 +132,12 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   }, []);
 
   useEffect(() => {
-    if (window.innerWidth < 1024) onClose();
+    if (window.innerWidth < 1024) onCloseRef.current();
   }, [location.pathname]);
 
   useEffect(() => {
     function handleEscape(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
     }
     if (open) {
       document.addEventListener("keydown", handleEscape);
@@ -149,7 +147,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       document.removeEventListener("keydown", handleEscape);
       document.body.style.overflow = "";
     };
-  }, [open, onClose]);
+  }, [open]);
 
   const toggleMenu = (label: string) => {
     setExpandedMenus((prev) =>

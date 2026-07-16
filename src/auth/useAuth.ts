@@ -20,6 +20,7 @@ export function useAuth() {
       if (userData?.adminRoleId && userData?.adminRole) {
         localStorage.setItem("adminRoleId", userData.adminRoleId);
         localStorage.setItem("adminRole", JSON.stringify(userData.adminRole));
+        localStorage.setItem("userName", userData.name || "");
       }
       return true;
     } catch (err: unknown) {

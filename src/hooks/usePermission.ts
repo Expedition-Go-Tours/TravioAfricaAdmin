@@ -1,9 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
-
-interface RawPermission {
-  permission?: { key: string };
-  key?: string;
-}
+import { useEffect, useCallback } from "react";
 
 interface StoredAdminRole {
   id: string;
@@ -11,11 +6,19 @@ interface StoredAdminRole {
   permissions: string[];
 }
 
-function flattenPermissions(raw: any): string[] {
+function flattenPermissions(raw: { permissions?: unknown[] }): string[] {
   if (!raw?.permissions) return [];
-  return raw.permissions.map((p: any) => {
+  return raw.permissions.map((p: unknown) => {
     if (typeof p === "string") return p;
-    return p.permission?.key || p.key || "";
+    if (p && typeof p === "object" && "permission" in (p as Record<string, unknown>)) {
+      const perm = (p as Record<string, unknown>).permission as Record<string, unknown> | undefined;
+      if (perm && typeof perm.key === "string") return perm.key;
+    }
+    if (p && typeof p === "object" && "key" in (p as Record<string, unknown>)) {
+      const key = (p as Record<string, unknown>).key;
+      if (typeof key === "string") return key;
+    }
+    return "";
   }).filter(Boolean);
 }
 
@@ -35,10 +38,10 @@ function getStoredAdminRole(): StoredAdminRole | null {
 }
 
 export function usePermission() {
-  const [version, setVersion] = useState(0);
-
   useEffect(() => {
-    const handler = () => setVersion((v) => v + 1);
+    const handler = () => {
+      window.dispatchEvent(new Event("local-storage-change"));
+    };
 
     window.addEventListener("storage", handler);
 
@@ -65,7 +68,7 @@ export function usePermission() {
       return role.permissions.some((p) => p.startsWith(prefix));
     }
     return role.permissions.includes(permissionKey);
-  }, [version]);
+  }, []);
 
   const isSuperAdmin = adminRole?.name === "super_admin";
 

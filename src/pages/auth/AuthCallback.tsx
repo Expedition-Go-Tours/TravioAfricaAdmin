@@ -20,6 +20,7 @@ export default function AuthCallback() {
 
         localStorage.setItem("adminRoleId", userData.adminRoleId);
         localStorage.setItem("adminRole", JSON.stringify(userData.adminRole));
+        localStorage.setItem("userName", userData.name || "");
 
         import("@/lib/permissions").then(({ getDefaultRoute }) => {
           window.location.href = getDefaultRoute();

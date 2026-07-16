@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { createBrowserRouter, RouterProvider, Navigate, useNavigate, useSearchParams, Outlet } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { queryClient } from "@/lib/query-client";

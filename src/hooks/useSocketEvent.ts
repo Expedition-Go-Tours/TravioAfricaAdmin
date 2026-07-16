@@ -4,7 +4,10 @@ import { getAdminSocket } from "@/lib/adminSocket";
 
 export function useSocketEvent(event: string, handler: () => void) {
   const savedHandler = useRef(handler);
-  savedHandler.current = handler;
+
+  useEffect(() => {
+    savedHandler.current = handler;
+  }, [handler]);
 
   useEffect(() => {
     const socket = getAdminSocket();
@@ -17,7 +20,10 @@ export function useSocketEvent(event: string, handler: () => void) {
 export function useSocketInvalidate(event: string, queryKey: string[]) {
   const queryClient = useQueryClient();
   const keyRef = useRef(queryKey);
-  keyRef.current = queryKey;
+
+  useEffect(() => {
+    keyRef.current = queryKey;
+  }, [queryKey]);
 
   useEffect(() => {
     const socket = getAdminSocket();

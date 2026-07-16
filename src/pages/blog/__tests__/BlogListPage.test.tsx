@@ -82,7 +82,7 @@ describe("BlogListPage", () => {
     vi.mocked(getArticles).mockResolvedValueOnce({ data: { articles: [] }, pagination: { totalCount: 0, totalPages: 1 } });
     renderWithProviders(<BlogListPage />);
     expect(screen.getByText("Resources and insights")).toBeInTheDocument();
-    expect(screen.getByText("The latest industry news, interviews, technologies, and resources.")).toBeInTheDocument();
+    expect(screen.getByText("Discover Africa's hidden gems, travel tips, and unforgettable experiences.")).toBeInTheDocument();
     expect(screen.getByText("New Article")).toBeInTheDocument();
   });
 

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Bell,
@@ -45,6 +45,8 @@ const typeConfig: Record<string, { icon: React.ReactNode; color: string }> = {
   SUPPLIER_APPROVED: { icon: <UserCheck className="h-3.5 w-3.5" />, color: "text-green-600" },
   SUPPLIER_REJECTED: { icon: <UserX className="h-3.5 w-3.5" />, color: "text-red-500" },
   NEW_SUPPLIER_APPLICATION: { icon: <UserCheck className="h-3.5 w-3.5" />, color: "text-amber-600" },
+  SUPPLIER_STATUS_CHANGE: { icon: <UserCheck className="h-3.5 w-3.5" />, color: "text-blue-600" },
+  REVIEW_NEEDS_MODERATION: { icon: <MessageSquare className="h-3.5 w-3.5" />, color: "text-amber-600" },
   SYSTEM_ALERT: { icon: <AlertTriangle className="h-3.5 w-3.5" />, color: "text-red-500" },
   NEW_MESSAGE: { icon: <MessageSquare className="h-3.5 w-3.5" />, color: "text-green-600" },
 };

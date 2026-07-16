@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronUp, ChevronDown, ChevronsUpDown, AlertCircle, Inbox } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";

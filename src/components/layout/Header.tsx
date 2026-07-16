@@ -2,7 +2,6 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { LogOut, Loader2, Settings, UserCircle, Menu, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/ui/NotificationBell";
 import { useAuth } from "@/auth/useAuth";
 import { isSuperAdmin, hasPermission } from "@/hooks/usePermission";

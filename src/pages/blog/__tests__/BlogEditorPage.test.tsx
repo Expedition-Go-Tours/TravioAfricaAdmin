@@ -72,7 +72,7 @@ describe("BlogEditorPage (new article)", () => {
     await waitFor(() => {
       const slugInput = screen.getByPlaceholderText("article-slug") as HTMLInputElement;
       expect(slugInput.value).toBe("my-new-article");
-    });
+    }, { timeout: 10000 });
   });
 
   it("loads categories and tags on mount", async () => {

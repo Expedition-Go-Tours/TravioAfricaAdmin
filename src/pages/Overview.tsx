@@ -32,7 +32,10 @@ import { SectionError } from "@/components/shared/SectionError";
 import { SectionEmpty } from "@/components/shared/SectionEmpty";
 import { SparklineChart } from "@/components/shared/SparklineChart";
 import { BookingVolumeChart } from "./overview/BookingVolumeChart";
-import { LatestUpdatesPanel } from "./overview/LatestUpdatesPanel";
+import { RecentActivityPanel } from "./overview/RecentActivityPanel";
+import { TopSuppliers } from "./overview/TopSuppliers";
+import { NotificationsCard } from "./overview/NotificationsCard";
+import { RecentBookingsTable } from "./overview/RecentBookingsTable";
 import api from "@/lib/axios";
 import { getAdminSocket } from "@/lib/adminSocket";
 import { formatCurrency, formatNumber, formatDate } from "@/lib/utils";
@@ -42,12 +45,13 @@ import { cn } from "@/lib/utils";
 interface OverviewData {
   forbidden?: boolean;
   revenue?: { today?: { revenue?: number }; yesterday?: { revenue?: number }; thisWeek?: { revenue?: number; commission?: number; supplierPayout?: number }; thisMonth?: { revenue?: number; commission?: number; supplierPayout?: number }; ytd?: { revenue?: number; commission?: number; supplierPayout?: number } };
-  bookings?: { today?: number; yesterday?: number; weekly?: Array<{ day: string; count: number }> };
+  bookings?: { today?: number; yesterday?: number };
   signups?: { today?: number; yesterday?: number };
   activeUsersLast30Days?: number;
   activeUsersPrevious30?: number;
   topTours?: Array<{ id?: string; title?: string; coverPhoto?: string; bookingCount?: number; revenue?: number; averageRating?: number; reviewCount?: number }>;
   topSuppliers?: Array<{ id?: string; user?: { name?: string; email?: string; photoURL?: string }; totalEarnings?: number; totalBookings?: number; averageRating?: number }>;
+  weeklyBookingData?: Array<{ day: string; count: number }>;
   bookingStatusDistribution?: Array<{ status?: string; count?: number }>;
   eventFeed?: Array<{ message?: string; userName?: string; createdAt?: string }>;
 }
@@ -63,7 +67,7 @@ const bookingColors: Record<string, string> = {
 
 export default function OverviewPage() {
   const navigate = useNavigate();
-  const { can, adminRole } = usePermission();
+  const { can } = usePermission();
   const [timeFilter, setTimeFilter] = useState("last_week");
   const [showActiveUsers, setShowActiveUsers] = useState(false);
   const [showTodayBookings, setShowTodayBookings] = useState(false);
@@ -98,6 +102,7 @@ export default function OverviewPage() {
             totalBookings: (s.totalBookings as number) || 0,
             averageRating: (s.averageRating as number) || 0,
           })),
+          weeklyBookingData: (d?.weeklyBookingData as Array<{ day: string; count: number }>) || [],
           bookingStatusDistribution: (d?.bookingStatusDistribution as Array<Record<string, unknown>>) || [],
           eventFeed: ((d?.eventFeed as Array<Record<string, unknown>>) || []).map((e) => ({
             message: typeof e.properties === "object" && e.properties ? ((e.properties as Record<string, unknown>).message as string) || (e.name as string) : (e.name as string),
@@ -170,6 +175,46 @@ export default function OverviewPage() {
     enabled: showNewSignups,
   });
 
+
+  // Recent Bookings
+  const { data: recentBookings, isLoading: recentBookingsLoading } = useQuery({
+    queryKey: ["admin", "bookings", "recent"],
+    queryFn: async () => {
+      const res = await api.get("/admin/bookings?limit=5&sortOrder=desc");
+      return (res.data?.data?.bookings || []) as Array<{
+        id: string;
+        bookingNumber: string;
+        status: string;
+        total: number;
+        currency: string;
+        createdAt: string;
+        customer: { name: string; email: string };
+        tour: { title: string };
+      }>;
+    },
+  });
+
+  // Pending Actions Stats
+  const { data: pendingStats, isLoading: pendingStatsLoading } = useQuery({
+    queryKey: ["admin", "pending-stats"],
+    queryFn: async () => {
+      const [payoutsRes, reviewsRes, suppliersRes] = await Promise.all([
+        api.get("/payouts/admin/summary"),
+        api.get("/reviews/admin/pending?page=1&limit=1"),
+        api.get("/suppliers/admin/applications?status=PENDING&page=1&limit=1"),
+      ]);
+      const pendingPayouts = payoutsRes.data?.data?.pending?.count ?? 0;
+      const pendingReviews = reviewsRes.data?.data?.counts?.pending ?? 0;
+      const pendingSuppliers = suppliersRes.data?.data?.pagination?.totalCount ?? 0;
+      return {
+        pendingPayouts,
+        pendingReviews,
+        pendingSuppliers,
+        totalPending: pendingPayouts + pendingReviews + pendingSuppliers,
+      };
+    },
+  });
+
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -220,29 +265,20 @@ export default function OverviewPage() {
   const revenueSparkline = [4500, 5200, 4800, 5600, 6200, 5900, Number(overview?.revenue?.today?.revenue) || 6500];
   const usersSparkline = [800, 820, 835, 810, 845, 860, Number(overview?.activeUsersLast30Days) || 890];
 
-  // Mock weekly booking data
-  const weeklyBookingData = overview?.bookings?.weekly || [
-    { day: "Sun", count: 145 },
-    { day: "Mon", count: 189 },
-    { day: "Tue", count: 234 },
-    { day: "Wed", count: 198 },
-    { day: "Thu", count: 267 },
-    { day: "Fri", count: 312 },
-    { day: "Sat", count: 278 },
-  ];
+  const weeklyBookingData = overview?.weeklyBookingData || [];
 
   const weeklyTotal = weeklyBookingData.reduce((sum, d) => sum + d.count, 0);
 
-  // Transform event feed for LatestUpdatesPanel
+  // Transform event feed for RecentActivityPanel
   const activities = (overview?.eventFeed || []).slice(0, 10).map((event, idx) => ({
     id: String(idx),
     type: idx % 3 === 0 ? "booking" as const : idx % 3 === 1 ? "user" as const : "update" as const,
     title: event.message || "Activity",
     description: event.userName || "System",
-    timestamp: event.createdAt,
+    timestamp: event.createdAt || "",
   }));
 
-  const userName = adminRole?.name?.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()) || "Admin";
+  const userName = localStorage.getItem("userName") || "Admin";
 
   return (
     <motion.div
@@ -318,8 +354,8 @@ export default function OverviewPage() {
             )}
           </motion.div>
 
-          {/* Booking Volume Chart + Latest Updates */}
-          <motion.div variants={fadeInUp} className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          {/* Booking Volume + Recent Activity */}
+          <motion.div variants={fadeInUp} className="grid grid-cols-1 gap-5 lg:grid-cols-3">
             <div className="lg:col-span-2">
               <BookingVolumeChart
                 data={weeklyBookingData}
@@ -329,10 +365,29 @@ export default function OverviewPage() {
               />
             </div>
             <div className="lg:col-span-1">
-              <LatestUpdatesPanel
+              <RecentActivityPanel
                 activities={activities}
                 loading={overviewLoading}
               />
+            </div>
+          </motion.div>
+
+          {/* Top Suppliers + Notifications + Recent Bookings */}
+          <motion.div variants={fadeInUp} className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+            <div className="lg:col-span-1">
+              <TopSuppliers 
+                suppliers={overview?.topSuppliers} 
+                loading={overviewLoading} 
+              />
+            </div>
+            <div className="lg:col-span-1">
+              <NotificationsCard 
+                stats={pendingStats} 
+                loading={pendingStatsLoading} 
+              />
+            </div>
+            <div className="lg:col-span-1">
+              <RecentBookingsTable bookings={recentBookings} loading={recentBookingsLoading} />
             </div>
           </motion.div>
 
@@ -685,7 +740,7 @@ function WelcomeDashboard() {
   );
 }
 
-/* KPI Card with Sparkline */
+/* KPI Card with Sparkline - Clean card style matching reference design */
 function KPICardWithSparkline({
   label,
   value,
@@ -710,8 +765,8 @@ function KPICardWithSparkline({
   return (
     <div
       className={cn(
-        "rounded-xl bg-surface-base border border-border p-4 transition-all duration-200 ease-[cubic-bezier(0.32,0.72,0,1)]",
-        onClick ? "cursor-pointer hover:shadow-soft hover:-translate-y-0.5" : "",
+        "rounded-2xl bg-white border-0 shadow-sm p-5 transition-all duration-200",
+        onClick ? "cursor-pointer hover:shadow-md hover:-translate-y-0.5" : "",
       )}
       onClick={onClick}
       role={onClick ? "button" : undefined}
@@ -720,23 +775,32 @@ function KPICardWithSparkline({
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <p className="text-xs font-medium text-text-secondary uppercase tracking-[0.08em]">{label}</p>
+          <p className="text-[13px] font-medium text-gray-500">{label}</p>
           {loading ? (
-            <Skeleton className="h-7 w-24 mt-2" />
+            <Skeleton className="h-8 w-28 mt-2" />
           ) : (
-            <p className="mt-2 text-2xl font-bold text-text-primary tabular-nums">{displayValue}</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900 tabular-nums">{displayValue}</p>
           )}
           {!loading && trend && (
-            <p className={cn("mt-1 text-xs font-medium", trend.isPositive ? "text-status-active" : "text-status-rejected")}>
-              {trend.isPositive ? "↑" : "↓"} {trend.value}% vs last period
+            <p className={cn("mt-2 text-xs font-medium flex items-center gap-1", trend.isPositive ? "text-emerald-600" : "text-red-500")}>
+              {trend.isPositive ? (
+                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                </svg>
+              ) : (
+                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+              )}
+              {trend.value}% vs last period
             </p>
           )}
         </div>
-        <div className="w-24 h-10">
+        <div className="w-24 h-12">
           {loading ? (
             <Skeleton className="h-full w-full" />
           ) : (
-            <SparklineChart data={sparklineData} color={sparklineColor} height={40} />
+            <SparklineChart data={sparklineData} color={sparklineColor} height={48} />
           )}
         </div>
       </div>

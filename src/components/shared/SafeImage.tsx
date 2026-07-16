@@ -21,7 +21,7 @@ export function SafeImage({ src, alt, className, fallback }: SafeImageProps) {
 
   if (attempt > maxRetries) return fallback || null;
 
-  const cacheBuster = attempt > 0 ? `?t=${Date.now()}` : "";
+  const cacheBuster = attempt > 0 ? `?t=${attempt}` : "";
 
   return (
     <img

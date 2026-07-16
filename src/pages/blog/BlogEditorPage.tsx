@@ -42,7 +42,7 @@ export default function BlogEditorPage() {
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [excerpt, setExcerpt] = useState("");
-  const [content, setContent] = useState<any>(null);
+  const [content, setContent] = useState<Record<string, unknown> | null>(null);
   const [categoryId, setCategoryId] = useState<string>("");
   const [tagIds, setTagIds] = useState<string[]>([]);
   const [relatedTourIds, setRelatedTourIds] = useState<string[]>([]);
@@ -55,7 +55,7 @@ export default function BlogEditorPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [articleStatus, setArticleStatus] = useState<string>("DRAFT");
   const isNavigatingAfterSave = useRef(false);
-  const original = useRef<Record<string, any>>({});
+  const [original, setOriginal] = useState<Record<string, unknown>>({});
 
   useEffect(() => {
     (async () => {
@@ -74,19 +74,19 @@ export default function BlogEditorPage() {
     if (isNavigatingAfterSave.current) return false;
     if (isNew) return !!title || !!slug || !!excerpt || !!content;
     return (
-      title !== original.current.title ||
-      slug !== original.current.slug ||
-      excerpt !== original.current.excerpt ||
-      JSON.stringify(content) !== JSON.stringify(original.current.body) ||
-      categoryId !== original.current.categoryId ||
-      JSON.stringify(tagIds) !== JSON.stringify(original.current.tagIds) ||
-      JSON.stringify(relatedTourIds) !== JSON.stringify(original.current.relatedTourIds) ||
-      metaTitle !== original.current.metaTitle ||
-      metaDescription !== original.current.metaDescription ||
-      featuredImage !== original.current.featuredImage ||
-      publishDate !== original.current.publishDate
+      title !== (original.title as string) ||
+      slug !== (original.slug as string) ||
+      excerpt !== (original.excerpt as string) ||
+      JSON.stringify(content) !== JSON.stringify(original.body) ||
+      categoryId !== (original.categoryId as string) ||
+      JSON.stringify(tagIds) !== JSON.stringify(original.tagIds) ||
+      JSON.stringify(relatedTourIds) !== JSON.stringify(original.relatedTourIds) ||
+      metaTitle !== (original.metaTitle as string) ||
+      metaDescription !== (original.metaDescription as string) ||
+      featuredImage !== (original.featuredImage as string) ||
+      publishDate !== (original.publishDate as string)
     );
-  }, [isNew, title, slug, excerpt, content, categoryId, tagIds, relatedTourIds, metaTitle, metaDescription, featuredImage, publishDate]);
+  }, [isNew, title, slug, excerpt, content, categoryId, tagIds, relatedTourIds, metaTitle, metaDescription, featuredImage, publishDate, original]);
 
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
@@ -134,26 +134,26 @@ export default function BlogEditorPage() {
       setExcerpt(article.excerpt || "");
       setContent(article.body);
       setCategoryId(article.category?.id || "");
-      setTagIds(article.tags?.map((t: any) => t.id) || []);
-      setRelatedTourIds(article.relatedTours?.map((rt: any) => rt.id) || []);
+      setTagIds(article.tags?.map((t: Record<string, unknown>) => t.id as string) || []);
+      setRelatedTourIds(article.relatedTours?.map((rt: Record<string, unknown>) => rt.id as string) || []);
       setMetaTitle(article.metaTitle || "");
       setMetaDescription(article.metaDescription || "");
       setFeaturedImage(article.featuredImage || "");
       setPublishDate(article.publishedAt ? article.publishedAt.slice(0, 10) : "");
       setArticleStatus(article.status || "DRAFT");
-      original.current = {
+      setOriginal({
         title: article.title,
         slug: article.slug,
         excerpt: article.excerpt || "",
         body: article.body,
         categoryId: article.category?.id || "",
-        tagIds: article.tags?.map((t: any) => t.id) || [],
-        relatedTourIds: article.relatedTours?.map((rt: any) => rt.id) || [],
+        tagIds: article.tags?.map((t: Record<string, unknown>) => t.id) || [],
+        relatedTourIds: article.relatedTours?.map((rt: Record<string, unknown>) => rt.id) || [],
         metaTitle: article.metaTitle || "",
         metaDescription: article.metaDescription || "",
         featuredImage: article.featuredImage || "",
         publishDate: article.publishedAt ? article.publishedAt.slice(0, 10) : "",
-      };
+      });
     }
   }, [article]);
 
@@ -184,7 +184,7 @@ export default function BlogEditorPage() {
   }, [checkSlug]);
 
   const saveMutation = useMutation({
-    mutationFn: (data: any) =>
+    mutationFn: (data: Record<string, unknown>) =>
       isNew ? createArticle(data) : updateArticle(id!, data),
     onSuccess: () => {
       toast.success(isNew ? "Article created" : "Article updated");
@@ -193,8 +193,9 @@ export default function BlogEditorPage() {
       isNavigatingAfterSave.current = true;
       navigate("/admin/blog");
     },
-    onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to save article");
+    onError: (err: unknown) => {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to save article";
+      toast.error(msg);
     },
   });
 
@@ -211,7 +212,7 @@ export default function BlogEditorPage() {
       toast.error("Content is required to publish");
       return;
     }
-    const payload: any = {
+    const payload: Record<string, unknown> = {
       title: title.trim(),
       slug: slug.trim(),
       excerpt: excerpt.trim() || undefined,
@@ -232,7 +233,7 @@ export default function BlogEditorPage() {
   }, [title, slug, excerpt, content, categoryId, tagIds, relatedTourIds, metaTitle, metaDescription, featuredImage, publishDate, saveMutation, currentUserId]);
 
   const saveAsDraftAndPreview = useCallback(async () => {
-    const payload: any = {
+    const payload: Record<string, unknown> = {
       title: title.trim() || "Untitled",
       slug: slug.trim() || "untitled",
       excerpt: excerpt.trim() || undefined,
@@ -257,8 +258,9 @@ export default function BlogEditorPage() {
         isNavigatingAfterSave.current = true;
         navigate(`/admin/blog/preview/${savedId}`);
       }
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Failed to save draft for preview");
+    } catch (err) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to save draft for preview";
+      toast.error(msg);
     }
   }, [isNew, id, title, slug, excerpt, content, categoryId, tagIds, relatedTourIds, metaTitle, metaDescription, featuredImage, currentUserId, navigate, queryClient]);
 
@@ -358,8 +360,8 @@ export default function BlogEditorPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">No category</SelectItem>
-                    {categories?.map((c: any) => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    {categories?.map((c: Record<string, unknown>) => (
+                      <SelectItem key={c.id as string} value={c.id as string}>{c.name as string}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

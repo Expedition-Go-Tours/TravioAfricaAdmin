@@ -1,9 +1,8 @@
 ﻿import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatNumber } from "@/lib/utils";
 import { cn } from "@/lib/utils";
-import { TrendingUp } from "lucide-react";
+import { TrendingUp, Calendar } from "lucide-react";
 
 interface BookingVolumeChartProps {
   data?: Array<{ day: string; count: number }>;
@@ -18,67 +17,67 @@ export function BookingVolumeChart({ data, total, trend, loading }: BookingVolum
   const chartData = data || days.map((day) => ({ day, count: 0 }));
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-semibold text-text-primary flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-primary" />
-            Booking Volume Trend
-          </CardTitle>
-          <span className="text-xs text-text-tertiary bg-surface-muted px-2 py-1 rounded-md">Last week</span>
+    <div className="rounded-2xl bg-white border-0 shadow-sm p-5 h-full">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4 text-gray-500" />
+          <h3 className="text-[15px] font-semibold text-gray-900">Booking Volume Trend</h3>
         </div>
-        {loading ? (
-          <Skeleton className="h-6 w-32 mt-2" />
-        ) : (
-          <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-2xl font-bold text-text-primary">{formatNumber(total)}</span>
-            {trend && (
-              <span className={cn("text-xs font-medium", trend.isPositive ? "text-status-active" : "text-status-rejected")}>
-                {trend.isPositive ? "+" : ""}{trend.value}% vs last week
-              </span>
-            )}
-          </div>
-        )}
-      </CardHeader>
-      <CardContent className="pt-4">
-        {loading ? (
-          <Skeleton className="h-48 w-full" />
-        ) : (
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={chartData} barCategoryGap="20%">
-              <XAxis
-                dataKey="day"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fontSize: 12, fill: "#64748b" }}
-              />
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                tick={{ fontSize: 12, fill: "#64748b" }}
-                tickFormatter={(value) => value.toString()}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "#fff",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "8px",
-                  fontSize: "12px",
-                }}
-                formatter={(value: number) => [formatNumber(value), "Bookings"]}
-              />
-              <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                {chartData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={entry.day === "Tue" ? "#1e293b" : "#cbd5e1"}
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        )}
-      </CardContent>
-    </Card>
+        <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg font-medium">Last week</span>
+      </div>
+      
+      {loading ? (
+        <Skeleton className="h-6 w-32 mt-2" />
+      ) : (
+        <div className="flex items-baseline gap-2 mb-6">
+          <span className="text-3xl font-bold text-gray-900">{formatNumber(total)}</span>
+          {trend && (
+            <span className={cn("text-sm font-medium flex items-center gap-1", trend.isPositive ? "text-emerald-600" : "text-red-500")}>
+              {trend.isPositive ? "+" : ""}{trend.value}% vs last week
+            </span>
+          )}
+        </div>
+      )}
+      
+      {loading ? (
+        <Skeleton className="h-48 w-full" />
+      ) : (
+        <ResponsiveContainer width="100%" height={220}>
+          <BarChart data={chartData} barCategoryGap="25%">
+            <XAxis
+              dataKey="day"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fontSize: 12, fill: "#9ca3af" }}
+            />
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              tick={{ fontSize: 12, fill: "#9ca3af" }}
+              tickFormatter={(value) => value.toString()}
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "#fff",
+                border: "none",
+                borderRadius: "12px",
+                fontSize: "12px",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+              }}
+              cursor={{ fill: "rgba(0,0,0,0.02)" }}
+              formatter={(value) => formatNumber(Number(value))}
+            />
+            <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+              {chartData.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={entry.day === "Tue" ? "#1f2937" : "#e5e7eb"}
+                />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      )}
+    </div>
   );
 }
