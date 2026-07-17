@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { HelpCircle, Save, Loader2, X } from "lucide-react";
@@ -22,6 +22,7 @@ const FIELDS: FieldDef[] = [
   { key: "platform.currency", label: "Currency", type: "select", required: true, options: CURRENCIES, section: "Platform" },
   { key: "platform.support_email", label: "Support Email", type: "email", required: true, section: "Platform" },
   { key: "platform.timezone", label: "Timezone", type: "select", required: true, options: TIMEZONES, section: "Platform" },
+  { key: "email.logo_url", label: "Logo URL", type: "url", hint: "Appears in the header of all transactional emails", section: "Branding" },
   { key: "commission.default_rate", label: "Default Commission (%)", type: "number", required: true, min: 0, max: 100, step: 0.1, section: "Commission & Fees" },
   { key: "commission.platform_fee", label: "Platform Fee", type: "number", required: true, min: 0, step: 0.01, section: "Commission & Fees" },
   { key: "payout.min_threshold", label: "Min Payout Threshold", type: "number", required: true, min: 0, step: 1, section: "Commission & Fees" },
@@ -34,6 +35,7 @@ const FIELDS: FieldDef[] = [
 
 const SECTION_LABELS: Record<string, { title: string; desc: string }> = {
   Platform: { title: "Platform", desc: "General platform information and regional settings" },
+  Branding: { title: "Branding", desc: "How your brand appears in emails" },
   "Commission & Fees": { title: "Commission & Fees", desc: "Platform revenue and payout configuration" },
   "Booking Rules": { title: "Booking Rules", desc: "Default constraints for new bookings" },
 };
@@ -245,6 +247,9 @@ export function GeneralTab() {
                         />
                       )}
                     </div>
+                    {field.hint && (
+                      <p className="text-xs text-text-tertiary">{field.hint}</p>
+                    )}
                     {error && (
                       <div className="flex items-center gap-1 mt-0.5">
                         <HelpCircle className="h-3 w-3 text-red-500 shrink-0" />

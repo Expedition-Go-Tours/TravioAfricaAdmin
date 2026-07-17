@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { usePermission } from "@/hooks/usePermission";
 import {
   Users,
@@ -37,6 +37,7 @@ import { RecentActivityPanel } from "./overview/RecentActivityPanel";
 import { TopSuppliers } from "./overview/TopSuppliers";
 import { NotificationsCard, type NotificationStats } from "./overview/NotificationsCard";
 import { RecentBookingsTable } from "./overview/RecentBookingsTable";
+import styles from "./Overview.module.css";
 import api from "@/lib/axios";
 import { getAdminSocket } from "@/lib/adminSocket";
 import { formatCurrency, formatNumber, formatDate } from "@/lib/utils";
@@ -48,8 +49,8 @@ interface OverviewData {
   revenue?: { today?: { revenue?: number }; yesterday?: { revenue?: number }; thisWeek?: { revenue?: number; commission?: number; supplierPayout?: number }; thisMonth?: { revenue?: number; commission?: number; supplierPayout?: number }; ytd?: { revenue?: number; commission?: number; supplierPayout?: number } };
   bookings?: { today?: number; yesterday?: number };
   signups?: { today?: number; yesterday?: number };
-  activeUsersLast30Days?: number;
-  activeUsersPrevious30?: number;
+  activeUsers?: number;
+  activeUsersPrevious?: number;
   topTours?: Array<{ id?: string; title?: string; coverPhoto?: string; bookingCount?: number; revenue?: number; averageRating?: number; reviewCount?: number }>;
   topSuppliers?: Array<{ id?: string; user?: { name?: string; email?: string; photoURL?: string }; totalEarnings?: number; totalBookings?: number; averageRating?: number }>;
   weeklyBookingData?: Array<{ day: string; count: number }>;
@@ -69,24 +70,34 @@ const bookingColors: Record<string, string> = {
 export default function OverviewPage() {
   const navigate = useNavigate();
   const { can } = usePermission();
-  const [timeFilter, setTimeFilter] = useState("last_week");
+  const [timeFilter, setTimeFilter] = useState("today");
+
+  const periodLabel = (base: string) => {
+    const labels: Record<string, string> = {
+      today: `${base} Today`,
+      last_week: `${base} (7d)`,
+      last_month: `${base} (30d)`,
+      last_quarter: `${base} (90d)`,
+    };
+    return labels[timeFilter] || `${base} (7d)`;
+  };
   const [showActiveUsers, setShowActiveUsers] = useState(false);
   const [showTodayBookings, setShowTodayBookings] = useState(false);
   const [showNewSignups, setShowNewSignups] = useState(false);
 
   const { data: overview, isLoading: overviewLoading, isError: overviewError, refetch: overviewRefetch } = useQuery({
-    queryKey: ["admin", "overview"],
+    queryKey: ["admin", "overview", timeFilter],
     queryFn: async () => {
       try {
-        const res = await api.get("/admin/analytics/overview");
+        const res = await api.get("/admin/analytics/overview", { params: { period: timeFilter } });
         const d = res.data?.data as Record<string, unknown> | undefined;
         const overview = (d?.overview as Record<string, unknown>) || {};
         return {
           revenue: (overview?.revenue as Record<string, unknown>) || {},
           bookings: (overview?.bookings as Record<string, unknown>) || {},
           signups: (overview?.signups as Record<string, unknown>) || {},
-          activeUsersLast30Days: (overview?.activeUsersLast30Days as number) || 0,
-          activeUsersPrevious30: (overview?.activeUsersPrevious30 as number) || 0,
+          activeUsers: (overview?.activeUsers as number) || 0,
+          activeUsersPrevious: (overview?.activeUsersPrevious as number) || 0,
           topTours: ((d?.topTours as Array<Record<string, unknown>>) || []).map((t) => ({
             id: t.id as string,
             title: t.title as string,
@@ -122,6 +133,7 @@ export default function OverviewPage() {
         throw err;
       }
     },
+    placeholderData: keepPreviousData,
   });
 
   const { data: payoutSummary } = useQuery({
@@ -253,7 +265,7 @@ export default function OverviewPage() {
   // Mock sparkline data (in real app, this would come from API)
   const bookingsSparkline = [120, 135, 142, 128, 156, 168, Number(overview?.bookings?.today) || 180];
   const revenueSparkline = [4500, 5200, 4800, 5600, 6200, 5900, Number(overview?.revenue?.today?.revenue) || 6500];
-  const usersSparkline = [800, 820, 835, 810, 845, 860, Number(overview?.activeUsersLast30Days) || 890];
+  const usersSparkline = [800, 820, 835, 810, 845, 860, Number(overview?.activeUsers) || 890];
 
   const weeklyBookingData = overview?.weeklyBookingData || [];
 
@@ -303,7 +315,7 @@ export default function OverviewPage() {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="-mx-4 md:-mx-6 lg:-mx-8 space-y-4 md:space-y-5 px-0.5 md:px-1 lg:px-1"
+      className={cn("-mx-4 md:-mx-6 lg:-mx-8 space-y-4 md:space-y-5", styles.container)}
     >
       {overview?.forbidden ? (
         <WelcomeDashboard />
@@ -333,10 +345,10 @@ export default function OverviewPage() {
           </motion.div>
 
           {/* KPI Cards with Sparklines */}
-          <motion.div variants={fadeInUp} className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <motion.div variants={fadeInUp} className={styles.kpiGrid}>
             {can('dashboard.bookings') && (
               <KPICardWithSparkline
-                label="Bookings Today"
+                label={periodLabel("Bookings")}
                 value={overviewLoading ? 0 : Number(overview?.bookings?.today) || 0}
                 trend={calcTrend(overview?.bookings?.today, overview?.bookings?.yesterday)}
                 sparklineData={bookingsSparkline}
@@ -347,7 +359,7 @@ export default function OverviewPage() {
             )}
             {can('dashboard.revenue') && (
               <KPICardWithSparkline
-                label="Revenue Today"
+                label={periodLabel("Revenue")}
                 value={overviewLoading ? 0 : Number(overview?.revenue?.today?.revenue) || 0}
                 trend={calcTrend(
                   overview?.revenue?.today?.revenue ? Number(overview.revenue.today.revenue) : undefined,
@@ -361,9 +373,9 @@ export default function OverviewPage() {
             )}
             {can('users.view') && (
               <KPICardWithSparkline
-                label="Active Users (30d)"
-                value={overviewLoading ? 0 : Number(overview?.activeUsersLast30Days) || 0}
-                trend={calcTrend(overview?.activeUsersLast30Days, overview?.activeUsersPrevious30)}
+                label={periodLabel("Active Users")}
+                value={overviewLoading ? 0 : Number(overview?.activeUsers) || 0}
+                trend={calcTrend(overview?.activeUsers, overview?.activeUsersPrevious)}
                 sparklineData={usersSparkline}
                 sparklineColor="#8b5cf6"
                 loading={overviewLoading}
@@ -373,13 +385,14 @@ export default function OverviewPage() {
           </motion.div>
 
           {/* Booking Volume + Recent Activity */}
-          <motion.div variants={fadeInUp} className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+          <motion.div variants={fadeInUp} className={styles.contentGrid3}>
             <div className="lg:col-span-2">
               <BookingVolumeChart
                 data={weeklyBookingData}
                 total={weeklyTotal}
                 trend={{ value: 8, isPositive: true }}
                 loading={overviewLoading}
+                period={timeFilter}
               />
             </div>
             <div className="lg:col-span-1">
@@ -391,7 +404,7 @@ export default function OverviewPage() {
           </motion.div>
 
           {/* Top Suppliers + Notifications + Recent Bookings */}
-          <motion.div variants={fadeInUp} className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+          <motion.div variants={fadeInUp} className={styles.contentGrid3}>
             <div className="lg:col-span-1">
               <TopSuppliers 
                 suppliers={overview?.topSuppliers} 
@@ -436,8 +449,8 @@ export default function OverviewPage() {
                             <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary" colSpan={2}>Tour</th>
                             <th className="px-4 py-3 text-center text-xs font-semibold text-text-secondary">Bookings</th>
                             <th className="px-4 py-3 text-center text-xs font-semibold text-text-secondary">Revenue</th>
-                            <th className="px-4 py-3 text-center text-xs font-semibold text-text-secondary">Rating</th>
-                            <th className="px-4 py-3 text-center text-xs font-semibold text-text-secondary">Reviews</th>
+                             <th className={cn("px-4 py-3 text-center text-xs font-semibold text-text-secondary", styles.hideMobile)}>Rating</th>
+                             <th className={cn("px-4 py-3 text-center text-xs font-semibold text-text-secondary", styles.hideMobile)}>Reviews</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -464,10 +477,10 @@ export default function OverviewPage() {
                               </td>
                               <td className="px-4 py-3 text-center text-text-primary">{formatNumber(tour.bookingCount)}</td>
                               <td className="px-4 py-3 text-center text-text-primary">{formatCurrency(tour.revenue)}</td>
-                              <td className="px-4 py-3 text-center">
+                              <td className={cn("px-4 py-3 text-center", styles.hideMobile)}>
                                 {tour.averageRating != null ? Number(tour.averageRating).toFixed(1) : "—"}
                               </td>
-                              <td className="px-4 py-3 text-center text-text-primary">{formatNumber(tour.reviewCount)}</td>
+                              <td className={cn("px-4 py-3 text-center text-text-primary", styles.hideMobile)}>{formatNumber(tour.reviewCount)}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -481,7 +494,7 @@ export default function OverviewPage() {
 
           {/* Bottom Grid: Booking Status + Payout Summary */}
           {(can('dashboard.bookings') || can('dashboard.*') || can('payouts.view')) && (
-            <motion.div variants={fadeInUp} className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+            <motion.div variants={fadeInUp} className={styles.contentGrid2}>
               {can('dashboard.bookings') && (
                 <Card>
                   <CardHeader className="border-b border-border/60 pb-3.5">
@@ -499,7 +512,7 @@ export default function OverviewPage() {
                       <SectionEmpty message="No booking data" />
                     ) : (
                       <div className="flex flex-col items-center">
-                        <ResponsiveContainer width="100%" height={200}>
+                        <div className={styles.chartPie}><ResponsiveContainer width="100%" height="100%">
                           <RePieChart>
                             <Pie
                               data={(overview.bookingStatusDistribution || []).map((d) => ({ name: d.status || "Unknown", value: d.count || 0 }))}
@@ -517,7 +530,7 @@ export default function OverviewPage() {
                             </Pie>
                             <Tooltip />
                           </RePieChart>
-                        </ResponsiveContainer>
+                        </ResponsiveContainer></div>
                         <div className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-1.5">
                           {(overview.bookingStatusDistribution || []).map((d, i) => (
                             <span key={d.status || `legend-${i}`} className="inline-flex items-center gap-1.5 text-xs text-text-secondary">
@@ -790,7 +803,7 @@ function KPICardWithSparkline({
   return (
     <div
       className={cn(
-        "rounded-2xl bg-white border-0 shadow-sm p-5 transition-all duration-200",
+        "rounded-2xl bg-white border-0 shadow-sm transition-all duration-200", styles.kpiCard,
         onClick ? "cursor-pointer hover:shadow-md hover:-translate-y-0.5" : "",
       )}
       onClick={onClick}

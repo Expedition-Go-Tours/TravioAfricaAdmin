@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ErrorBoundary } from "react-error-boundary";
 import { RefreshCw, AlertTriangle, ChevronRight } from "lucide-react";
@@ -8,7 +8,6 @@ import { RolesTab } from "./RolesTab";
 import { AdminUsersTab } from "./AdminUsersTab";
 import { SystemTab } from "./SystemTab";
 import { AuditLogTab } from "./AuditLogTab";
-import { EmailTab } from "./EmailTab";
 import { isSuperAdmin } from "@/hooks/usePermission";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,7 +19,6 @@ const TABS = [
   { id: "users", label: "Admin Users", desc: "Manage admin accounts", adminOnly: true },
   { id: "system", label: "System", desc: "Maintenance and health", adminOnly: true },
   { id: "audit", label: "Audit Log", desc: "Track admin actions", adminOnly: true },
-  { id: "email", label: "Email", desc: "Email branding and templates", adminOnly: true },
 ];
 
 const TAB_ACCENTS: Record<string, string> = {
@@ -29,7 +27,6 @@ const TAB_ACCENTS: Record<string, string> = {
   users: "from-blue-500 to-indigo-600",
   system: "from-amber-500 to-orange-600",
   audit: "from-rose-500 to-pink-600",
-  email: "from-sky-500 to-cyan-600",
 };
 
 const contentVariants = {
@@ -186,7 +183,6 @@ export default function SettingsPage() {
                 {activeTab === "users" && superAdmin && <AdminUsersTab />}
                 {activeTab === "system" && superAdmin && <SystemTab />}
                 {activeTab === "audit" && superAdmin && <AuditLogTab />}
-                {activeTab === "email" && superAdmin && <EmailTab />}
               </ErrorBoundary>
             </motion.div>
           </AnimatePresence>
