@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { markAllAsRead } from "@/services/notificationService";
 import { timeAgo, cn } from "@/lib/utils";
 
-interface RecentNotification {
+export interface RecentNotification {
   id: string;
   type: string;
   title: string;
@@ -16,7 +16,7 @@ interface RecentNotification {
   createdAt: string;
 }
 
-interface NotificationStats {
+export interface NotificationStats {
   total: number;
   unacknowledged: number;
   byType: Array<{ type: string; _count: number }>;

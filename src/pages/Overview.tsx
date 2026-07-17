@@ -35,7 +35,7 @@ import { SparklineChart } from "@/components/shared/SparklineChart";
 import { BookingVolumeChart } from "./overview/BookingVolumeChart";
 import { RecentActivityPanel } from "./overview/RecentActivityPanel";
 import { TopSuppliers } from "./overview/TopSuppliers";
-import { NotificationsCard } from "./overview/NotificationsCard";
+import { NotificationsCard, type NotificationStats } from "./overview/NotificationsCard";
 import { RecentBookingsTable } from "./overview/RecentBookingsTable";
 import api from "@/lib/axios";
 import { getAdminSocket } from "@/lib/adminSocket";
@@ -201,12 +201,7 @@ export default function OverviewPage() {
     queryKey: ["admin", "notifications", "stats"],
     queryFn: async () => {
       const res = await api.get("/admin/notifications/stats");
-      return res.data.data as {
-        total: number;
-        unacknowledged: number;
-        byType: Array<{ type: string; _count: number }>;
-        recent: Array<Record<string, unknown>>;
-      };
+      return res.data.data as NotificationStats;
     },
   });
 
