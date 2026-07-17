@@ -1,5 +1,5 @@
 ﻿import { useState } from "react";
-import { Search, Calendar, User, FileText, Star, AlertCircle, MessageSquare, Bell } from "lucide-react";
+import { Search, Calendar, User, FileText, Star, AlertCircle, MessageSquare, Bell, Banknote, Building, Tag, UserPlus, Shield, Activity } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 interface Activity {
   id?: string;
-  type: "booking" | "user" | "review" | "alert" | "update" | "message";
+  type: "booking" | "user" | "review" | "alert" | "update" | "message" | "payout" | "supplier" | "offer" | "team" | "role" | "webhook";
   title: string;
   description: string;
   timestamp: string;
@@ -27,6 +27,12 @@ const activityIcons: Record<string, React.ReactNode> = {
   alert: <AlertCircle className="h-4 w-4" />,
   update: <FileText className="h-4 w-4" />,
   message: <MessageSquare className="h-4 w-4" />,
+  payout: <Banknote className="h-4 w-4" />,
+  supplier: <Building className="h-4 w-4" />,
+  offer: <Tag className="h-4 w-4" />,
+  team: <UserPlus className="h-4 w-4" />,
+  role: <Shield className="h-4 w-4" />,
+  webhook: <Activity className="h-4 w-4" />,
 };
 
 const activityColors: Record<string, string> = {
@@ -36,6 +42,12 @@ const activityColors: Record<string, string> = {
   alert: "bg-red-500",
   update: "bg-violet-500",
   message: "bg-cyan-500",
+  payout: "bg-green-500",
+  supplier: "bg-orange-500",
+  offer: "bg-pink-500",
+  team: "bg-indigo-500",
+  role: "bg-slate-500",
+  webhook: "bg-teal-500",
 };
 
 export function RecentActivityPanel({ activities = [], loading }: RecentActivityPanelProps) {

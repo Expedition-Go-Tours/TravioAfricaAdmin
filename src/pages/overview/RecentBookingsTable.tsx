@@ -11,7 +11,7 @@ interface Booking {
   total: number;
   currency: string;
   createdAt: string;
-  customer: { name: string; email: string };
+  customer: { name: string; email: string; photoURL?: string };
   tour: { title: string };
 }
 
@@ -52,11 +52,19 @@ export function RecentBookingsTable({ bookings = [], loading }: RecentBookingsTa
             <div 
               key={booking.id} 
               className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors"
-              onClick={() => navigate(`/admin/bookings/${booking.id}`)}
+              onClick={() => navigate(`/admin/bookings?bookingId=${booking.id}`, { state: { bookingId: booking.id } })}
             >
-              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-sm font-semibold shrink-0">
-                {booking.customer?.name?.charAt(0)?.toUpperCase() || "?"}
-              </div>
+              {booking.customer?.photoURL ? (
+                <img
+                  src={booking.customer.photoURL}
+                  alt=""
+                  className="h-10 w-10 rounded-full object-cover shrink-0"
+                />
+              ) : (
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-sm font-semibold shrink-0">
+                  {booking.customer?.name?.charAt(0)?.toUpperCase() || "?"}
+                </div>
+              )}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-medium text-gray-900 truncate">

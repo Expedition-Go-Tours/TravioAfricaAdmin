@@ -11,6 +11,7 @@ import {
   X,
   MessageCircle,
   Map,
+  MapPin,
   Star as StarIcon,
   Banknote,
   LayoutDashboard,
@@ -53,7 +54,7 @@ interface OverviewData {
   topSuppliers?: Array<{ id?: string; user?: { name?: string; email?: string; photoURL?: string }; totalEarnings?: number; totalBookings?: number; averageRating?: number }>;
   weeklyBookingData?: Array<{ day: string; count: number }>;
   bookingStatusDistribution?: Array<{ status?: string; count?: number }>;
-  eventFeed?: Array<{ message?: string; userName?: string; createdAt?: string }>;
+  eventFeed?: Array<{ message?: string; userName?: string; createdAt?: string; resource?: string }>;
 }
 
 const bookingColors: Record<string, string> = {
@@ -108,6 +109,7 @@ export default function OverviewPage() {
             message: typeof e.properties === "object" && e.properties ? ((e.properties as Record<string, unknown>).message as string) || (e.name as string) : (e.name as string),
             userName: (e.userName as string) || null,
             createdAt: e.createdAt as string,
+            resource: (e.resource as string) || "",
           })),
         } as OverviewData;
       } catch (err: unknown) {
@@ -188,29 +190,22 @@ export default function OverviewPage() {
         total: number;
         currency: string;
         createdAt: string;
-        customer: { name: string; email: string };
+        customer: { name: string; email: string; photoURL?: string };
         tour: { title: string };
       }>;
     },
   });
 
-  // Pending Actions Stats
-  const { data: pendingStats, isLoading: pendingStatsLoading } = useQuery({
-    queryKey: ["admin", "pending-stats"],
+  // Notification Stats
+  const { data: notifStats, isLoading: notifStatsLoading } = useQuery({
+    queryKey: ["admin", "notifications", "stats"],
     queryFn: async () => {
-      const [payoutsRes, reviewsRes, suppliersRes] = await Promise.all([
-        api.get("/payouts/admin/summary"),
-        api.get("/reviews/admin/pending?page=1&limit=1"),
-        api.get("/suppliers/admin/applications?status=PENDING&page=1&limit=1"),
-      ]);
-      const pendingPayouts = payoutsRes.data?.data?.pending?.count ?? 0;
-      const pendingReviews = reviewsRes.data?.data?.counts?.pending ?? 0;
-      const pendingSuppliers = suppliersRes.data?.data?.pagination?.totalCount ?? 0;
-      return {
-        pendingPayouts,
-        pendingReviews,
-        pendingSuppliers,
-        totalPending: pendingPayouts + pendingReviews + pendingSuppliers,
+      const res = await api.get("/admin/notifications/stats");
+      return res.data.data as {
+        total: number;
+        unacknowledged: number;
+        byType: Array<{ type: string; _count: number }>;
+        recent: Array<Record<string, unknown>>;
       };
     },
   });
@@ -223,17 +218,17 @@ export default function OverviewPage() {
     const refetchSignups = () => queryClient.invalidateQueries({ queryKey: ["admin", "users", "new-signups"] });
     const refetchTodayBookings = () => queryClient.invalidateQueries({ queryKey: ["admin", "bookings", "today"] });
     const refetchRevenueTrend = () => queryClient.invalidateQueries({ queryKey: ["admin", "revenue-trend"] });
-    const refetchPayoutSummary = () => queryClient.invalidateQueries({ queryKey: ["admin", "payout-summary"] });
-    const refetchPendingSuppliers = () => queryClient.invalidateQueries({ queryKey: ["admin", "suppliers-pending"] });
-    const onBooking = () => { refetchOverview(); refetchTodayBookings(); refetchRevenueTrend(); };
+    const refetchNotifStats = () => queryClient.invalidateQueries({ queryKey: ["admin", "notifications", "stats"] });
+    const onBooking = () => { refetchOverview(); refetchTodayBookings(); refetchRevenueTrend(); refetchNotifStats(); };
     const onSignup = () => { refetchSignups(); refetchOverview(); };
     const onTourChange = () => refetchOverview();
-    const onSupplierApp = () => { refetchOverview(); refetchPendingSuppliers(); };
-    const onSupplierStatus = () => refetchOverview();
-    const onPayout = () => { refetchPayoutSummary(); refetchRevenueTrend(); };
+    const onSupplierApp = () => { refetchOverview(); refetchNotifStats(); };
+    const onSupplierStatus = () => { refetchOverview(); refetchNotifStats(); };
+    const onPayout = () => { refetchNotifStats(); refetchRevenueTrend(); };
+    const onReview = () => { refetchOverview(); refetchNotifStats(); };
     socket.on("admin:signup", onSignup);
     socket.on("admin:new-booking", onBooking);
-    socket.on("admin:new-review", refetchOverview);
+    socket.on("admin:new-review", onReview);
     socket.on("admin:new-tour", onTourChange);
     socket.on("admin:tour-update", onTourChange);
     socket.on("admin:supplier-application", onSupplierApp);
@@ -242,7 +237,7 @@ export default function OverviewPage() {
     return () => {
       socket.off("admin:signup", onSignup);
       socket.off("admin:new-booking", onBooking);
-      socket.off("admin:new-review", refetchOverview);
+      socket.off("admin:new-review", onReview);
       socket.off("admin:tour-update", onTourChange);
       socket.off("admin:supplier-application", onSupplierApp);
       socket.off("admin:supplier-status-change", onSupplierStatus);
@@ -270,13 +265,41 @@ export default function OverviewPage() {
   const weeklyTotal = weeklyBookingData.reduce((sum, d) => sum + d.count, 0);
 
   // Transform event feed for RecentActivityPanel
-  const activities = (overview?.eventFeed || []).slice(0, 10).map((event, idx) => ({
-    id: String(idx),
-    type: idx % 3 === 0 ? "booking" as const : idx % 3 === 1 ? "user" as const : "update" as const,
-    title: event.message || "Activity",
-    description: event.userName || "System",
-    timestamp: event.createdAt || "",
-  }));
+  const activities = (overview?.eventFeed || []).slice(0, 10).map((event, idx) => {
+    const resource = (event.resource || "").toLowerCase();
+    const type:
+      | "booking"
+      | "user"
+      | "review"
+      | "alert"
+      | "update"
+      | "message"
+      | "payout"
+      | "supplier"
+      | "offer"
+      | "team"
+      | "role"
+      | "webhook" =
+      resource === "booking" || resource === "payment" ? "booking"
+      : resource === "user" || resource === "customer" || resource === "authentication" ? "user"
+      : resource === "review" ? "review"
+      : resource === "security" ? "alert"
+      : resource === "tour" || resource === "systemconfig" || resource === "settings" ? "update"
+      : resource === "payout" || resource === "payoutmethod" ? "payout"
+      : resource === "supplierprofile" ? "supplier"
+      : resource === "specialoffer" ? "offer"
+      : resource === "teammember" ? "team"
+      : resource === "adminrole" ? "role"
+      : resource === "webhook" || resource === "socket" ? "webhook"
+      : idx % 3 === 0 ? "booking" : idx % 3 === 1 ? "user" : "update";
+    return {
+      id: String(idx),
+      type,
+      title: event.message || "Activity",
+      description: event.userName || "System",
+      timestamp: event.createdAt || "",
+    };
+  });
 
   const userName = localStorage.getItem("userName") || "Admin";
 
@@ -382,8 +405,8 @@ export default function OverviewPage() {
             </div>
             <div className="lg:col-span-1">
               <NotificationsCard 
-                stats={pendingStats} 
-                loading={pendingStatsLoading} 
+                data={notifStats} 
+                loading={notifStatsLoading} 
               />
             </div>
             <div className="lg:col-span-1">
@@ -434,6 +457,13 @@ export default function OverviewPage() {
                               <td colSpan={2} className="px-4 py-3">
                                 <div className="flex items-center gap-3">
                                   <span className="w-5 text-center text-xs font-medium text-text-tertiary shrink-0">{idx + 1}</span>
+                                  {tour.coverPhoto ? (
+                                    <img src={tour.coverPhoto} alt="" className="h-8 w-8 rounded-lg object-cover shrink-0" />
+                                  ) : (
+                                    <div className="h-8 w-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
+                                      <MapPin className="h-4 w-4 text-gray-400" />
+                                    </div>
+                                  )}
                                   <span className="font-medium text-text-primary truncate">{tour.title}</span>
                                 </div>
                               </td>
