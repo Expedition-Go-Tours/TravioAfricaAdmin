@@ -61,9 +61,7 @@ api.interceptors.response.use(
         }
       }
 
-      if (status === 403) {
-        toast.error("Access denied");
-      } else if (status >= 500) {
+      if (status >= 500) {
         toast.error("Server error. Try again.");
       }
     } else if (error.request) {

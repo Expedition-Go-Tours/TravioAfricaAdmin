@@ -215,6 +215,7 @@ export default function OverviewPage() {
       const res = await api.get("/admin/notifications/stats");
       return res.data.data as NotificationStats;
     },
+    enabled: can("notifications.view"),
   });
 
   const queryClient = useQueryClient();
