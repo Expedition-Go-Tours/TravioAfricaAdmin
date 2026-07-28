@@ -7,7 +7,7 @@ import { staggerFast } from "@/lib/animations";
 
 export interface Column<T> {
   key: string;
-  header: string;
+  header: React.ReactNode;
   sortable?: boolean;
   render: (row: T) => React.ReactNode;
   className?: string;
@@ -118,11 +118,11 @@ export function DataTable<T>({
                   onClick={() => {
                     if (col.sortable && onSort) onSort(col.key);
                   }}
-                  aria-label={
+                  aria-label={typeof col.header === "string" ? (
                     col.sortable
                       ? `${col.header}, sortable. Current sort: ${sortBy === col.key ? sortOrder : "none"}`
                       : col.header
-                  }
+                  ) : col.key}
                   tabIndex={col.sortable ? 0 : undefined}
                   onKeyDown={(e) => {
                     if (col.sortable && onSort && (e.key === "Enter" || e.key === " ")) {

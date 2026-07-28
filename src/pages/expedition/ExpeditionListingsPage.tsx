@@ -27,6 +27,9 @@ interface ExpeditionListing {
   externalUrl: string | null;
   displayOrder: number;
   isFeatured: boolean;
+  syncStatus: string | null;
+  lastSyncAt: string | null;
+  syncError: string | null;
   publishedAt: string | null;
   publishedBy: { id: string; name: string; email: string } | null;
   unpublishedAt: string | null;
@@ -193,6 +196,33 @@ export default function ExpeditionListingsPage() {
       header: "Featured",
       render: (r: ExpeditionListing) =>
         r.isFeatured ? <CheckCircle className="h-4 w-4 text-emerald-500" /> : null,
+    },
+    {
+      key: "syncStatus",
+      header: "Sync",
+      render: (r: ExpeditionListing) => {
+        if (!r.syncStatus) return <span className="text-xs text-slate-300">—</span>;
+        const config = {
+          synced: { dot: "bg-emerald-500", label: "Synced", time: r.lastSyncAt },
+          pending: { dot: "bg-amber-400", label: "Pending", time: null },
+          failed: { dot: "bg-red-500", label: "Failed", time: null },
+        } as const;
+        const c = config[r.syncStatus as keyof typeof config] || config.pending;
+        return (
+          <div className="group relative inline-flex items-center gap-1.5 text-xs text-slate-600">
+            <span className={`inline-block h-2 w-2 rounded-full ${c.dot}`} />
+            {c.label}
+            {c.time && <span className="text-slate-400">{formatDate(c.time)}</span>}
+            {r.syncStatus === "failed" && r.syncError && (
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block z-10">
+                <div className="bg-slate-800 text-white text-[11px] px-2 py-1 rounded whitespace-nowrap max-w-[200px] truncate">
+                  {r.syncError}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      },
     },
     {
       key: "publishedAt",

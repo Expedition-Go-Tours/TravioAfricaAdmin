@@ -82,6 +82,9 @@ interface TourDetail {
     isActive: boolean;
     bookingFlow: "DIRECT" | "EXTERNAL";
     externalUrl: string | null;
+    syncStatus: string | null;
+    lastSyncAt: string | null;
+    syncError: string | null;
     publishedAt: string | null;
     publishedBy: { id: string; name: string; email: string } | null;
     unpublishedAt: string | null;
@@ -605,6 +608,20 @@ export default function TourDetailPage() {
                         <a href={tour.expeditionTour.externalUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
                           {tour.expeditionTour.externalUrl}
                         </a>
+                      </p>
+                    )}
+                    {tour.expeditionTour.syncStatus && (
+                      <p className="flex items-center gap-1.5">
+                        <span className="font-medium text-slate-700">Sync:</span>
+                        <span className={`inline-block h-2 w-2 rounded-full ${
+                          tour.expeditionTour.syncStatus === "synced" ? "bg-emerald-500" :
+                          tour.expeditionTour.syncStatus === "failed" ? "bg-red-500" :
+                          "bg-amber-400"
+                        }`} />
+                        <span className="capitalize">{tour.expeditionTour.syncStatus}</span>
+                        {tour.expeditionTour.lastSyncAt && (
+                          <span className="text-slate-400">({formatDate(tour.expeditionTour.lastSyncAt)})</span>
+                        )}
                       </p>
                     )}
                     {tour.expeditionTour.publishedAt && (
