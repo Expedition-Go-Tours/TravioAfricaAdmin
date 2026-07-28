@@ -26,6 +26,7 @@ import {
   FileText,
   FolderTree,
   Tags,
+  Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePermission } from "@/hooks/usePermission";
@@ -77,6 +78,7 @@ function getNavGroups(can: (key: string) => boolean): { group: string; items: Na
         ...(can('bookings.view') ? [{ label: "Bookings", path: "/admin/bookings", icon: <ShoppingCart className="h-4 w-4" /> }] : []),
         ...(can('suppliers.view') ? [{ label: "Suppliers", path: "/admin/suppliers", icon: <UserPlus className="h-4 w-4" /> }] : []),
         ...(can('suppliers.view') ? [{ label: "Active Suppliers", path: "/admin/suppliers/active", icon: <UserCheck className="h-4 w-4" /> }] : []),
+        ...(can('tours.view') ? [{ label: "Expedition Go", path: "/admin/expedition", icon: <Globe className="h-4 w-4" /> }] : []),
         ...(can('reviews.view') ? [{ label: "Reviews", path: "/admin/reviews", icon: <Star className="h-4 w-4" /> }] : []),
         ...(can('chat.suppliers') ? [{ label: "Supplier Messages", path: "/admin/chat/suppliers", icon: <Building className="h-4 w-4" /> }] : []),
         ...(can('blog.manage') ? [{

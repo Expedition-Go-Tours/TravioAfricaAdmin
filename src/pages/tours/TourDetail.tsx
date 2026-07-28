@@ -1,19 +1,21 @@
 import { useState, useCallback, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft, ChevronRight, ChevronLeft,
   Map, Star, Eye, Calendar, DollarSign,
   Clock, Shield, CheckCircle, XCircle, Check, X, Users, Image as ImageIcon,
-  BarChart3, TrendingUp,
+  BarChart3, TrendingUp, Globe,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { SectionError } from "@/components/shared/SectionError";
 import api from "@/lib/axios";
 import { formatCurrency, formatNumber, formatDate } from "@/lib/utils";
 import { usePermission } from "@/hooks/usePermission";
+import { toast } from "sonner";
 
 interface TourDetail {
   id: string;
@@ -76,6 +78,14 @@ interface TourDetail {
     cancellationPolicy?: string;
     meetingPoint?: unknown;
   };
+  expeditionTour?: {
+    isActive: boolean;
+    bookingFlow: "DIRECT" | "EXTERNAL";
+    externalUrl: string | null;
+    publishedAt: string | null;
+    publishedBy: { id: string; name: string; email: string } | null;
+    unpublishedAt: string | null;
+  } | null;
 }
 
 function ensureArray(value: unknown): unknown[] | undefined {
@@ -180,6 +190,18 @@ export default function TourDetailPage() {
   const revenuePerBooking = tour?.totalRevenue && tour?.bookingCount
     ? tour.totalRevenue / tour.bookingCount
     : null;
+
+  const queryClient = useQueryClient();
+
+  const expeditionMutation = useMutation({
+    mutationFn: (isActive: boolean) =>
+      api.patch(`/admin/tours/${id}/expedition-publish`, { isActive }),
+    onSuccess: (_, isActive) => {
+      toast.success(isActive ? "Published to Expedition Go" : "Removed from Expedition Go");
+      queryClient.invalidateQueries({ queryKey: ["admin", "tour-detail", id] });
+    },
+    onError: () => toast.error("Failed to update Expedition Go listing"),
+  });
 
   const allPhotos = useMemo(() => {
     const set = new Set<string>();
@@ -543,6 +565,73 @@ export default function TourDetailPage() {
                 <InfoItem label="Category" value={tour.category} icon={<Map className="h-3.5 w-3.5 text-slate-400" />} className="col-span-2" />
                 <InfoItem label="Created" value={tour.createdAt ? formatDate(tour.createdAt) : null} icon={<Calendar className="h-3.5 w-3.5 text-slate-400" />} className="col-span-2" />
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Expedition Go */}
+          <Card className="rounded-xl border border-slate-200 shadow-sm">
+            <CardHeader className="border-b border-slate-100 pb-3 pl-5 pr-5 pt-4">
+              <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                <Globe className="h-4 w-4 text-slate-400" />
+                Expedition Go Tours
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-5 pt-4">
+              {tour.expeditionTour?.isActive ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">
+                      <CheckCircle className="h-3 w-3" />
+                      Published
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs text-red-600 border-red-200 hover:bg-red-50"
+                      onClick={() => expeditionMutation.mutate(false)}
+                      disabled={expeditionMutation.isPending}
+                    >
+                      Unpublish
+                    </Button>
+                  </div>
+                  <div className="text-xs text-slate-500 space-y-1">
+                    <p>
+                      <span className="font-medium text-slate-700">Flow:</span>{" "}
+                      {tour.expeditionTour.bookingFlow === "DIRECT" ? "Direct booking on EG" : "External → TravioAfrica"}
+                    </p>
+                    {tour.expeditionTour.externalUrl && (
+                      <p className="truncate">
+                        <span className="font-medium text-slate-700">Link:</span>{" "}
+                        <a href={tour.expeditionTour.externalUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                          {tour.expeditionTour.externalUrl}
+                        </a>
+                      </p>
+                    )}
+                    {tour.expeditionTour.publishedAt && (
+                      <p>
+                        <span className="font-medium text-slate-700">Published:</span>{" "}
+                        {formatDate(tour.expeditionTour.publishedAt)}
+                        {tour.expeditionTour.publishedBy && ` by ${tour.expeditionTour.publishedBy.name}`}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
+                    <XCircle className="h-3 w-3" />
+                    Not Published
+                  </span>
+                  <Button
+                    size="sm"
+                    className="h-7 text-xs w-full"
+                    onClick={() => expeditionMutation.mutate(true)}
+                    disabled={expeditionMutation.isPending}
+                  >
+                    Publish to Expedition Go
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
 
