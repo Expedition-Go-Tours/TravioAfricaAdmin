@@ -27,6 +27,7 @@ import {
   FolderTree,
   Tags,
   Globe,
+  History,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePermission } from "@/hooks/usePermission";
@@ -122,6 +123,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const adminGroups: { group: string; items: NavItem[] }[] = isSuperAdmin ? [{
     group: "Administration",
     items: [
+      { label: "Activity Log", path: "/admin/activity-log", icon: <History className="h-4 w-4" /> },
       { label: "Settings", path: "/admin/settings", icon: <Settings className="h-4 w-4" /> },
     ],
   }] : [];

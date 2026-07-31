@@ -30,6 +30,7 @@ import ReviewModerationPage from "@/pages/reviews/ReviewModeration";
 import BookingsPage from "@/pages/bookings/BookingsPage";
 import ChatPage from "@/pages/chat/ChatPage";
 import SettingsPage from "@/pages/settings/SettingsPage";
+import ActivityLogPage from "@/pages/activity/ActivityLogPage";
 import BlogListPage from "@/pages/blog/BlogListPage";
 import BlogPreviewPage from "@/pages/blog/BlogPreviewPage";
 import BlogEditorPage from "@/pages/blog/BlogEditorPage";
@@ -133,6 +134,7 @@ const router = createBrowserRouter([
       { path: "chat/suppliers", element: <PermissionRoute permission="chat.suppliers"><ChatPage /></PermissionRoute> },
       { path: "chat/customers", element: <PermissionRoute permission="chat.customers"><ChatPage /></PermissionRoute> },
       { path: "settings", element: <PermissionRoute permission="settings.access"><SettingsPage /></PermissionRoute> },
+      { path: "activity-log", element: <PermissionRoute permission="settings.access"><ActivityLogPage /></PermissionRoute> },
       { path: "blog", element: <PermissionRoute permission="blog.manage"><BlogListPage /></PermissionRoute> },
       { path: "blog/preview/:id", element: <PermissionRoute permission="blog.manage"><BlogPreviewPage /></PermissionRoute> },
       { path: "blog/new", element: <PermissionRoute permission="blog.manage"><BlogEditorPage /></PermissionRoute> },
