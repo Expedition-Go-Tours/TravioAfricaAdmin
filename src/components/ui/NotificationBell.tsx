@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   Loader2,
   ChevronRight,
+  ClipboardCheck,
 } from "lucide-react";
 import { getNotifications, getUnreadCount, markAsRead, markAllAsRead } from "@/services/notificationService";
 import { onAdminNotification } from "@/lib/adminSocket";
@@ -27,6 +28,7 @@ const notificationRouteMap: Record<string, (data?: Record<string, unknown>) => {
   NEW_SUPPLIER_APPLICATION: (data) => data?.supplierId ? { path: `/admin/suppliers/${data.supplierId}` } : null,
   SUPPLIER_STATUS_CHANGE: (data) => data?.supplierId ? { path: `/admin/suppliers/${data.supplierId}` } : null,
   REVIEW_NEEDS_MODERATION: (data) => data?.reviewId ? { path: "/admin/reviews", state: { reviewId: data.reviewId } } : null,
+  TOUR_SUBMITTED_FOR_REVIEW: (data) => data?.tourId ? { path: "/admin/tour-moderation", state: { tourId: data.tourId } } : null,
   PAYOUT_NEEDS_APPROVAL: (data) => data?.payoutId ? { path: "/admin/payouts", state: { payoutId: data.payoutId } } : null,
   PAYOUT_PROCESSED: (data) => data?.payoutId ? { path: "/admin/payouts", state: { payoutId: data.payoutId } } : null,
   PAYOUT_APPROVED: (data) => data?.payoutId ? { path: "/admin/payouts", state: { payoutId: data.payoutId } } : null,
@@ -47,6 +49,7 @@ const typeConfig: Record<string, { icon: React.ReactNode; color: string }> = {
   NEW_SUPPLIER_APPLICATION: { icon: <UserCheck className="h-3.5 w-3.5" />, color: "text-amber-600" },
   SUPPLIER_STATUS_CHANGE: { icon: <UserCheck className="h-3.5 w-3.5" />, color: "text-blue-600" },
   REVIEW_NEEDS_MODERATION: { icon: <MessageSquare className="h-3.5 w-3.5" />, color: "text-amber-600" },
+  TOUR_SUBMITTED_FOR_REVIEW: { icon: <ClipboardCheck className="h-3.5 w-3.5" />, color: "text-amber-600" },
   SYSTEM_ALERT: { icon: <AlertTriangle className="h-3.5 w-3.5" />, color: "text-red-500" },
   NEW_MESSAGE: { icon: <MessageSquare className="h-3.5 w-3.5" />, color: "text-green-600" },
 };

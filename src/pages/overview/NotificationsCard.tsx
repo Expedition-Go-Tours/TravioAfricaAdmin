@@ -1,6 +1,6 @@
 ﻿import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Bell, CheckCheck, Users, Star, Banknote } from "lucide-react";
+import { Bell, CheckCheck, Users, Star, Banknote, ClipboardCheck } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { markAllAsRead } from "@/services/notificationService";
@@ -31,6 +31,7 @@ interface NotificationsCardProps {
 const dotColors: Record<string, string> = {
   NEW_SUPPLIER_APPLICATION: "bg-amber-400",
   REVIEW_NEEDS_MODERATION: "bg-blue-400",
+  TOUR_SUBMITTED_FOR_REVIEW: "bg-amber-400",
   PAYOUT_NEEDS_APPROVAL: "bg-emerald-400",
   PAYOUT_PROCESSED: "bg-green-400",
   PAYOUT_APPROVED: "bg-green-400",
@@ -45,6 +46,7 @@ const notificationRouteMap: Record<string, (data?: Record<string, unknown>) => {
   NEW_SUPPLIER_APPLICATION: (d) => (d?.supplierId ? { path: `/admin/suppliers/${d.supplierId}` } : null),
   SUPPLIER_STATUS_CHANGE: (d) => (d?.supplierId ? { path: `/admin/suppliers/${d.supplierId}` } : null),
   REVIEW_NEEDS_MODERATION: (d) => (d?.reviewId ? { path: "/admin/reviews", state: { reviewId: d.reviewId } } : null),
+  TOUR_SUBMITTED_FOR_REVIEW: (d) => (d?.tourId ? { path: "/admin/tour-moderation", state: { tourId: d.tourId } } : null),
   PAYOUT_NEEDS_APPROVAL: (d) => (d?.payoutId ? { path: "/admin/payouts", state: { payoutId: d.payoutId } } : null),
   PAYOUT_PROCESSED: (d) => (d?.payoutId ? { path: "/admin/payouts", state: { payoutId: d.payoutId } } : null),
   PAYOUT_APPROVED: (d) => (d?.payoutId ? { path: "/admin/payouts", state: { payoutId: d.payoutId } } : null),
@@ -54,13 +56,14 @@ const notificationRouteMap: Record<string, (data?: Record<string, unknown>) => {
 
 const statItems = [
   { type: "NEW_SUPPLIER_APPLICATION", label: "Apps", icon: Users, route: "/admin/suppliers" },
+  { type: "TOUR_SUBMITTED_FOR_REVIEW", label: "Tours", icon: ClipboardCheck, route: "/admin/tour-moderation" },
   { type: "REVIEW_NEEDS_MODERATION", label: "Review", icon: Star, route: "/admin/reviews" },
   { type: "PAYOUT_NEEDS_APPROVAL", label: "Payouts", icon: Banknote, route: "/admin/payouts" },
 ];
 
-const numberColor = ["text-amber-600", "text-blue-600", "text-emerald-600"];
+const numberColor = ["text-amber-600", "text-amber-600", "text-blue-600", "text-emerald-600"];
 
-const iconBg = ["bg-amber-50", "bg-blue-50", "bg-emerald-50"];
+const iconBg = ["bg-amber-50", "bg-amber-50", "bg-blue-50", "bg-emerald-50"];
 
 export function NotificationsCard({ data, loading }: NotificationsCardProps) {
   const navigate = useNavigate();

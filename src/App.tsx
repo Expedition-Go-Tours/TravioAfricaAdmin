@@ -19,6 +19,7 @@ import CustomerLifetimeValuePage from "@/pages/users/CustomerLifetimeValue";
 import ConversionFunnelPage from "@/pages/users/ConversionFunnel";
 import TourPerformancePage from "@/pages/tours/TourPerformance";
 import TourDetailPage from "@/pages/tours/TourDetail";
+import TourModerationPage from "@/pages/tours/TourModeration";
 import SupplierApplicationsPage from "@/pages/suppliers/SupplierApplications";
 import SupplierDetailPage from "@/pages/suppliers/SupplierDetail";
 import ActiveSuppliersPage from "@/pages/suppliers/ActiveSuppliers";
@@ -124,6 +125,7 @@ const router = createBrowserRouter([
       { path: "funnel", element: <PermissionRoute permission="users.view"><ConversionFunnelPage /></PermissionRoute> },
       { path: "tours", element: <PermissionRoute permission="tours.view"><TourPerformancePage /></PermissionRoute> },
       { path: "tours/:id", element: <PermissionRoute permission="tours.view"><TourDetailPage /></PermissionRoute> },
+      { path: "tour-moderation", element: <PermissionRoute permission="tours.view"><TourModerationPage /></PermissionRoute> },
       { path: "suppliers", element: <PermissionRoute permission="suppliers.view"><SupplierApplicationsPage /></PermissionRoute> },
       { path: "suppliers/:id", element: <PermissionRoute permission="suppliers.view"><SupplierDetailPage /></PermissionRoute> },
       { path: "suppliers/active", element: <PermissionRoute permission="suppliers.view"><ActiveSuppliersPage /></PermissionRoute> },

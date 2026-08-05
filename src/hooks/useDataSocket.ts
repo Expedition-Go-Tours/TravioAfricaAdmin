@@ -6,6 +6,7 @@ const MODEL_QUERY_MAP: Record<string, string[]> = {
   Tour: [
     "tour-detail",
     "tours",
+    "tour-review",
   ],
   User: [
     "supplier",

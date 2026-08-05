@@ -15,6 +15,7 @@ const breadcrumbMap: Record<string, string> = {
   clv: "Customer Lifetime Value",
   funnel: "Conversion Funnel",
   tours: "Tour Performance",
+  "tour-moderation": "Tour Moderation",
   suppliers: "Supplier Applications",
   active: "Active Suppliers",
   payouts: "Payouts",

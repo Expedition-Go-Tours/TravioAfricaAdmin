@@ -72,6 +72,7 @@ export function truncateId(id: string, chars = 12): string {
 export function getStatusColor(status: string): string {
   const map: Record<string, string> = {
     PENDING: "bg-status-pending/10 text-status-pending border-status-pending/30",
+    PENDING_APPROVAL: "bg-status-pending/10 text-status-pending border-status-pending/30",
     APPROVED: "bg-status-approved/10 text-status-approved border-status-approved/30",
     ACTIVE: "bg-status-active/10 text-status-active border-status-active/30",
     REJECTED: "bg-status-rejected/10 text-status-rejected border-status-rejected/30",

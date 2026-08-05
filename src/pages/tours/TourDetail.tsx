@@ -178,10 +178,26 @@ export default function TourDetailPage() {
   const { data: tour, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin", "tour-detail", id],
     queryFn: async () => {
-      const res = await api.get(`/tours/${id}`);
-      const tour = res.data?.data?.tour || res.data?.tour || res.data;
-      if (!tour) throw new Error("Tour not found");
-      return normalizeTour(tour);
+      const unwrap = (res: { data: unknown }) => {
+        const body = res.data as {
+          data?: { tour?: Record<string, unknown> };
+          tour?: Record<string, unknown>;
+        };
+        const tour = body?.data?.tour ?? body?.tour ?? (body as Record<string, unknown>);
+        if (!tour) throw new Error("Tour not found");
+        return normalizeTour(tour);
+      };
+      try {
+        const res = await api.get(`/admin/tours/${id}`);
+        return unwrap(res);
+      } catch (err) {
+        const status = (err as { response?: { status?: number } })?.response?.status;
+        if (status === 401 || status === 403 || status === 404) {
+          const res = await api.get(`/tours/${id}`);
+          return unwrap(res);
+        }
+        throw err;
+      }
     },
     enabled: !!id,
   });
