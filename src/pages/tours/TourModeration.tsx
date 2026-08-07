@@ -143,6 +143,7 @@ export default function TourModerationPage() {
       queryClient.refetchQueries({ queryKey: ["admin", "tour-review"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "tours"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "tour-detail"] });
+      queryClient.removeQueries({ queryKey: ["admin", "tour-draft"] });
       toast.success(
         actionType === "approve"
           ? actionTour?.draftStatus === "PENDING_APPROVAL"
@@ -665,16 +666,18 @@ export default function TourModerationPage() {
                         <motion.button
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          className="inline-flex items-center justify-center h-9 px-4 text-xs font-semibold rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+                          disabled={reviewMutation.isPending}
+                          className="inline-flex items-center justify-center h-9 px-4 text-xs font-semibold rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:pointer-events-none"
                           onClick={() => openAction("approve", selectedTour)}
                         >
-                          <Check className="h-3.5 w-3.5 mr-1.5" />
+                          {reviewMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Check className="h-3.5 w-3.5 mr-1.5" />}
                           {isPendingEdit ? "Apply & Make Live" : "Approve & Make Live"}
                         </motion.button>
                         <motion.button
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          className="inline-flex items-center justify-center h-9 px-4 text-xs font-semibold rounded-lg border border-border text-text-secondary bg-white hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors"
+                          disabled={reviewMutation.isPending}
+                          className="inline-flex items-center justify-center h-9 px-4 text-xs font-semibold rounded-lg border border-border text-text-secondary bg-white hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors disabled:opacity-50 disabled:pointer-events-none"
                           onClick={() => openAction("flag", selectedTour)}
                         >
                           <Flag className="h-3.5 w-3.5 mr-1.5" />

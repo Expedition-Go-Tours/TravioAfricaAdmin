@@ -78,7 +78,12 @@ export const getTourReviewQueue = (params?: {
     .then((r) => (r.data?.data ? r.data.data : r.data) as ReviewQueueResponse);
 
 export const reviewTour = (id: string, body: { action: "approve" | "flag"; reason?: string }) =>
-  api.patch(`/admin/tours/${id}/review`, body).then((r) => r.data);
+  api.patch(`/admin/tours/${id}/review`, body).then((r) => {
+    if (r.data?.status && r.data.status !== "success") {
+      throw new Error(r.data.message || "Request failed");
+    }
+    return r.data;
+  });
 
 export const getTourDraftReview = (id: string) =>
   api
@@ -86,4 +91,9 @@ export const getTourDraftReview = (id: string) =>
     .then((r) => (r.data?.data ? r.data.data : r.data) as TourDraftReview);
 
 export const reviewTourDraft = (id: string, body: { action: "approve" | "flag"; reason?: string }) =>
-  api.patch(`/admin/tours/${id}/draft-review`, body).then((r) => r.data);
+  api.patch(`/admin/tours/${id}/draft-review`, body).then((r) => {
+    if (r.data?.status && r.data.status !== "success") {
+      throw new Error(r.data.message || "Request failed");
+    }
+    return r.data;
+  });
