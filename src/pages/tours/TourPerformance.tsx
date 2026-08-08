@@ -50,9 +50,10 @@ export default function TourPerformancePage() {
     sortOrder,
   });
   if (status && status !== "all") queryParams.set("status", status);
+  if (searchQuery.trim()) queryParams.set("search", searchQuery.trim());
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["admin", "tours", { page, limit, status, sortBy, sortOrder }],
+    queryKey: ["admin", "tours", { page, limit, status, sortBy, sortOrder, search: searchQuery.trim() }],
     queryFn: () => api.get(`/admin/analytics/tour-performance?${queryParams.toString()}`).then((r) => r.data),
   });
 
@@ -67,21 +68,9 @@ export default function TourPerformancePage() {
 
   const rawTours = data?.data?.tours || data?.tours || [];
 
-  const query = searchQuery.toLowerCase().trim();
-  const tours: Tour[] = query
-    ? rawTours
-        .filter((t: Tour) =>
-          [t.title, t.supplier?.name]
-            .some((f) => f?.toLowerCase().includes(query))
-        )
-        .sort((a: Tour, b: Tour) => {
-          const aName = (a.title || "").toLowerCase();
-          const bName = (b.title || "").toLowerCase();
-          const aStarts = aName.startsWith(query) ? 0 : 1;
-          const bStarts = bName.startsWith(query) ? 0 : 1;
-          return aStarts - bStarts;
-        })
-    : rawTours;
+  // Server-side search (title / supplier name) + server-side sort already
+  // applied by /admin/analytics/tour-performance?search=...
+  const tours: Tour[] = rawTours;
   const pagination = data?.pagination || data?.data?.pagination;
   const totalCount = pagination?.totalCount || 0;
 
