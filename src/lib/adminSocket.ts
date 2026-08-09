@@ -14,7 +14,7 @@ export function getAdminSocket(): Socket {
     socket = io(SOCKET_URL, {
       withCredentials: true,
       auth: { role: "admin" },
-      transports: ["websocket"],
+      transports: ["websocket", "polling"],
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 3000,
@@ -35,5 +35,13 @@ export function onAdminNotification(callback: (notification: Record<string, unkn
   s.on(ADMIN_NOTIFICATION_EVENT, callback);
   return () => {
     s.off(ADMIN_NOTIFICATION_EVENT, callback);
+  };
+}
+
+export function onAdminSocketConnect(callback: () => void): () => void {
+  const s = getAdminSocket();
+  s.on("connect", callback);
+  return () => {
+    s.off("connect", callback);
   };
 }
