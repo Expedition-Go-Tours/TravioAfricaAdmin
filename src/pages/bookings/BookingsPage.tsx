@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, startTransition } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -119,7 +119,7 @@ export default function BookingsPage() {
   const bookingIdFromUrl = searchParams.get("bookingId");
   const bookingId = bookingIdFromState || bookingIdFromUrl;
 
-  const deepLinkHandled = useRef(false);
+  const [deepLinkHandled, setDeepLinkHandled] = useState(false);
 
   const findInCaches = useCallback((id: string): Booking | undefined => {
     const recent = queryClient.getQueryData<Booking[]>(["admin", "bookings", "recent"]);
@@ -137,9 +137,9 @@ export default function BookingsPage() {
   }, [queryClient]);
 
   const cachedBooking = useMemo(() => {
-    if (!bookingId || deepLinkHandled.current) return undefined;
+    if (!bookingId || deepLinkHandled) return undefined;
     return findInCaches(bookingId);
-  }, [bookingId, findInCaches]);
+  }, [bookingId, findInCaches, deepLinkHandled]);
 
   const { data: fetchedBooking } = useQuery({
     queryKey: ["admin", "booking", bookingId],
@@ -150,9 +150,11 @@ export default function BookingsPage() {
   const deepLinkBooking = cachedBooking || fetchedBooking;
 
   useEffect(() => {
-    if (!deepLinkBooking || deepLinkHandled.current) return;
-    deepLinkHandled.current = true;
-    setSelectedBooking(deepLinkBooking);
+    if (!deepLinkBooking || deepLinkHandled) return;
+    startTransition(() => {
+      setDeepLinkHandled(true);
+      setSelectedBooking(deepLinkBooking);
+    });
 
     if (location.state?.bookingId) {
       navigate(location.pathname, { replace: true, state: {} });
@@ -162,7 +164,7 @@ export default function BookingsPage() {
       next.delete("bookingId");
       setSearchParams(next, { replace: true });
     }
-  }, [deepLinkBooking, location.pathname, navigate, searchParams, setSearchParams]);
+  }, [deepLinkBooking, deepLinkHandled, location.pathname, location.state?.bookingId, navigate, searchParams, setSearchParams]);
 
   return (
     <div className="space-y-4 md:space-y-5 w-full h-full flex flex-col">
@@ -357,7 +359,7 @@ export default function BookingsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filtered.map((booking, idx) => (
+                    {filtered.map((booking) => (
                       <motion.tr
                         key={booking.id}
                         variants={FADE_SLIDE}
@@ -506,7 +508,7 @@ export default function BookingsPage() {
             onConfirmPayment={(booking) => {
               setConfirmPayBooking(booking);
             }}
-            onViewCustomer={(customerId) => {
+            onViewCustomer={() => {
               setSelectedBooking(null);
             }}
           />

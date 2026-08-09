@@ -1,8 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { HelpCircle, Save, Loader2, X } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -47,7 +46,7 @@ export function GeneralTab() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [savingSections, setSavingSections] = useState<Record<string, boolean>>({});
 
-  const sections = [...new Set(FIELDS.map((f) => f.section))];
+  const sections = useMemo(() => [...new Set(FIELDS.map((f) => f.section))], []);
 
   const isSectionDirty = useCallback((section: string) => {
     const keys = FIELDS.filter((f) => f.section === section).map((f) => f.key);
@@ -68,16 +67,16 @@ export function GeneralTab() {
     queryFn: () => api.get("/admin/settings").then((r) => r.data?.data || {}),
   });
 
-  useEffect(() => {
-    if (data && Object.keys(original).length === 0) {
-      const flattened: Record<string, string> = {};
-      for (const [key, val] of Object.entries(data)) {
-        flattened[key] = String(val ?? "");
-      }
-      setForm(flattened);
-      setOriginal(flattened);
+  const [prevData, setPrevData] = useState<unknown>(null);
+  if (data && data !== prevData && Object.keys(original).length === 0) {
+    setPrevData(data);
+    const flattened: Record<string, string> = {};
+    for (const [key, val] of Object.entries(data)) {
+      flattened[key] = String(val ?? "");
     }
-  }, [data]);
+    setForm(flattened);
+    setOriginal(flattened);
+  }
 
   const mutation = useMutation({
     mutationFn: (settings: Record<string, unknown>) =>
@@ -136,11 +135,12 @@ export function GeneralTab() {
   const resetSection = (section: string) => {
     const sectionKeys = FIELDS.filter((f) => f.section === section).map((f) => f.key);
     const newErrors = { ...errors };
+    const nextForm = { ...form };
     for (const k of sectionKeys) {
       delete newErrors[k];
-      form[k] = original[k] ?? "";
+      nextForm[k] = original[k] ?? "";
     }
-    setForm({ ...form });
+    setForm(nextForm);
     setErrors(newErrors);
   };
 
@@ -162,11 +162,6 @@ export function GeneralTab() {
     );
     mutation.mutate(dirtyForm);
   }, [form, isSectionDirty, sections, mutation]);
-
-  const resetAll = () => {
-    setForm({ ...original });
-    setErrors({});
-  };
 
   useCtrlSave(saveAllDirty, anyDirty && !hasErrors);
 

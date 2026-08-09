@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState } from "react";
 import { Upload, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -51,8 +51,9 @@ export function ImageUploadDialog({ open, onOpenChange, onImageSelect, title = "
       onImageSelect(res.data.url);
       onOpenChange(false);
       reset();
-    } catch (err: any) {
-      setError(err?.response?.data?.message || "Upload failed");
+    } catch (err) {
+      const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Upload failed";
+      setError(message);
     } finally {
       setUploading(false);
     }

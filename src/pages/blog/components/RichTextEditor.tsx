@@ -37,8 +37,8 @@ import {
 import { ImageUploadDialog } from "./ImageUploadDialog";
 
 interface RichTextEditorProps {
-  value: any;
-  onChange: (value: any) => void;
+  value: Record<string, unknown> | null;
+  onChange: (value: Record<string, unknown> | null) => void;
   placeholder?: string;
   disabled?: boolean;
   expand?: boolean;

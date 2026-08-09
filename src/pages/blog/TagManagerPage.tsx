@@ -26,7 +26,7 @@ export default function TagManagerPage() {
   });
 
   const saveMutation = useMutation({
-    mutationFn: (data: any) =>
+    mutationFn: (data: { id?: string; name: string; slug: string }) =>
       data.id
         ? updateTag(data.id, { name: data.name, slug: data.slug })
         : createTag(data),
@@ -61,7 +61,7 @@ export default function TagManagerPage() {
         </div>
       ) : (
         <div className="flex flex-wrap gap-2">
-          {tags?.map((tag: any) => (
+          {tags?.map((tag: ArticleTag) => (
             <div key={tag.id} className="group inline-flex items-center gap-2 rounded-full border bg-white px-3 py-1.5 text-sm hover:border-gray-300 transition-colors">
               <span>{tag.name}</span>
               <span className="text-xs text-gray-400">({tag._count?.articles || 0})</span>

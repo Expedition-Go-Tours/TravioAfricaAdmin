@@ -1,6 +1,6 @@
 ﻿import { useState, useRef, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, X, Download, Clock, ChevronRight, CalendarDays, Filter, FileDown } from "lucide-react";
+import { X, ChevronRight, CalendarDays, Filter, FileDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

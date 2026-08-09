@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect, useCallback } from "react";
+﻿import { useState, useRef, useEffect } from "react";
 import { Check, CheckCheck, Loader2, MoreVertical, Pencil, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Message } from "@/services/chatService";

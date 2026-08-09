@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { ChevronLeft, Edit3 } from "lucide-react"
 import { getArticleById } from "@/services/blogService"
-import { renderTipTap } from "@/lib/renderTipTap"
+import { renderTipTap, type TipTapNode } from "@/lib/renderTipTap"
 import type { Article } from "@/types/blog"
 
 const formatDate = (dateStr: string | null) => {
@@ -126,7 +126,7 @@ export default function BlogPreviewPage() {
             [&_hr]:border-[#E5E6EA] [&_hr]:my-10
             [&_a]:underline [&_a]:underline-offset-4 [&_a]:decoration-[#E5E6EA] [&_a:hover]:decoration-[#262D4D] [&_a]:transition-all [&_a]:duration-300"
           >
-            {renderTipTap(article.body)}
+            {renderTipTap(article.body as TipTapNode | null)}
           </div>
         </div>
       </main>

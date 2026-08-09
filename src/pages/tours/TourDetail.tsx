@@ -5,7 +5,7 @@ import {
   ArrowLeft, ChevronRight, ChevronLeft,
   Map, Star, Eye, Calendar, DollarSign,
   Clock, Shield, CheckCircle, XCircle, Check, X, Users, Image as ImageIcon,
-  BarChart3, TrendingUp, Globe,
+  Globe,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -201,14 +201,6 @@ export default function TourDetailPage() {
     },
     enabled: !!id,
   });
-
-  const conversionRate = tour?.viewCount && tour?.bookingCount
-    ? ((tour.bookingCount / tour.viewCount) * 100).toFixed(1)
-    : null;
-
-  const revenuePerBooking = tour?.totalRevenue && tour?.bookingCount
-    ? tour.totalRevenue / tour.bookingCount
-    : null;
 
   const queryClient = useQueryClient();
 
@@ -798,18 +790,6 @@ function InfoItem({ label, value, icon, highlight, className }: { label: string;
       ) : (
         <span className="text-sm text-slate-300">—</span>
       )}
-    </div>
-  );
-}
-
-function PerfRow({ label, value, icon, highlight }: { label: string; value: string; icon: React.ReactNode; highlight?: boolean }) {
-  return (
-    <div className="flex items-center justify-between py-1">
-      <div className="flex items-center gap-2">
-        {icon}
-        <span className="text-xs text-slate-500">{label}</span>
-      </div>
-      <span className={`text-sm font-medium ${highlight ? "text-slate-900" : "text-slate-700"}`}>{value}</span>
     </div>
   );
 }

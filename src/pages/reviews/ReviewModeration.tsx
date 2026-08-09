@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, startTransition } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -210,6 +210,12 @@ export default function ReviewModerationPage() {
   const moderatedTodayCount = counts?.moderatedToday ?? 0;
 
   const deepLinkReviewId = location.state?.reviewId as string | undefined;
+  const openModerate = (type: "approve" | "reject" | "flag", review: Review) => {
+    setActionReview(review);
+    setActionType(type);
+    setReason("");
+  };
+
   useEffect(() => {
     if (!deepLinkReviewId || deepLinkHandled.current || rawReviews.length === 0) return;
     const found = rawReviews.find((r) => r.id === deepLinkReviewId);
@@ -217,7 +223,11 @@ export default function ReviewModerationPage() {
       deepLinkHandled.current = true;
       navigate(location.pathname, { replace: true, state: {} });
       const tourId = found.tour?.id;
-      if (tourId) setSelectedTourId(tourId);
+      if (tourId) {
+        startTransition(() => {
+          setSelectedTourId(tourId);
+        });
+      }
       setTimeout(() => openModerate("approve", found), 0);
     }
   }, [rawReviews, location.pathname, navigate, deepLinkReviewId]);
@@ -265,20 +275,14 @@ export default function ReviewModerationPage() {
     [tourGroups, selectedTourId],
   );
 
-  useEffect(() => {
-    if (tourGroups.length > 0) {
-      const stillExists = tourGroups.some((g) => g.tourId === selectedTourId);
-      if (!stillExists) setSelectedTourId(tourGroups[0].tourId);
-    } else {
-      setSelectedTourId(null);
+  const [prevTourIdsKey, setPrevTourIdsKey] = useState("");
+  const tourIdsKey = tourGroups.map((g) => g.tourId).join("|");
+  if (tourIdsKey !== prevTourIdsKey) {
+    setPrevTourIdsKey(tourIdsKey);
+    if (!tourGroups.some((g) => g.tourId === selectedTourId)) {
+      setSelectedTourId(tourGroups[0]?.tourId ?? null);
     }
-  }, [tourGroups, selectedTourId]);
-
-  const openModerate = (type: "approve" | "reject" | "flag", review: Review) => {
-    setActionReview(review);
-    setActionType(type);
-    setReason("");
-  };
+  }
 
   const closeModerate = () => {
     setActionReview(null);

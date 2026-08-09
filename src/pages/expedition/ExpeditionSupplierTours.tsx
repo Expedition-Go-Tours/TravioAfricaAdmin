@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, CheckCircle, XCircle, Globe, ExternalLink, Star, Eye } from "lucide-react";
+import { ArrowLeft, CheckCircle, Globe, ExternalLink, Star, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -85,7 +85,7 @@ export default function ExpeditionSupplierTours({ supplier, onBack }: SupplierTo
     queryFn: () => api.get(`/admin/expedition/suppliers/${supplier.id}/tours?status=${statusFilter}`).then((r) => r.data?.data),
   });
 
-  const tours: Tour[] = data?.tours || [];
+  const tours: Tour[] = useMemo(() => data?.tours || [], [data]);
   const supplierDetail = data?.supplier;
 
   const publishMut = useMutation({

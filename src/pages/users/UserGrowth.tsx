@@ -65,7 +65,7 @@ export default function UserGrowthPage() {
     enabled: !!dialog,
   });
 
-  const growth = data?.data?.growth || [];
+  const growth = useMemo(() => data?.data?.growth || [], [data]);
 
   const { totals, latestMonth, avgMonthly, momChange, customerMom, supplierMom } = useMemo(() => {
     if (!growth.length) return { totals: { customers: 0, suppliers: 0, total: 0 }, latestMonth: null, avgMonthly: 0, momChange: null, customerMom: null, supplierMom: null };

@@ -112,7 +112,6 @@ export function ChatWindow({
   hasMore,
   loadingMore,
   sending,
-  currentUserId,
   onViewProfile,
   onEditMessage,
   onDeleteMessage,
@@ -148,7 +147,9 @@ export function ChatWindow({
   }, [isNearBottom]);
 
   const stopTypingSignal = useCallback(() => {
-    if (conversation?.id) emitTyping(conversation.id, false);
+    if (conversation?.id) {
+      emitTyping(conversation.id, false);
+    }
     if (typingIntervalRef.current) {
       clearInterval(typingIntervalRef.current);
       typingIntervalRef.current = null;
@@ -157,7 +158,7 @@ export function ChatWindow({
       clearTimeout(typingStopRef.current);
       typingStopRef.current = null;
     }
-  }, [conversation?.id, emitTyping]);
+  }, [conversation, emitTyping]);
 
   useEffect(() => {
     const unsub = onTyping((data) => {

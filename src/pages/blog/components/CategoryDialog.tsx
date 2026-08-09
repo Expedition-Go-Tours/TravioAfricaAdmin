@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -27,16 +27,16 @@ export function CategoryDialog({ open, onOpenChange, category, categories, onSav
   const [parentId, setParentId] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [prevCategory, setPrevCategory] = useState<ArticleCategory | null>(category);
 
-  useEffect(() => {
-    if (open) {
-      setName(category?.name || "");
-      setSlug(category?.slug || "");
-      setDescription(category?.description || "");
-      setParentId(category?.parentId || "");
-      setError("");
-    }
-  }, [open, category]);
+  if (open && category !== prevCategory) {
+    setPrevCategory(category);
+    setName(category?.name || "");
+    setSlug(category?.slug || "");
+    setDescription(category?.description || "");
+    setParentId(category?.parentId || "");
+    setError("");
+  }
 
   const handleNameChange = (value: string) => {
     setName(value);
@@ -51,8 +51,9 @@ export function CategoryDialog({ open, onOpenChange, category, categories, onSav
     try {
       await onSave({ name: name.trim(), slug: slug.trim(), description: description.trim() || undefined, parentId: parentId || undefined });
       onOpenChange(false);
-    } catch (e: any) {
-      setError(e?.response?.data?.message || "Failed to save category");
+    } catch (e) {
+      const message = (e as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to save category";
+      setError(message);
     } finally {
       setSaving(false);
     }

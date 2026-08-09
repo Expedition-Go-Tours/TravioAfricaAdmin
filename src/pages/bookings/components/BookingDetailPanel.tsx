@@ -3,7 +3,6 @@ import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import {
   X,
-  User,
   MapPin,
   Calendar,
   Clock,
@@ -19,7 +18,6 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { usePermission } from "@/hooks/usePermission";
 import { cn, timeAgo } from "@/lib/utils";
 import { BookingTimeline } from "./BookingTimeline";

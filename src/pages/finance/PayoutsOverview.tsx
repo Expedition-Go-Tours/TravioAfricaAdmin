@@ -127,7 +127,7 @@ export default function PayoutsOverview() {
                 />
                 <Tooltip
                   contentStyle={{ borderRadius: 4, border: "1px solid #dee3e8", fontSize: 12 }}
-                  formatter={(value: any) => [formatCurrency(Number(value))]}
+                  formatter={(value) => [formatCurrency(Number(value))]}
                   labelStyle={{ fontWeight: 600, marginBottom: 4 }}
                 />
                 <Legend
@@ -174,8 +174,9 @@ export default function PayoutsOverview() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border-muted">
-                  {monthlyBreakdown.map((m: any) => {
-                    const pct = m.totalAmount > 0 ? ((m.commission ?? 0) / m.totalAmount) * 100 : 0;
+                  {monthlyBreakdown.map((m) => {
+                    const total = m.totalAmount ?? 0;
+                    const pct = total > 0 ? ((m.commission ?? 0) / total) * 100 : 0;
                     return (
                       <tr key={m.month} className="transition-colors hover:bg-green-50/40 even:bg-green-50/20">
                         <td className="px-5 py-3 text-sm font-medium text-text-primary">{m.month}</td>
