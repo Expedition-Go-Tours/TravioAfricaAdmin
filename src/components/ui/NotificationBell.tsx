@@ -21,8 +21,10 @@ import {
   ClipboardCheck,
 } from "lucide-react";
 import { getNotifications, getUnreadCount, markAsRead, markAllAsRead } from "@/services/notificationService";
-import { onAdminNotification } from "@/lib/adminSocket";
+import { onAdminNotification, onAdminSocketConnect } from "@/lib/adminSocket";
 import { timeAgo, cn } from "@/lib/utils";
+
+const NOTIFICATIONS_REFETCH_INTERVAL_MS = 60_000;
 
 const notificationRouteMap: Record<string, (data?: Record<string, unknown>) => { path: string; state?: Record<string, unknown> } | null> = {
   NEW_SUPPLIER_APPLICATION: (data) => data?.supplierId ? { path: `/admin/suppliers/${data.supplierId}` } : null,
@@ -67,12 +69,16 @@ export function NotificationBell() {
   const { data: unreadCount = 0 } = useQuery({
     queryKey: ["admin-notifications", "unread-count"],
     queryFn: getUnreadCount,
+    refetchInterval: NOTIFICATIONS_REFETCH_INTERVAL_MS,
+    refetchIntervalInBackground: true,
+    refetchOnWindowFocus: true,
   });
 
   const { data: dropdown, isLoading } = useQuery({
     queryKey: ["admin-notifications", "feed"],
     queryFn: () => getNotifications(1, 20, true),
     enabled: open,
+    refetchOnWindowFocus: true,
   });
 
   const notifications = dropdown?.notifications || [];
@@ -92,10 +98,15 @@ export function NotificationBell() {
   });
 
   useEffect(() => {
-    const cleanup = onAdminNotification(() => {
+    const invalidate = () => {
       queryClient.invalidateQueries({ queryKey: ["admin-notifications"] });
-    });
-    return cleanup;
+    };
+    const cleanupNotification = onAdminNotification(invalidate);
+    const cleanupConnect = onAdminSocketConnect(invalidate);
+    return () => {
+      cleanupNotification();
+      cleanupConnect();
+    };
   }, [queryClient]);
 
   useEffect(() => {
