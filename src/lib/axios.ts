@@ -13,6 +13,22 @@ let failedQueue: Array<{
   reject: (error: unknown) => void;
 }> = [];
 
+// Error toasts must never stack: an outage (paused DB, gateway 5xx, dropped
+// connection) fails every background refetch, and each failure would otherwise
+// pop its own toast. Same-message toasts are suppressed within the window, so
+// the user sees one notice per problem, not a wall of identical ones.
+const ERROR_TOAST_DEDUPE_MS = 20000;
+let lastErrorToast = { message: "", at: 0 };
+
+function showErrorToast(message: string) {
+  const now = Date.now();
+  if (lastErrorToast.message === message && now - lastErrorToast.at < ERROR_TOAST_DEDUPE_MS) {
+    return;
+  }
+  lastErrorToast = { message, at: now };
+  toast.error(message);
+}
+
 function processQueue(error: unknown) {
   failedQueue.forEach(({ resolve, reject }) => {
     if (error) {
@@ -32,6 +48,10 @@ function clearAuth() {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
+    if (axios.isCancel(error)) {
+      return Promise.reject(error);
+    }
+
     if (error.response) {
       const { status } = error.response;
       const originalRequest = error.config;
@@ -62,10 +82,10 @@ api.interceptors.response.use(
       }
 
       if (status >= 500) {
-        toast.error("Server error. Try again.");
+        showErrorToast("Server error. Try again.");
       }
     } else if (error.request) {
-      toast.error("Network error. Check connection.");
+      showErrorToast("Network error. Check connection.");
     }
 
     return Promise.reject(error);
