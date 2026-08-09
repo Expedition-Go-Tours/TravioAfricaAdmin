@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useEffect, useRef } from "react";
-import { Loader2, AlertTriangle, CheckCircle, Globe, XCircle } from "lucide-react";
+import { Loader2, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ConfirmModalProps {

@@ -6,11 +6,9 @@ import {
   Star,
   Calendar,
   Hash,
-  Users,
   Ticket,
   Mail,
   Phone,
-  Clock,
   ShieldCheck,
   MapPin,
   MessageSquareText,
@@ -23,6 +21,26 @@ import { Skeleton } from "@/components/ui/skeleton";
 interface CustomerProfilePanelProps {
   customerId: string;
   onClose: () => void;
+}
+
+interface CustomerReview {
+  id?: string;
+  rating?: number;
+  status?: string;
+  title?: string;
+  comment?: string;
+  createdAt?: string;
+  tour?: { title?: string };
+}
+
+interface CustomerBooking {
+  id?: string;
+  status?: string;
+  bookingNumber?: string;
+  selectedDate?: string;
+  total?: number;
+  currency?: string;
+  tour?: { coverPhoto?: string; title?: string };
 }
 
 const STATUS_BADGE: Record<string, "success" | "warning" | "error" | "info"> = {
@@ -47,9 +65,9 @@ export function CustomerProfilePanel({ customerId, onClose }: CustomerProfilePan
   });
 
   const user = data?.user;
-  const bookings = data?.bookings || [];
+  const bookings = (data?.bookings || []) as CustomerBooking[];
   const reviewStats = data?.reviewStats;
-  const recentReviews = data?.recentReviews || [];
+  const recentReviews = (data?.recentReviews || []) as CustomerReview[];
 
   const renderStars = (rating: number) => (
     <div className="flex items-center gap-0.5">
@@ -202,7 +220,7 @@ export function CustomerProfilePanel({ customerId, onClose }: CustomerProfilePan
 
               {activeTab === "reviews" && recentReviews.length > 0 && (
                 <div className="space-y-2">
-                  {recentReviews.map((review: any) => (
+                  {recentReviews.map((review) => (
                     <div key={review.id} className="rounded-lg border border-border bg-surface-base p-3 space-y-1.5">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -235,7 +253,7 @@ export function CustomerProfilePanel({ customerId, onClose }: CustomerProfilePan
 
               {activeTab === "bookings" && bookings.length > 0 && (
                 <div className="space-y-2">
-                  {bookings.map((booking: any) => (
+                  {bookings.map((booking) => (
                     <div key={booking.id} className="rounded-lg border border-border bg-surface-base p-3 space-y-2">
                       <div className="flex items-start gap-3">
                         <div className="w-10 h-10 rounded-lg shrink-0 overflow-hidden bg-surface-muted border border-border">

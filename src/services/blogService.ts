@@ -1,15 +1,15 @@
 import api from '@/lib/axios'
 
-export const getArticles = (params?: Record<string, any>) =>
+export const getArticles = (params?: Record<string, unknown>) =>
   api.get('/blog/admin/articles', { params }).then((r) => r.data)
 
 export const getArticleById = (id: string) =>
   api.get(`/blog/admin/articles/${id}`).then((r) => r.data)
 
-export const createArticle = (data: any) =>
+export const createArticle = (data: unknown) =>
   api.post('/blog/admin/articles', data).then((r) => r.data)
 
-export const updateArticle = (id: string, data: any) =>
+export const updateArticle = (id: string, data: unknown) =>
   api.patch(`/blog/admin/articles/${id}`, data).then((r) => r.data)
 
 export const deleteArticle = (id: string) =>

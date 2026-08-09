@@ -1,7 +1,6 @@
 ﻿import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import { AlertTriangle, Star, Banknote, Users, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 

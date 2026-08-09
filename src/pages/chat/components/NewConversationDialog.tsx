@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search, X, UserPlus } from "lucide-react";
 import {
@@ -67,6 +67,15 @@ export function NewConversationDialog({
   const a = accent(chatType);
   const [query, setQuery] = useState("");
   const [focusedIndex, setFocusedIndex] = useState(-1);
+  const [prevOpen, setPrevOpen] = useState(open);
+
+  if (open !== prevOpen) {
+    setPrevOpen(open);
+    if (open) {
+      setQuery("");
+      setFocusedIndex(-1);
+    }
+  }
   const debounceRef = useRef<number | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -99,16 +108,12 @@ export function NewConversationDialog({
     enabled: open,
   });
 
-  useEffect(() => {
-    if (open) {
-      setQuery("");
-      setFocusedIndex(-1);
-    }
-  }, [open]);
-
-  useEffect(() => {
+  const [prevSearchKey, setPrevSearchKey] = useState(`${searchQuery}|${results.length}`);
+  const searchKey = `${searchQuery}|${results.length}`;
+  if (searchKey !== prevSearchKey) {
+    setPrevSearchKey(searchKey);
     setFocusedIndex(-1);
-  }, [results.length, searchQuery]);
+  }
 
   const getItemName = (item: SupplierResult | ChatUser) => {
     if ("user" in item) {

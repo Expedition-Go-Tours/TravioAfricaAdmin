@@ -27,7 +27,7 @@ vi.mock("@/lib/axios", () => ({
   },
 }));
 
-import { getArticleById, createArticle, getCategories, getTags } from "@/services/blogService";
+import { getArticleById, getCategories, getTags } from "@/services/blogService";
 import BlogEditorPage from "../BlogEditorPage";
 
 const mockCategories = [

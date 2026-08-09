@@ -13,7 +13,7 @@ interface TipTapMark {
   attrs?: TipTapAttrs;
 }
 
-interface TipTapNode {
+export interface TipTapNode {
   type: string;
   content?: TipTapNode[];
   text?: string;

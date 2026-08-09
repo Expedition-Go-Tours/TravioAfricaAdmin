@@ -3,7 +3,7 @@ export interface Article {
   title: string
   slug: string
   excerpt: string
-  body: any
+  body: unknown
   featuredImage: string | null
   images: string[] | null
   metaTitle: string | null
@@ -58,6 +58,7 @@ export interface ArticleTag {
   name: string
   slug: string
   articleCount?: number
+  _count?: { articles?: number }
 }
 
 export interface ArticleListDTO {

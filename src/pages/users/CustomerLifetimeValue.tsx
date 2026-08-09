@@ -28,7 +28,7 @@ const BOOKING_LABELS: Record<string, string> = {
 
 interface CLVData {
   overview?: { totalCustomers?: number; totalBookings?: number; avgBookingValue?: number; totalRevenue?: number; avgCLV?: number };
-  repeatRate?: { percent?: number; avgBookingsPerCustomer?: number };
+  repeatRate?: { percent?: number; avgBookingsPerCustomer?: number; repeatRate?: number };
   distribution?: Array<{ bookingCount?: string; customers?: number; percentage?: number }>;
   topCustomers?: Array<{ id?: string; name?: string; email?: string; totalBookings?: number; totalSpent?: number; avgBookingValue?: number; lastBookingDate?: string }>;
   cohorts?: Array<{ month?: string; users?: number; bookings?: number; revenue?: number; bookingsPerUser?: number; revenuePerUser?: number }>;
@@ -36,7 +36,7 @@ interface CLVData {
 
 export default function CustomerLifetimeValuePage() {
   const navigate = useNavigate();
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery<CLVData & { data?: CLVData }>({
     queryKey: ["admin", "clv"],
     queryFn: () => api.get("/admin/analytics/clv").then((r) => r.data),
   });
@@ -109,7 +109,7 @@ export default function CustomerLifetimeValuePage() {
               <CardTitle className="text-sm font-semibold text-text-primary">Booking Distribution</CardTitle>
               {!isLoading && !isError && chartData.length > 0 && (
                 <span className="text-xs text-text-tertiary">
-                  {chartData.reduce((s: number, d: any) => s + (d.customers || 0), 0).toLocaleString()} total customers
+                  {chartData.reduce((s, d) => s + (d.customers || 0), 0).toLocaleString()} total customers
                 </span>
               )}
             </div>
@@ -126,12 +126,12 @@ export default function CustomerLifetimeValuePage() {
                 <ResponsiveContainer width="100%" height={200} className="max-w-[220px] shrink-0">
                   <PieChart>
                     <Pie data={chartData} dataKey="customers" nameKey="bookingCount" cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={3}>
-                      {chartData.map((_: any, idx: number) => (
+                      {chartData.map((_, idx) => (
                         <Cell key={idx} fill={DIST_COLORS[idx % DIST_COLORS.length]} stroke="transparent" />
                       ))}
                     </Pie>
                     <Tooltip
-                      formatter={(value: any, _name: any, entry: any) => [
+                      formatter={(value, _name, entry) => [
                         `${formatNumber(Number(value))} (${entry.payload.percentage?.toFixed(1) || "0"}%)`,
                         BOOKING_LABELS[entry.payload.bookingCount as string] || entry.payload.bookingCount,
                       ]}
@@ -139,9 +139,9 @@ export default function CustomerLifetimeValuePage() {
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="flex-1 space-y-3 w-full">
-                  {chartData.map((entry: any, idx: number) => {
-                    const total = chartData.reduce((s: number, d: any) => s + (d.customers || 0), 0);
-                    const pct = entry.percentage ?? (total > 0 ? (entry.customers / total) * 100 : 0);
+                  {chartData.map((entry, idx) => {
+                    const total = chartData.reduce((s, d) => s + (d.customers || 0), 0);
+                    const pct = entry.percentage ?? (total > 0 ? ((entry.customers ?? 0) / total) * 100 : 0);
                     return (
                       <div key={entry.bookingCount}>
                         <div className="flex items-center justify-between mb-1">

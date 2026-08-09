@@ -1,6 +1,5 @@
 ﻿import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Star, TrendingUp, Users } from "lucide-react";
+import { Star, Users } from "lucide-react";
 import { formatCurrency, formatNumber } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 

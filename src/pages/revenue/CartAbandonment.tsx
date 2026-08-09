@@ -26,12 +26,6 @@ const periods = [
   { value: "1y", label: "1 year" },
 ];
 
-interface CartData {
-  overview?: { cartsCreated?: number; cartsConverted?: number; abandonmentRate?: number };
-  byTour?: Array<{ tourTitle?: string; cartsAdded?: number; converted?: number; abandonmentRate?: number }>;
-  dailyTrend?: Array<{ day?: string; cartsAdded?: number; converted?: number; abandonmentRate?: number }>;
-}
-
 const ChartTooltip = ({ active, payload, label }: { active?: boolean; payload?: { dataKey: string; color: string; name: string; value: number }[]; label?: string }) => {
   if (!active || !payload?.length) return null;
   return (

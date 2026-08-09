@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate, useBlocker } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Image, Calendar } from "lucide-react";
@@ -54,8 +54,9 @@ export default function BlogEditorPage() {
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [articleStatus, setArticleStatus] = useState<string>("DRAFT");
-  const isNavigatingAfterSave = useRef(false);
+  const [navigatingAfterSave, setNavigatingAfterSave] = useState(false);
   const [original, setOriginal] = useState<Record<string, unknown>>({});
+  const [lastLoadedArticleId, setLastLoadedArticleId] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -71,7 +72,7 @@ export default function BlogEditorPage() {
   const queryClient = useQueryClient();
 
   const hasUnsavedChanges = useMemo(() => {
-    if (isNavigatingAfterSave.current) return false;
+    if (navigatingAfterSave) return false;
     if (isNew) return !!title || !!slug || !!excerpt || !!content;
     return (
       title !== (original.title as string) ||
@@ -86,7 +87,7 @@ export default function BlogEditorPage() {
       featuredImage !== (original.featuredImage as string) ||
       publishDate !== (original.publishDate as string)
     );
-  }, [isNew, title, slug, excerpt, content, categoryId, tagIds, relatedTourIds, metaTitle, metaDescription, featuredImage, publishDate, original]);
+  }, [navigatingAfterSave, isNew, title, slug, excerpt, content, categoryId, tagIds, relatedTourIds, metaTitle, metaDescription, featuredImage, publishDate, original]);
 
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
@@ -127,35 +128,34 @@ export default function BlogEditorPage() {
   const tags = tagsData?.data?.tags || [];
   const tours = Array.isArray(toursData) ? toursData : toursData?.tours || [];
 
-  useEffect(() => {
-    if (article) {
-      setTitle(article.title);
-      setSlug(article.slug);
-      setExcerpt(article.excerpt || "");
-      setContent(article.body);
-      setCategoryId(article.category?.id || "");
-      setTagIds(article.tags?.map((t: Record<string, unknown>) => t.id as string) || []);
-      setRelatedTourIds(article.relatedTours?.map((rt: Record<string, unknown>) => rt.id as string) || []);
-      setMetaTitle(article.metaTitle || "");
-      setMetaDescription(article.metaDescription || "");
-      setFeaturedImage(article.featuredImage || "");
-      setPublishDate(article.publishedAt ? article.publishedAt.slice(0, 10) : "");
-      setArticleStatus(article.status || "DRAFT");
-      setOriginal({
-        title: article.title,
-        slug: article.slug,
-        excerpt: article.excerpt || "",
-        body: article.body,
-        categoryId: article.category?.id || "",
-        tagIds: article.tags?.map((t: Record<string, unknown>) => t.id) || [],
-        relatedTourIds: article.relatedTours?.map((rt: Record<string, unknown>) => rt.id) || [],
-        metaTitle: article.metaTitle || "",
-        metaDescription: article.metaDescription || "",
-        featuredImage: article.featuredImage || "",
-        publishDate: article.publishedAt ? article.publishedAt.slice(0, 10) : "",
-      });
-    }
-  }, [article]);
+  if (article && article.id !== lastLoadedArticleId) {
+    setLastLoadedArticleId(article.id);
+    setTitle(article.title);
+    setSlug(article.slug);
+    setExcerpt(article.excerpt || "");
+    setContent(article.body);
+    setCategoryId(article.category?.id || "");
+    setTagIds(article.tags?.map((t: Record<string, unknown>) => t.id as string) || []);
+    setRelatedTourIds(article.relatedTours?.map((rt: Record<string, unknown>) => rt.id as string) || []);
+    setMetaTitle(article.metaTitle || "");
+    setMetaDescription(article.metaDescription || "");
+    setFeaturedImage(article.featuredImage || "");
+    setPublishDate(article.publishedAt ? article.publishedAt.slice(0, 10) : "");
+    setArticleStatus(article.status || "DRAFT");
+    setOriginal({
+      title: article.title,
+      slug: article.slug,
+      excerpt: article.excerpt || "",
+      body: article.body,
+      categoryId: article.category?.id || "",
+      tagIds: article.tags?.map((t: Record<string, unknown>) => t.id) || [],
+      relatedTourIds: article.relatedTours?.map((rt: Record<string, unknown>) => rt.id) || [],
+      metaTitle: article.metaTitle || "",
+      metaDescription: article.metaDescription || "",
+      featuredImage: article.featuredImage || "",
+      publishDate: article.publishedAt ? article.publishedAt.slice(0, 10) : "",
+    });
+  }
 
   const wordCount = useMemo(() => {
     if (!content) return 0;
@@ -174,14 +174,10 @@ export default function BlogEditorPage() {
     }
   }, [isNew]);
 
-  const checkSlug = useCallback(async (_value: string) => {
-    setSlugError("");
-  }, []);
-
   const handleSlugChange = useCallback((value: string) => {
     setSlug(value);
-    checkSlug(value);
-  }, [checkSlug]);
+    setSlugError("");
+  }, []);
 
   const saveMutation = useMutation({
     mutationFn: (data: Record<string, unknown>) =>
@@ -190,7 +186,7 @@ export default function BlogEditorPage() {
       toast.success(isNew ? "Article created" : "Article updated");
       queryClient.invalidateQueries({ queryKey: ["articles"] });
       if (!isNew) queryClient.invalidateQueries({ queryKey: ["article", id] });
-      isNavigatingAfterSave.current = true;
+      setNavigatingAfterSave(true);
       navigate("/admin/blog");
     },
     onError: (err: unknown) => {
@@ -255,7 +251,7 @@ export default function BlogEditorPage() {
       const savedId = res?.data?.article?.id || id;
       queryClient.invalidateQueries({ queryKey: ["articles"] });
       if (savedId) {
-        isNavigatingAfterSave.current = true;
+        setNavigatingAfterSave(true);
         navigate(`/admin/blog/preview/${savedId}`);
       }
     } catch (err) {

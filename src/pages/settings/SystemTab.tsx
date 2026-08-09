@@ -1,6 +1,6 @@
 ﻿import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Shield, AlertTriangle, RotateCw, Power, PowerOff, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, RotateCw, Power, PowerOff, CheckCircle2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";

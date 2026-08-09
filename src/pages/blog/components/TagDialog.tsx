@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -24,16 +24,14 @@ export function TagDialog({ open, onOpenChange, tag, onSave }: TagDialogProps) {
   const [slug, setSlug] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [prevTag, setPrevTag] = useState<ArticleTag | null>(tag ?? null);
 
-  const isEditing = !!tag;
-
-  useEffect(() => {
-    if (open) {
-      setName(tag?.name || "");
-      setSlug(tag?.slug || "");
-      setError("");
-    }
-  }, [open, tag]);
+  if (open && tag !== prevTag) {
+    setPrevTag(tag ?? null);
+    setName(tag?.name || "");
+    setSlug(tag?.slug || "");
+    setError("");
+  }
 
   const handleNameChange = (value: string) => {
     setName(value);
@@ -50,8 +48,9 @@ export function TagDialog({ open, onOpenChange, tag, onSave }: TagDialogProps) {
     try {
       await onSave({ id: tag?.id, name: name.trim(), slug: slug.trim() });
       onOpenChange(false);
-    } catch (e: any) {
-      setError(e?.response?.data?.message || "Failed to save tag");
+    } catch (e) {
+      const message = (e as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to save tag";
+      setError(message);
     } finally {
       setSaving(false);
     }

@@ -2,7 +2,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatNumber } from "@/lib/utils";
 import { cn } from "@/lib/utils";
-import { TrendingUp, Calendar } from "lucide-react";
+import { Calendar } from "lucide-react";
 import styles from "../Overview.module.css";
 
 const periodLabels: Record<string, string> = {

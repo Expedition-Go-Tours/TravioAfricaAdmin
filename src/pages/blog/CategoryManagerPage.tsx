@@ -22,7 +22,7 @@ export default function CategoryManagerPage() {
   const categories: ArticleCategory[] = categoriesData?.data?.categories || [];
 
   const saveMutation = useMutation({
-    mutationFn: (data: any) =>
+    mutationFn: (data: { name: string; slug: string; description?: string; parentId?: string }) =>
       editingCategory
         ? updateCategory(editingCategory.id, data)
         : createCategory(data),
@@ -34,10 +34,10 @@ export default function CategoryManagerPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["categories"] }),
   });
 
-  const rootCategories = categories?.filter((c: any) => !c.parentId) || [];
-  const childCategories = (parentId: string) => categories?.filter((c: any) => c.parentId === parentId) || [];
+  const rootCategories = categories?.filter((c) => !c.parentId) || [];
+  const childCategories = (parentId: string) => categories?.filter((c) => c.parentId === parentId) || [];
 
-  const renderCategory = (cat: any, depth = 0) => (
+  const renderCategory = (cat: ArticleCategory, depth = 0) => (
     <div key={cat.id}>
       <div
         className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 rounded-lg group"
@@ -45,7 +45,7 @@ export default function CategoryManagerPage() {
       >
         <div className="flex items-center gap-2">
           {childCategories(cat.id).length > 0 && (
-            <button onClick={() => setExpanded((prev) => { const next = new Set(prev); next.has(cat.id) ? next.delete(cat.id) : next.add(cat.id); return next; })}>
+            <button onClick={() => setExpanded((prev) => { const next = new Set(prev); if (next.has(cat.id)) next.delete(cat.id); else next.add(cat.id); return next; })}>
               {expanded.has(cat.id) ? <ChevronDown className="h-4 w-4 text-gray-400" /> : <ChevronRight className="h-4 w-4 text-gray-400" />}
             </button>
           )}
@@ -61,7 +61,7 @@ export default function CategoryManagerPage() {
           </Button>
         </div>
       </div>
-      {expanded.has(cat.id) && childCategories(cat.id).map((child: any) => renderCategory(child, depth + 1))}
+      {expanded.has(cat.id) && childCategories(cat.id).map((child) => renderCategory(child, depth + 1))}
     </div>
   );
 
@@ -93,7 +93,7 @@ export default function CategoryManagerPage() {
         </div>
       ) : (
         <div className="rounded-xl border bg-white divide-y">
-          {rootCategories.map((cat: any) => renderCategory(cat))}
+          {rootCategories.map((cat) => renderCategory(cat))}
         </div>
       )}
 

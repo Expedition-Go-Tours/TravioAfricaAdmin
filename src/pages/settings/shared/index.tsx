@@ -1,4 +1,5 @@
-﻿import { useState, useEffect, useCallback, useRef, type ReactNode, type ComponentType } from "react";
+﻿/* eslint-disable react-refresh/only-export-components -- shared settings library module (hooks + helpers + components) */
+import { useState, useEffect, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, RefreshCw, ChevronDown, Loader2, Save, CheckCircle2, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -142,7 +143,6 @@ const SECTION_ACCENTS: Record<string, string> = {
 };
 
 export function SettingsCard({
-  icon: Icon,
   title,
   description,
   children,
@@ -151,7 +151,6 @@ export function SettingsCard({
   errorCount,
   defaultOpen = true,
 }: {
-  icon?: ComponentType<{ className?: string }>;
   title: string;
   description: string;
   children: ReactNode;

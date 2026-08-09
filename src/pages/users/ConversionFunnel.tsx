@@ -61,6 +61,12 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
   );
 }
 
+interface FunnelStep {
+  step?: string;
+  users?: number;
+  dropOff?: number | string;
+}
+
 export default function ConversionFunnelPage() {
   const navigate = useNavigate();
   const [period, setPeriod] = useState("30d");
@@ -70,9 +76,9 @@ export default function ConversionFunnelPage() {
     queryFn: () => api.get(`/admin/analytics/funnel?period=${period}`).then((r) => r.data),
   });
 
-  const funnel = data?.data?.funnel || data?.funnel || [];
+  const funnel = (data?.data?.funnel || data?.funnel || []) as FunnelStep[];
   const conversionRates = data?.data?.conversionRates || data?.conversionRates;
-  const rawDaily = data?.data?.dailyTrend || data?.dailyTrend || [];
+  const rawDaily = useMemo(() => data?.data?.dailyTrend || data?.dailyTrend || [], [data]);
   const firstUsers = funnel[0]?.users || 1;
 
   const dailyTrend = useMemo(() => {
@@ -159,7 +165,7 @@ export default function ConversionFunnelPage() {
             <SectionEmpty message="No funnel data for this period" />
           ) : (
             <div className="space-y-6">
-              {funnel.map((step: any, idx: number) => {
+              {funnel.map((step, idx) => {
                 const info = STEPS[idx];
                 const Icon = info?.icon || CheckCircle;
                 const pct = ((step.users || 0) / firstUsers) * 100;

@@ -1,14 +1,10 @@
-import { Edit, Trash2, Eye, Clock, ArrowUpDown, BookOpen } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Eye, Clock, BookOpen } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { Article, ArticleStatus } from "@/types/blog";
 
 interface ArticleCardProps {
   article: Article;
   onPreview: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
-  onToggleStatus: () => void;
 }
 
 const statusConfig: Record<ArticleStatus, { label: string; dot: string; bg: string }> = {
@@ -33,7 +29,7 @@ function truncate(text: string, max: number) {
   return text.slice(0, max).replace(/\s+\S*$/, "") + "...";
 }
 
-export function ArticleCard({ article, onPreview, onEdit, onDelete, onToggleStatus }: ArticleCardProps) {
+export function ArticleCard({ article, onPreview }: ArticleCardProps) {
   const status = statusConfig[article.status];
   const hasImage = !!article.featuredImage;
 

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from "react";
+﻿import { useState, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Mail, Pencil, X, Save, Loader2, Info } from "lucide-react";
@@ -89,16 +89,16 @@ export function EmailTab() {
     queryFn: () => api.get("/admin/settings").then((r) => r.data?.data || {}),
   });
 
-  useEffect(() => {
-    if (data && Object.keys(original).length === 0) {
-      const flattened: Record<string, string> = {};
-      for (const [key, val] of Object.entries(data)) {
-        flattened[key] = String(val ?? "");
-      }
-      setForm(flattened);
-      setOriginal(flattened);
+  const [prevData, setPrevData] = useState<unknown>(null);
+  if (data && data !== prevData && Object.keys(original).length === 0) {
+    setPrevData(data);
+    const flattened: Record<string, string> = {};
+    for (const [key, val] of Object.entries(data)) {
+      flattened[key] = String(val ?? "");
     }
-  }, [data]);
+    setForm(flattened);
+    setOriginal(flattened);
+  }
 
   const mutation = useMutation({
     mutationFn: (settings: Record<string, unknown>) =>

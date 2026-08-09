@@ -1,7 +1,7 @@
 import { useState, useEffect, useLayoutEffect, useCallback, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Plus, ArrowLeft } from "lucide-react";
+import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,7 @@ export default function ChatPage() {
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [newDialogOpen, setNewDialogOpen] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserId] = useState<string | null>(() => localStorage.getItem("adminRoleId"));
   const selectedIdRef = useRef<string | null>(null);
   const invalidateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const selectByNotificationRef = useRef<string | null>(null);
@@ -92,11 +92,6 @@ export default function ChatPage() {
     }, 500);
   }, [queryClient]);
 
-  useEffect(() => {
-    const adminId = localStorage.getItem("adminRoleId");
-    if (adminId) setCurrentUserId(adminId);
-  }, []);
-
   useLayoutEffect(() => {
     const el = document.querySelector("main");
     if (!el) return;
@@ -126,7 +121,7 @@ export default function ChatPage() {
       selectByNotificationRef.current = convId;
       window.history.replaceState({}, "");
     }
-  }, []);
+  }, [location.state]);
 
   const { onNewMessage, onMarkRead, onDelivered, emitDelivered } = useChatSocket(selectedConv?.id || null);
 
@@ -166,31 +161,28 @@ export default function ChatPage() {
       (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
     );
 
-  const loadMessages = useCallback(async (convId: string) => {
-    const result = await getMessages(convId);
-    setMessages(sortMessages(result.messages || []));
-    setHasMore(!!result.nextCursor);
-    const statuses: Record<string, MessageStatus> = {};
-    const otherParticipant = selectedConv?.participants?.find(
-      (p) => p.user.roles && !p.user.roles.includes('admin')
-    );
-    const lastReadAt = otherParticipant?.lastReadAt ? new Date(otherParticipant.lastReadAt).getTime() : 0;
-    for (const msg of result.messages || []) {
-      statuses[msg.id] = new Date(msg.createdAt).getTime() <= lastReadAt ? "read" : "sent";
-    }
-    setMessageStatuses(statuses);
-  }, [selectedConv]);
-
   useEffect(() => {
     if (selectedConv) {
       selectedIdRef.current = selectedConv.id;
-      loadMessages(selectedConv.id);
+      getMessages(selectedConv.id).then((result) => {
+        setMessages(sortMessages(result.messages || []));
+        setHasMore(!!result.nextCursor);
+        const statuses: Record<string, MessageStatus> = {};
+        const otherParticipant = selectedConv.participants?.find(
+          (p) => p.user.roles && !p.user.roles.includes('admin')
+        );
+        const lastReadAt = otherParticipant?.lastReadAt ? new Date(otherParticipant.lastReadAt).getTime() : 0;
+        for (const msg of result.messages || []) {
+          statuses[msg.id] = new Date(msg.createdAt).getTime() <= lastReadAt ? "read" : "sent";
+        }
+        setMessageStatuses(statuses);
+      });
       markConversationAsRead(selectedConv.id).then(() => {
         invalidateConvs();
         queryClient.invalidateQueries({ queryKey: ["admin-notifications"] });
       }).catch(() => {});
     }
-  }, [selectedConv?.id, loadMessages, invalidateConvs]);
+  }, [selectedConv, queryClient, invalidateConvs]);
 
   useEffect(() => {
     const unsubMsg = onNewMessage((message, convId) => {
@@ -208,7 +200,7 @@ export default function ChatPage() {
       invalidateConvs();
     });
     return unsubMsg;
-  }, [onNewMessage, invalidateConvs, emitDelivered]);
+  }, [onNewMessage, invalidateConvs, emitDelivered, queryClient]);
 
   useEffect(() => {
     const unsubRead = onMarkRead(({ conversationId }) => {
@@ -306,7 +298,7 @@ export default function ChatPage() {
     } finally {
       setLoadingMore(false);
     }
-  }, [selectedConv, messages, loadingMore]);
+  }, [selectedConv, messages, loadingMore, hasMore]);
 
   const handleNewConversation = useCallback(
     async (recipientId: string) => {
