@@ -1,94 +1,23 @@
-import { useMemo } from 'react';
+import { GitCompareArrows, ListChecks } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Plus, Minus, ImageIcon } from 'lucide-react';
+import type { TourDraftDiff } from '@/services/tourService';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type TourData = Record<string, any>;
+interface ChangesSummary {
+  count: number;
+  sections: { section: string; changes: number; paths: string[] }[];
+}
 
 interface DiffViewerProps {
-  currentData: TourData;
-  draftData: TourData;
-  tourPhotos?: string[];
+  diff: TourDraftDiff[];
+  changesSummary: ChangesSummary;
 }
 
-const FIELD_LABELS: Record<string, string> = {
-  name: 'Name',
-  description: 'Description',
-  price: 'Price',
-  duration: 'Duration',
-  maxGroupSize: 'Max Group Size',
-  meetingPoint: 'Meeting Point',
-  category: 'Category',
-  difficulty: 'Difficulty',
-  languages: 'Languages',
-  highlights: 'Highlights',
-  itinerary: 'Itinerary',
-  included: 'Included',
-  notIncluded: 'Not Included',
-  safetyInfo: 'Safety Info',
-  photos: 'Photos',
-};
-
-const EDITABLE_FIELDS = [
-  'name', 'description', 'price', 'duration', 'maxGroupSize',
-  'meetingPoint', 'category', 'difficulty', 'languages', 'highlights',
-  'itinerary', 'included', 'notIncluded', 'safetyInfo',
-];
-
-function findChanges(current: TourData, draft: TourData) {
-  const changes: Array<{ field: string; label: string; oldValue: unknown; newValue: unknown }> = [];
-
-  for (const field of EDITABLE_FIELDS) {
-    const oldVal = current[field];
-    const newVal = draft[field];
-
-    if (newVal === undefined) continue;
-
-    const oldStr = JSON.stringify(oldVal);
-    const newStr = JSON.stringify(newVal);
-
-    if (oldStr !== newStr) {
-      changes.push({
-        field,
-        label: FIELD_LABELS[field] || field,
-        oldValue: oldVal,
-        newValue: newVal,
-      });
-    }
-  }
-
-  return changes;
+function formatDiffPath(path: string) {
+  return path.split('.').join(' › ');
 }
 
-function findPhotoChanges(currentPhotos: string[], draftPhotos: string[]) {
-  const added = draftPhotos.filter((p) => !currentPhotos.includes(p));
-  const removed = currentPhotos.filter((p) => !draftPhotos.includes(p));
-  return { added, removed };
-}
-
-function formatValue(val: unknown): string {
-  if (val === null || val === undefined) return '—';
-  if (typeof val === 'object') {
-    if (Array.isArray(val)) {
-      return val.length > 0 ? val.join(', ') : '—';
-    }
-    return JSON.stringify(val);
-  }
-  return String(val);
-}
-
-export function DiffViewer({ currentData, draftData, tourPhotos = [] }: DiffViewerProps) {
-  const changes = useMemo(() => findChanges(currentData, draftData), [currentData, draftData]);
-
-  const photoChanges = useMemo(() => {
-    const draftPhotos = draftData.photos || [];
-    return findPhotoChanges(tourPhotos, draftPhotos);
-  }, [tourPhotos, draftData]);
-
-  const hasPhotoChanges = photoChanges.added.length > 0 || photoChanges.removed.length > 0;
-  const totalChanges = changes.length + (hasPhotoChanges ? 1 : 0);
-
-  if (totalChanges === 0) {
+export function DiffViewer({ diff, changesSummary }: DiffViewerProps) {
+  if (diff.length === 0) {
     return (
       <div className="rounded-xl border border-border/40 bg-surface-muted/30 p-6 text-center">
         <p className="text-sm text-muted-foreground">No pending changes</p>
@@ -98,96 +27,52 @@ export function DiffViewer({ currentData, draftData, tourPhotos = [] }: DiffView
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2">
-        <Badge variant="warning" className="px-2 py-0.5">
-          {totalChanges} change{totalChanges !== 1 ? 's' : ''}
+      {/* Summary badges */}
+      <div className="flex flex-wrap gap-2">
+        <Badge variant="info" className="gap-1">
+          <ListChecks className="h-3 w-3" />
+          {changesSummary.count} change{changesSummary.count === 1 ? '' : 's'}
         </Badge>
+        {changesSummary.sections.map((s) => (
+          <Badge key={s.section} variant="secondary">
+            {s.section} ({s.changes})
+          </Badge>
+        ))}
       </div>
 
-      <div className="space-y-2">
-        {changes.map((change) => (
+      {/* Diff rows */}
+      <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+        {diff.map((entry) => (
           <div
-            key={change.field}
-            className="rounded-xl border border-border/40 bg-surface-base p-4"
+            key={entry.path}
+            className="flex items-start gap-3 rounded-lg border border-border bg-surface-muted/40 px-3 py-2.5"
           >
-            <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              {change.label}
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="flex-1 rounded-lg bg-status-rejected/5 px-3 py-2">
-                <div className="mb-1 flex items-center gap-1.5 text-[11px] font-medium text-status-rejected">
-                  <Minus className="h-3 w-3" />
-                  Before
-                </div>
-                <p className="text-sm text-foreground/70 line-through decoration-status-rejected/30">
-                  {formatValue(change.oldValue)}
-                </p>
-              </div>
-              <ArrowRight className="mt-6 h-4 w-4 shrink-0 text-muted-foreground" />
-              <div className="flex-1 rounded-lg bg-status-active/5 px-3 py-2">
-                <div className="mb-1 flex items-center gap-1.5 text-[11px] font-medium text-status-active">
-                  <Plus className="h-3 w-3" />
-                  After
-                </div>
-                <p className="text-sm text-foreground">
-                  {formatValue(change.newValue)}
-                </p>
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-medium text-text-secondary uppercase tracking-wider break-all">
+                {formatDiffPath(entry.path)}
+              </p>
+              <div className="flex items-center gap-2 text-xs mt-1 flex-wrap">
+                {entry.before !== undefined && (
+                  <span className="rounded bg-red-50 border border-red-100 text-red-600 px-1.5 py-0.5 line-through max-w-xs truncate">
+                    {entry.before}
+                  </span>
+                )}
+                <GitCompareArrows className="h-3 w-3 text-text-tertiary shrink-0" />
+                {entry.after !== undefined && (
+                  <span className="rounded bg-emerald-50 border border-emerald-100 text-emerald-700 px-1.5 py-0.5 max-w-xs truncate">
+                    {entry.after}
+                  </span>
+                )}
               </div>
             </div>
+            <Badge
+              variant={entry.kind === 'removed' ? 'error' : entry.kind === 'added' ? 'success' : 'warning'}
+              className="shrink-0 capitalize"
+            >
+              {entry.kind}
+            </Badge>
           </div>
         ))}
-
-        {hasPhotoChanges && (
-          <div className="rounded-xl border border-border/40 bg-surface-base p-4">
-            <div className="mb-2 flex items-center gap-2">
-              <ImageIcon className="h-4 w-4 text-muted-foreground" />
-              <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Photo Changes
-              </span>
-            </div>
-            <div className="flex gap-4">
-              {photoChanges.added.length > 0 && (
-                <div>
-                  <div className="mb-1.5 text-[11px] font-medium text-status-active">
-                    +{photoChanges.added.length} added
-                  </div>
-                  <div className="flex gap-1.5">
-                    {photoChanges.added.slice(0, 4).map((photo) => (
-                      <img
-                        key={photo}
-                        src={photo}
-                        alt="New photo"
-                        className="h-12 w-12 rounded-lg object-cover ring-2 ring-status-active/20"
-                      />
-                    ))}
-                    {photoChanges.added.length > 4 && (
-                      <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-surface-muted text-xs font-medium text-muted-foreground">
-                        +{photoChanges.added.length - 4}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-              {photoChanges.removed.length > 0 && (
-                <div>
-                  <div className="mb-1.5 text-[11px] font-medium text-status-rejected">
-                    -{photoChanges.removed.length} removed
-                  </div>
-                  <div className="flex gap-1.5">
-                    {photoChanges.removed.slice(0, 4).map((photo) => (
-                      <img
-                        key={photo}
-                        src={photo}
-                        alt="Removed photo"
-                        className="h-12 w-12 rounded-lg object-cover opacity-50 ring-2 ring-status-rejected/20"
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

@@ -1200,9 +1200,8 @@ export function TourDetailPanel({
                   Pending Edits ({draftReview.changesSummary.count} changes)
                 </h3>
                 <DiffViewer
-                  currentData={draftReview.live}
-                  draftData={draftReview.draft || {}}
-                  tourPhotos={(tour.photos || []) as string[]}
+                  diff={draftReview.diff}
+                  changesSummary={draftReview.changesSummary}
                 />
               </section>
             )}
