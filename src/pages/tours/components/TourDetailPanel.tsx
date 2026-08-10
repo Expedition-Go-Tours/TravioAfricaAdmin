@@ -432,6 +432,20 @@ export function TourDetailPanel({
           </div>
 
           <div className="space-y-8">
+            {/* ── Pending Edits Diff ── */}
+            {showDraftReview && (
+              <section>
+                <h3 className="mb-3 flex items-center gap-2 text-base font-semibold text-foreground">
+                  <Shield className="h-5 w-5 text-status-approved" />
+                  Pending Edits ({draftReview.changesSummary.count} changes)
+                </h3>
+                <DiffViewer
+                  diff={draftReview.diff}
+                  changesSummary={draftReview.changesSummary}
+                />
+              </section>
+            )}
+
             {/* ── Photos ── */}
             {tour.photos && tour.photos.length > 0 && (
               <section>
@@ -1192,19 +1206,6 @@ export function TourDetailPanel({
               </section>
             )}
 
-            {/* ── Pending Edits Diff ── */}
-            {showDraftReview && (
-              <section>
-                <h3 className="mb-3 flex items-center gap-2 text-base font-semibold text-foreground">
-                  <Shield className="h-5 w-5 text-status-approved" />
-                  Pending Edits ({draftReview.changesSummary.count} changes)
-                </h3>
-                <DiffViewer
-                  diff={draftReview.diff}
-                  changesSummary={draftReview.changesSummary}
-                />
-              </section>
-            )}
           </div>
         </div>
       </div>
