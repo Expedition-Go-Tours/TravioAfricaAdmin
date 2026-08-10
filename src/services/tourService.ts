@@ -13,8 +13,17 @@ export interface ReviewQueueTour {
   subcategory?: string;
   city?: string;
   country?: string;
+  region?: string;
   price?: number | string | null;
   currency?: string;
+  slug?: string;
+  tags?: string[];
+  difficulty?: string;
+  durationMinutes?: number;
+  averageRating?: number;
+  reviewCount?: number;
+  totalBookings?: number;
+  viewCount?: number;
   submittedAt?: string | null;
   reviewedAt?: string | null;
   reviewNote?: string | null;
