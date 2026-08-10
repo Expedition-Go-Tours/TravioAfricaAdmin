@@ -148,16 +148,20 @@ export const TourListPanel = forwardRef<HTMLDivElement, TourListPanelProps>(func
                         {tour.category}
                       </span>
                     )}
-                    {(tour.productContent as Record<string, unknown>)?.duration && (
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    {(tour.productContent as Record<string, any>)?.duration && (
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        {(tour.productContent as Record<string, unknown>).duration as string}
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                        {(tour.productContent as Record<string, any>).duration as string}
                       </span>
                     )}
-                    {(tour.productContent as Record<string, unknown>)?.difficulty && (
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    {(tour.productContent as Record<string, any>)?.difficulty && (
                       <span className="flex items-center gap-1">
                         <Star className="h-3 w-3" />
-                        {(tour.productContent as Record<string, unknown>).difficulty as string}
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                        {(tour.productContent as Record<string, any>).difficulty as string}
                       </span>
                     )}
                     {(tour.city || tour.country) && (

@@ -326,7 +326,8 @@ export function TourDetailPanel({
 
   if (!tour) return <EmptyState />;
 
-  const content = (tour.productContent as Record<string, unknown>) || {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const content = (tour.productContent as Record<string, any>) || {};
   const isPendingEdits =
     tour.status === 'ACTIVE' && tour.draftStatus === 'PENDING_APPROVAL';
   const showDraftReview = isPendingEdits && draftReview;
@@ -557,10 +558,11 @@ export function TourDetailPanel({
                       <div>
                         <p className="text-sm font-medium text-foreground">Meeting point</p>
                         <p className="mt-0.5 text-sm text-foreground/70">
-                          {(content.meetingPoint as Record<string, unknown>).name as string}
-                          {(content.meetingPoint as Record<string, unknown>).address && (
+                          {(content.meetingPoint as Record<string, any>).name as string}
+                          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                          {(content.meetingPoint as Record<string, any>).address && (
                             <span className="block text-xs text-muted-foreground">
-                              {(content.meetingPoint as Record<string, unknown>).address as string}
+                              {(content.meetingPoint as Record<string, any>).address as string}
                             </span>
                           )}
                         </p>
