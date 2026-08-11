@@ -2,7 +2,7 @@
 import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { RefreshCw, Clock, CheckCircle, Flag, AlertTriangle, LayoutDashboard } from 'lucide-react';
+import { RefreshCw, Clock, Flag, AlertTriangle, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSocketInvalidate } from '@/hooks/useSocketEvent';
 import { TourListPanel } from './components/TourListPanel';
@@ -17,7 +17,6 @@ import {
 
 const statRow = {
   pending: { icon: Clock, label: 'Pending', variant: 'pending' as const },
-  active: { icon: CheckCircle, label: 'Active', variant: 'success' as const },
   rejected: { icon: Flag, label: 'Flagged', variant: 'error' as const },
   pendingEdits: { icon: AlertTriangle, label: 'Edits', variant: 'warning' as const },
 };
@@ -65,7 +64,7 @@ export default function TourModeration() {
   });
 
   const tours = useMemo(() => data?.tours ?? [], [data]);
-  const counts = data?.counts ?? { pending: 0, rejected: 0, active: 0, pendingEdits: 0 };
+  const counts = data?.counts ?? { pending: 0, rejected: 0, pendingEdits: 0 };
   const totalCount = data?.pagination?.totalCount ?? 0;
 
   // Fetch draft review when needed

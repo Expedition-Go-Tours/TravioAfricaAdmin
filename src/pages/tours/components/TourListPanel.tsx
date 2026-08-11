@@ -13,7 +13,7 @@ interface TourListPanelProps {
   onSearchChange: (value: string) => void;
   statusFilter: string;
   onStatusFilterChange: (filter: string) => void;
-  counts: { pending: number; rejected: number; active: number; pendingEdits: number };
+  counts: { pending: number; rejected: number; pendingEdits: number };
   totalCount: number;
   isLoading: boolean;
 }
@@ -28,7 +28,6 @@ const STATUS_CONFIG: Record<string, { label: string; dot: string; badge: 'warnin
 const FILTERS = [
   { key: 'all', label: 'All' },
   { key: 'PENDING_APPROVAL', label: 'Pending' },
-  { key: 'ACTIVE', label: 'Approved' },
   { key: 'REJECTED', label: 'Flagged' },
   { key: 'PENDING_EDITS', label: 'Edits' },
 ];

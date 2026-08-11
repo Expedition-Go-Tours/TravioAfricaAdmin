@@ -1210,28 +1210,34 @@ export function TourDetailPanel({
         </div>
       </div>
 
-      {/* ── Sticky Action Bar ── */}
-      <div className="shrink-0 border-t border-border/40 bg-white/95 backdrop-blur-sm">
-        <div className="flex items-center gap-3 p-4">
-          <Button
-            onClick={onApprove}
-            disabled={isApproving || isFlagging}
-            className="flex-1 gap-2 rounded-xl"
-          >
-            <CheckCircle className="h-4 w-4" />
-            {isApproving ? 'Approving...' : 'Approve Tour'}
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => setFlagDialogOpen(true)}
-            disabled={isApproving || isFlagging}
-            className="gap-2 rounded-xl text-destructive hover:bg-destructive/5 hover:text-destructive"
-          >
-            <Flag className="h-4 w-4" />
-            Flag
-          </Button>
+      {/* ── Sticky Action Bar (only for pending reviews) ── */}
+      {(tour.status === 'PENDING_APPROVAL' || tour.draftStatus === 'PENDING_APPROVAL') && (
+        <div className="shrink-0 border-t border-border/40 bg-white/95 backdrop-blur-sm">
+          <div className="flex items-center gap-3 p-4">
+            <Button
+              onClick={onApprove}
+              disabled={isApproving || isFlagging}
+              className="flex-1 gap-2 rounded-xl"
+            >
+              <CheckCircle className="h-4 w-4" />
+              {isApproving
+                ? 'Approving...'
+                : tour.status === 'ACTIVE' && tour.draftStatus === 'PENDING_APPROVAL'
+                  ? 'Approve Edit'
+                  : 'Approve & Make Live'}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setFlagDialogOpen(true)}
+              disabled={isApproving || isFlagging}
+              className="gap-2 rounded-xl text-destructive hover:bg-destructive/5 hover:text-destructive"
+            >
+              <Flag className="h-4 w-4" />
+              Flag
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ── Flag Dialog ── */}
       <Dialog open={flagDialogOpen} onOpenChange={setFlagDialogOpen}>
