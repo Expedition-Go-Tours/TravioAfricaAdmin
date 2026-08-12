@@ -481,7 +481,6 @@ export default function TourDetailPage() {
   if (!tour) return <div className="py-12 text-center text-sm text-slate-500">Tour not found</div>;
 
   const displayPhotos = allPhotos;
-  const hasAnyStat = [tour.bookingCount, tour.totalRevenue, tour.averageRating, tour.reviewCount, tour.viewCount].some((v) => v != null && v > 0);
 
   // Itinerary day grouping
   const locations = tour.locations ?? [];
@@ -572,23 +571,20 @@ export default function TourDetailPage() {
           </motion.div>
         )}
 
-        {/* Stat cards */}
-        {hasAnyStat && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-            {can("bookings.view") && (tour.bookingCount ?? 0) > 0 && (
-              <StatCard label="Bookings" value={formatNumber(tour.bookingCount)} icon={<Calendar size={17} />} accent="blue" />
-            )}
-            {can("analytics.view") && (tour.totalRevenue ?? 0) > 0 && (
-              <StatCard label="Revenue" value={formatCurrency(tour.totalRevenue, tour.currency)} icon={<DollarSign size={17} />} accent="emerald" />
-            )}
-            {(tour.averageRating ?? 0) > 0 && (
-              <StatCard label="Rating" value={Number(tour.averageRating).toFixed(1)} icon={<Star size={17} />} accent="amber" />
-            )}
-            {can("analytics.view") && (tour.viewCount ?? 0) > 0 && (
-              <StatCard label="Views" value={formatNumber(tour.viewCount)} icon={<Eye size={17} />} accent="emerald" />
-            )}
-          </div>
-        )}
+        {/* Performance stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 mb-8">
+          {can("bookings.view") && (
+            <StatCard label="Bookings" value={tour.bookingCount != null ? formatNumber(tour.bookingCount) : "—"} icon={<Calendar size={17} />} accent="blue" />
+          )}
+          {can("analytics.view") && (
+            <StatCard label="Revenue" value={tour.totalRevenue != null ? formatCurrency(tour.totalRevenue, tour.currency) : "—"} icon={<DollarSign size={17} />} accent="emerald" />
+          )}
+          <StatCard label="Reviews" value={tour.reviewCount != null ? formatNumber(tour.reviewCount) : "—"} icon={<Star size={17} />} accent="amber" />
+          <StatCard label="Rating" value={tour.averageRating != null ? Number(tour.averageRating).toFixed(1) : "—"} icon={<Star size={17} />} accent="amber" />
+          {can("analytics.view") && (
+            <StatCard label="Views" value={tour.viewCount != null ? formatNumber(tour.viewCount) : "—"} icon={<Eye size={17} />} accent="emerald" />
+          )}
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
           {/* Left column */}
