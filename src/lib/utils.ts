@@ -5,11 +5,28 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatCurrency(value: number | string | null | undefined): string {
+export function formatCurrency(value: number | string | null | undefined, currency?: string | null): string {
   if (value == null) return "$0.00";
   const num = typeof value === "string" ? Number.parseFloat(value) : value;
   if (Number.isNaN(num)) return "$0.00";
-  return `$${num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const code = currency && currency.trim() ? currency.trim().toUpperCase() : null;
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: code || "USD",
+    }).format(num);
+  } catch {
+    return `$${num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+}
+
+export function formatTime(timeString: string | null | undefined): string {
+  if (!timeString) return "";
+  const [hours, minutes] = timeString.split(":").map(Number);
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) return timeString;
+  const period = hours >= 12 ? "PM" : "AM";
+  const h = hours % 12 || 12;
+  return `${h}:${String(minutes).padStart(2, "0")} ${period}`;
 }
 
 export function formatNumber(value: number | string | null | undefined): string {
