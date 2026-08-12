@@ -2,9 +2,11 @@ import { createBrowserRouter, RouterProvider, Navigate, useNavigate, useSearchPa
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { queryClient } from "@/lib/query-client";
+import { AuthProvider } from "@/auth/AuthProvider";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProtectedRoute } from "@/auth/ProtectedRoute";
 import { useAdminRole } from "@/auth/useAdminRole";
+import { useAuthContext } from "@/auth/auth-context";
 import { getDefaultRoute } from "@/lib/permissions";
 import { useDataSocket } from "@/hooks/useDataSocket";
 
@@ -41,7 +43,8 @@ import BlogAnalytics from "@/pages/blog/BlogAnalytics";
 import ExpeditionListingsPage from "@/pages/expedition/ExpeditionListingsPage";
 
 function DataSocketInit() {
-  useDataSocket();
+  const { isAuthenticated } = useAuthContext();
+  useDataSocket(isAuthenticated);
   return null;
 }
 
@@ -153,19 +156,21 @@ const router = createBrowserRouter([
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <DataSocketInit />
-      <RouterProvider router={router} />
-      <Toaster
-        position="top-right"
-        richColors
-        closeButton
-        toastOptions={{
-          style: {
-            fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
-            borderRadius: "8px",
-          },
-        }}
-      />
+      <AuthProvider>
+        <DataSocketInit />
+        <RouterProvider router={router} />
+        <Toaster
+          position="top-right"
+          richColors
+          closeButton
+          toastOptions={{
+            style: {
+              fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
+              borderRadius: "8px",
+            },
+          }}
+        />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

@@ -5,11 +5,15 @@ import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { pageTransition } from "@/lib/animations";
 import { useAdminRole } from "@/auth/useAdminRole";
+import { useTokenRefresh } from "@/hooks/useTokenRefresh";
+import { useSessionTimeout } from "@/hooks/useSessionTimeout";
 
 export function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   useAdminRole(true);
+  useTokenRefresh();
+  useSessionTimeout();
 
   const closeSidebar = useCallback(() => setSidebarOpen(false), []);
 

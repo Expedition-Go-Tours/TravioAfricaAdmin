@@ -70,15 +70,14 @@ export function NotificationBell() {
     queryKey: ["admin-notifications", "unread-count"],
     queryFn: getUnreadCount,
     refetchInterval: NOTIFICATIONS_REFETCH_INTERVAL_MS,
-    refetchIntervalInBackground: true,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
   });
 
   const { data: dropdown, isLoading } = useQuery({
     queryKey: ["admin-notifications", "feed"],
     queryFn: () => getNotifications(1, 20, true),
     enabled: open,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
   });
 
   const notifications = dropdown?.notifications || [];

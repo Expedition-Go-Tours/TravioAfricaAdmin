@@ -33,8 +33,9 @@ const MODEL_QUERY_MAP: Record<string, string[]> = {
   AdminNotification: [],
 };
 
-export function useDataSocket() {
+export function useDataSocket(enabled = true) {
   useEffect(() => {
+    if (!enabled) return;
     const socket = getAdminSocket();
 
     const handleDataChange = (event: { model: string; action: string; recordId: string }) => {
@@ -50,5 +51,5 @@ export function useDataSocket() {
     return () => {
       socket.off("data-change", handleDataChange);
     };
-  }, []);
+  }, [enabled]);
 }

@@ -18,8 +18,12 @@ function OneTapHandler({ onSuccess }: { onSuccess: () => void }) {
     onSuccess: async (credentialResponse) => {
       const credential = credentialResponse.credential;
       if (!credential) return;
-      const ok = await loginWithGoogleOneTap(credential);
-      if (ok) onSuccess();
+      try {
+        const ok = await loginWithGoogleOneTap(credential);
+        if (ok) onSuccess();
+      } catch {
+        // Silent — the login page surfaces its own error state.
+      }
     },
     onError: () => {},
     cancel_on_tap_outside: false,
@@ -30,9 +34,11 @@ function OneTapHandler({ onSuccess }: { onSuccess: () => void }) {
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { login, loginWithGoogle, loading, error, isAuthenticated } = useAuth();
+  const { login, loginWithGoogle, isAuthenticated } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -44,13 +50,26 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = await login(email, password);
-    if (success) handleSuccess();
+    setLoading(true);
+    setError(null);
+    try {
+      const success = await login(email, password);
+      if (success) handleSuccess();
+    } catch (err: unknown) {
+      if (err && typeof err === "object" && "response" in err) {
+        const axiosErr = err as { response?: { data?: { message?: string } } };
+        setError(axiosErr.response?.data?.message || "Invalid email or password");
+      } else {
+        setError("Unable to connect. Check your internet.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoogleLogin = async () => {
-    const success = await loginWithGoogle();
-    if (success) handleSuccess();
+    setError(null);
+    await loginWithGoogle();
   };
 
   if (isAuthenticated) {

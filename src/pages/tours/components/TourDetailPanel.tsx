@@ -573,11 +573,10 @@ export function TourDetailPanel({
                       <div>
                         <p className="text-sm font-medium text-foreground">Meeting point</p>
                         <p className="mt-0.5 text-sm text-foreground/70">
-                          {(content.meetingPoint as Record<string, any>).name as string}
-                          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                          {(content.meetingPoint as Record<string, any>).address && (
+                          {(content.meetingPoint as Record<string, string | undefined>).name}
+                          {(content.meetingPoint as Record<string, string | undefined>).address && (
                             <span className="block text-xs text-muted-foreground">
-                              {(content.meetingPoint as Record<string, any>).address as string}
+                              {(content.meetingPoint as Record<string, string | undefined>).address}
                             </span>
                           )}
                         </p>

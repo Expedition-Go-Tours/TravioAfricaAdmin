@@ -1,4 +1,5 @@
-import { useEffect, useCallback } from "react";
+import { useCallback, useMemo } from "react";
+import { useAuthContext } from "@/auth/auth-context";
 
 interface StoredAdminRole {
   id: string;
@@ -37,68 +38,56 @@ function getStoredAdminRole(): StoredAdminRole | null {
   }
 }
 
+function roleAllows(role: StoredAdminRole | null, permissionKey: string): boolean {
+  if (!role) return false;
+  if (role.name === "super_admin") return true;
+  if (permissionKey.endsWith("*")) {
+    const prefix = permissionKey.slice(0, -1);
+    return role.permissions.some((p) => p.startsWith(prefix));
+  }
+  return role.permissions.includes(permissionKey);
+}
+
+/**
+ * Reactive permission hook — derives from the AuthProvider (single source of
+ * truth). Returns the historical `{ can, isSuperAdmin, adminRole, ... }`
+ * shape so existing call sites keep working.
+ */
 export function usePermission() {
-  useEffect(() => {
-    const handler = () => {
-      window.dispatchEvent(new Event("local-storage-change"));
-    };
+  const { role, isLoading } = useAuthContext();
 
-    window.addEventListener("storage", handler);
+  const adminRole = useMemo(
+    () => (role ? { id: role.id, name: role.name, permissions: role.permissions } : null),
+    [role],
+  );
 
-    const origSetItem = localStorage.setItem;
-    localStorage.setItem = function (key, value) {
-      origSetItem.call(this, key, value);
-      if (key === "adminRole") handler();
-    };
-
-    return () => {
-      window.removeEventListener("storage", handler);
-      localStorage.setItem = origSetItem;
-    };
-  }, []);
-
-  const adminRole = getStoredAdminRole();
-
-  const can = useCallback((permissionKey: string): boolean => {
-    const role = getStoredAdminRole();
-    if (!role) return false;
-    if (role.name === "super_admin") return true;
-    if (permissionKey.endsWith("*")) {
-      const prefix = permissionKey.slice(0, -1);
-      return role.permissions.some((p) => p.startsWith(prefix));
-    }
-    return role.permissions.includes(permissionKey);
-  }, []);
+  const can = useCallback(
+    (permissionKey: string): boolean => {
+      return roleAllows(adminRole, permissionKey);
+    },
+    [adminRole],
+  );
 
   const isSuperAdmin = adminRole?.name === "super_admin";
 
-  return { can, isSuperAdmin, adminRole, loading: false, setAdminRole: () => {} };
+  const value = useMemo(
+    () => ({ can, isSuperAdmin, adminRole, loading: isLoading, setAdminRole: () => {} }),
+    [can, isSuperAdmin, adminRole, isLoading],
+  );
+
+  return value;
 }
 
+/**
+ * Non-hook, localStorage-backed helpers retained for call sites outside React
+ * (e.g. standalone menu gating). The AuthProvider keeps this cache in sync on
+ * every `admin/me` fetch; the server remains the authority for real access.
+ */
 export function hasPermission(permissionKey: string): boolean {
-  try {
-    const raw = localStorage.getItem("adminRole");
-    if (!raw) return false;
-    const parsed = JSON.parse(raw);
-    if (parsed.name === "super_admin") return true;
-    const permissions = flattenPermissions(parsed);
-    if (permissionKey.endsWith("*")) {
-      const prefix = permissionKey.slice(0, -1);
-      return permissions.some((p: string) => p.startsWith(prefix));
-    }
-    return permissions.includes(permissionKey);
-  } catch {
-    return false;
-  }
+  return roleAllows(getStoredAdminRole(), permissionKey);
 }
 
 export function isSuperAdmin(): boolean {
-  try {
-    const raw = localStorage.getItem("adminRole");
-    if (!raw) return false;
-    const parsed = JSON.parse(raw);
-    return parsed.name === "super_admin";
-  } catch {
-    return false;
-  }
+  const role = getStoredAdminRole();
+  return role?.name === "super_admin";
 }
