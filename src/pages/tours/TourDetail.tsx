@@ -158,7 +158,7 @@ function formatDurationValue(value?: number | null, unit?: string | null): strin
 }
 
 function formatStopDuration(loc: LocationStop): string | null {
-  if (loc?.timeSpent == null || loc.timeSpent === "") return null;
+  if (loc?.timeSpent == null) return null;
   const n = Number(loc.timeSpent);
   if (loc.timeSpentUnit === "hours") return `${n} hour${n === 1 ? "" : "s"}`;
   return `${n} min`;
@@ -282,7 +282,7 @@ function normalizeTour(raw: Record<string, unknown>): TourDetail {
     isPrivateActivity: productContent.isPrivateActivity === true,
     scheduleType: typeof availability.scheduleType === "string" ? availability.scheduleType : undefined,
     operatingDays: asArray(availability.daysOfWeek).filter((d): d is string => typeof d === "string"),
-    timeSlots: asArray(firstSchedule.timeSlots?.length ? firstSchedule.timeSlots : availability.timeSlots),
+    timeSlots: asArray(Array.isArray(firstSchedule.timeSlots) && firstSchedule.timeSlots.length > 0 ? firstSchedule.timeSlots : availability.timeSlots) as Array<string | { startTime?: string; endTime?: string }>,
     capacityPerSlot: typeof travelerDetails.maxParticipants === "number" ? travelerDetails.maxParticipants : null,
     validPeriod: firstSchedule.startDate ? { start: String(firstSchedule.startDate), end: firstSchedule.endDate ? String(firstSchedule.endDate) : null } : null,
     pricingModel: typeof travelerDetails.pricingModel === "string" ? travelerDetails.pricingModel : undefined,
