@@ -1,6 +1,6 @@
 import { transformImage, getSrcSet } from '@/lib/image'
 
-interface OptimizedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+interface OptimizedImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'src'> {
   src: string | null | undefined
   width?: number
   height?: number
