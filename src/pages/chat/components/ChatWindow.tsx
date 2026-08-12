@@ -7,6 +7,7 @@ import { MessageBubble, type MessageStatus } from "./MessageBubble";
 import { useChatSocket } from "@/hooks/useChatSocket";
 import { uploadChatImage } from "@/services/chatService";
 import type { Message, Conversation } from "@/services/chatService";
+import OptimizedImage from "@/components/shared/OptimizedImage";
 
 interface ChatWindowProps {
   conversation: Conversation | null;
@@ -324,12 +325,11 @@ export function ChatWindow({
           <div className={cn("relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br text-sm font-bold text-white shadow-sm", a.gradient)}>
             <span>{headerName.charAt(0).toUpperCase()}</span>
             {otherParticipant?.photoURL && (
-              <img
+              <OptimizedImage
                 src={otherParticipant.photoURL}
                 alt=""
-                referrerPolicy="no-referrer"
+                width={36}
                 className="absolute inset-0 h-full w-full object-cover"
-                loading="lazy"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
               />
             )}
@@ -437,7 +437,7 @@ export function ChatWindow({
                 <div className={cn("relative mt-1 flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br text-xs font-bold text-white", a.gradient)}>
                   <span>{headerName.charAt(0).toUpperCase()}</span>
                   {otherParticipant?.photoURL && (
-                    <img src={otherParticipant.photoURL} alt="" referrerPolicy="no-referrer" className="absolute inset-0 h-full w-full object-cover" loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                    <OptimizedImage src={otherParticipant.photoURL} alt="" width={32} className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                   )}
                 </div>
                 <div className="flex items-center gap-1.5 rounded-[18px] rounded-bl-[4px] border border-border/50 bg-white px-4 py-3 shadow-sm">

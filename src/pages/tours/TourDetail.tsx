@@ -16,6 +16,7 @@ import api from "@/lib/axios";
 import { formatCurrency, formatNumber, formatDate } from "@/lib/utils";
 import { usePermission } from "@/hooks/usePermission";
 import { toast } from "sonner";
+import OptimizedImage from "@/components/shared/OptimizedImage";
 
 interface TourDetail {
   id: string;
@@ -272,9 +273,10 @@ export default function TourDetailPage() {
           <div className="md:col-span-3 relative min-h-[280px] md:min-h-[55vh] bg-slate-100 group">
             {allPhotos.length > 0 ? (
               <>
-                <img
+                <OptimizedImage
                   src={allPhotos[activeImageIndex]}
                   alt=""
+                  width={800}
                   className="absolute inset-0 h-full w-full object-cover"
                   onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                 />
@@ -405,7 +407,7 @@ export default function TourDetailPage() {
                     : "border-transparent hover:border-slate-300"
                 }`}
               >
-                <img src={photo} alt="" className="h-full w-full object-cover" />
+                        <OptimizedImage src={photo} alt="" width={128} className="h-full w-full object-cover" />
               </button>
             ))}
           </div>
@@ -673,7 +675,7 @@ export default function TourDetailPage() {
                 {tour.supplier ? (
                   <div className="flex items-center gap-3">
                     {tour.supplier.photoURL ? (
-                      <img src={tour.supplier.photoURL} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
+                      <OptimizedImage src={tour.supplier.photoURL} alt="" width={40} className="h-10 w-10 shrink-0 rounded-full object-cover" />
                     ) : (
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-600">
                         {tour.supplier.name?.charAt(0)?.toUpperCase() || "?"}
@@ -720,7 +722,7 @@ export default function TourDetailPage() {
                             : "border-transparent hover:border-slate-300"
                         }`}
                       >
-                        <img src={photo} alt="" className="h-full w-full object-cover" />
+                <OptimizedImage src={photo} alt="" width={80} className="h-full w-full object-cover" />
                         {i === 5 && allPhotos.length > 6 && (
                           <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-xs font-semibold text-white">
                             +{allPhotos.length - 6}

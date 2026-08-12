@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import type { Article, ArticleStatus } from "@/types/blog"
+import OptimizedImage from "@/components/shared/OptimizedImage"
 
 interface GridArticleCardProps {
   article: Article
@@ -43,9 +44,10 @@ export function GridArticleCard({ article, onPreview, onEdit, onDelete, onToggle
     <div className="group relative rounded-sm bg-white shadow-lg ring-1 ring-black/5 overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 cursor-pointer">
       <div className="relative h-60 overflow-hidden bg-gray-100" onClick={onPreview}>
         {hasImage ? (
-          <img
+          <OptimizedImage
             src={article.featuredImage!}
             alt={article.title}
+            width={800}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
@@ -115,7 +117,7 @@ export function GridArticleCard({ article, onPreview, onEdit, onDelete, onToggle
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-100 ring-2 ring-white shrink-0">
             {article.author?.photoURL ? (
-              <img src={article.author.photoURL} alt="" className="h-full w-full object-cover" />
+              <OptimizedImage src={article.author.photoURL} alt="" width={40} className="h-full w-full object-cover" />
             ) : (
               <div className="h-full w-full bg-gradient-to-br from-purple-100 to-purple-200" />
             )}

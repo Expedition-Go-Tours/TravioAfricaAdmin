@@ -1,6 +1,7 @@
 import { Eye, Clock, BookOpen } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { Article, ArticleStatus } from "@/types/blog";
+import OptimizedImage from "@/components/shared/OptimizedImage";
 
 interface ArticleCardProps {
   article: Article;
@@ -42,7 +43,7 @@ export function ArticleCard({ article, onPreview }: ArticleCardProps) {
         <div className="flex flex-1 flex-col sm:flex-row">
           <div className={`relative sm:w-48 h-36 sm:h-auto shrink-0 overflow-hidden ${!hasImage ? "bg-gradient-to-br from-[#5645d4]/4 to-[#5645d4]/8" : ""}`}>
             {hasImage ? (
-              <img src={article.featuredImage!} alt={article.title} className="h-full w-full object-cover transition-transform duration-700 ease-spring group-hover:scale-105" />
+              <OptimizedImage src={article.featuredImage!} alt={article.title} width={800} className="h-full w-full object-cover transition-transform duration-700 ease-spring group-hover:scale-105" />
             ) : (
               <div className="flex h-full w-full items-center justify-center">
                 <div className="flex flex-col items-center gap-1">
@@ -83,7 +84,7 @@ export function ArticleCard({ article, onPreview }: ArticleCardProps) {
                 {article.author && (
                   <span className="flex items-center gap-1">
                     {article.author.photoURL ? (
-                      <img src={article.author.photoURL} alt="" className="h-4 w-4 rounded-full" />
+                      <OptimizedImage src={article.author.photoURL} alt="" width={16} className="h-4 w-4 rounded-full" />
                     ) : (
                       <span className="h-4 w-4 rounded-full bg-gray-100 inline-block" />
                     )}

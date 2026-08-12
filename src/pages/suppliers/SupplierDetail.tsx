@@ -36,6 +36,7 @@ import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { SectionError } from "@/components/shared/SectionError";
 import { SectionEmpty } from "@/components/shared/SectionEmpty";
 import { SafeImage } from "@/components/shared/SafeImage";
+import OptimizedImage from "@/components/shared/OptimizedImage";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { usePermission } from "@/hooks/usePermission";
@@ -963,7 +964,7 @@ function DocumentPreview({ url, label }: { url: string; label: string }) {
   if (isImage) {
     return (
       <a href={url} target="_blank" rel="noopener noreferrer" className="group relative block">
-        <img src={url} alt={label} className="h-44 w-full rounded-sm border border-border-muted object-cover shadow-sm transition-shadow group-hover:shadow-md" />
+        <OptimizedImage src={url} alt={label} width={800} className="h-44 w-full rounded-sm border border-border-muted object-cover shadow-sm transition-shadow group-hover:shadow-md" />
         <div className="absolute inset-0 flex items-center justify-center rounded-sm bg-black/0 text-xs font-medium text-white transition-colors group-hover:bg-black/40">
           <span className="opacity-0 group-hover:opacity-100">View →</span>
         </div>

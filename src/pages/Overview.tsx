@@ -43,6 +43,7 @@ import { getAdminSocket } from "@/lib/adminSocket";
 import { formatCurrency, formatNumber, formatDate } from "@/lib/utils";
 import { staggerContainer, fadeInUp } from "@/lib/animations";
 import { cn } from "@/lib/utils";
+import OptimizedImage from "@/components/shared/OptimizedImage";
 
 interface OverviewData {
   forbidden?: boolean;
@@ -467,7 +468,7 @@ export default function OverviewPage() {
                                 <div className="flex items-center gap-3">
                                   <span className="w-5 text-center text-xs font-medium text-text-tertiary shrink-0">{idx + 1}</span>
                                   {tour.coverPhoto ? (
-                                    <img src={tour.coverPhoto} alt="" className="h-8 w-8 rounded-lg object-cover shrink-0" />
+                                    <OptimizedImage src={tour.coverPhoto} alt="" width={32} className="h-8 w-8 rounded-lg object-cover shrink-0" />
                                   ) : (
                                     <div className="h-8 w-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
                                       <MapPin className="h-4 w-4 text-gray-400" />
@@ -597,7 +598,7 @@ export default function OverviewPage() {
                   {activeUsersData.map((user) => (
                     <div key={user.id} className="flex items-start gap-3 px-4 py-3">
                       {user.photoURL ? (
-                        <img src={user.photoURL} alt="" className="h-8 w-8 shrink-0 rounded-[10px] object-cover mt-0.5" />
+                        <OptimizedImage src={user.photoURL} alt="" width={32} className="h-8 w-8 shrink-0 rounded-[10px] object-cover mt-0.5" />
                       ) : (
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-surface-muted text-xs font-medium text-text-secondary mt-0.5">
                           {user.name?.charAt(0)?.toUpperCase() || "?"}
@@ -663,7 +664,7 @@ export default function OverviewPage() {
                   {newSignupsData.map((user) => (
                     <div key={user.id} className="flex items-start gap-3 px-4 py-3">
                       {user.photoURL ? (
-                        <img src={user.photoURL} alt="" className="h-8 w-8 shrink-0 rounded-[10px] object-cover mt-0.5" />
+                        <OptimizedImage src={user.photoURL} alt="" width={32} className="h-8 w-8 shrink-0 rounded-[10px] object-cover mt-0.5" />
                       ) : (
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-surface-muted text-xs font-medium text-text-secondary mt-0.5">
                           {user.name?.charAt(0)?.toUpperCase() || "?"}

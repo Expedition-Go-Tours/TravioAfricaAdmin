@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import OptimizedImage from "@/components/shared/OptimizedImage";
 
 interface SafeImageProps {
   src?: string;
@@ -24,12 +25,10 @@ export function SafeImage({ src, alt, className, fallback }: SafeImageProps) {
   const cacheBuster = attempt > 0 ? `?t=${attempt}` : "";
 
   return (
-    <img
+    <OptimizedImage
       src={`${src}${cacheBuster}`}
       alt={alt}
-      referrerPolicy="no-referrer"
       className={className}
-      loading="lazy"
       onError={handleError}
     />
   );

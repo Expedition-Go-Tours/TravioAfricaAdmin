@@ -13,6 +13,7 @@ import api from "@/lib/axios";
 import { timeAgo } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import type { AdminUser, AdminRole } from "@/lib/permissions";
+import OptimizedImage from "@/components/shared/OptimizedImage";
 
 function TableSkeleton() {
   return (
@@ -233,7 +234,7 @@ export function AdminUsersTab() {
                     <div className="flex items-center gap-3">
                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600 text-xs font-bold text-white shadow-sm shrink-0">
                         {admin.photoURL ? (
-                          <img src={admin.photoURL} alt="" referrerPolicy="no-referrer" className="h-full w-full rounded-full object-cover" loading="lazy" />
+                          <OptimizedImage src={admin.photoURL} alt="" width={36} className="h-full w-full rounded-full object-cover" />
                         ) : (
                           admin.name.charAt(0).toUpperCase()
                         )}
@@ -476,7 +477,7 @@ export function AdminUsersTab() {
             <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-surface-muted/50 px-4 py-3">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600 text-sm font-bold text-white shadow-sm">
                 {showRevoke.photoURL ? (
-                  <img src={showRevoke.photoURL} alt="" referrerPolicy="no-referrer" className="h-full w-full rounded-full object-cover" loading="lazy" />
+                  <OptimizedImage src={showRevoke.photoURL} alt="" width={36} className="h-full w-full rounded-full object-cover" />
                 ) : (
                   showRevoke.name.charAt(0).toUpperCase()
                 )}

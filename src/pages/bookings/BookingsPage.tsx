@@ -31,6 +31,7 @@ import { BookingDetailPanel } from "./components/BookingDetailPanel";
 import { ConfirmPaymentDialog } from "./components/ConfirmPaymentDialog";
 import type { Booking } from "@/types/booking";
 import { isPaymentPaid } from "@/types/booking";
+import OptimizedImage from "@/components/shared/OptimizedImage";
 
 const STATUS_BADGE: Record<string, "success" | "warning" | "error" | "info"> = {
   PENDING: "warning",
@@ -382,7 +383,7 @@ export default function BookingsPage() {
                           <div className="flex items-center gap-2.5">
                             <div className="relative flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-accent text-[10px] font-bold text-accent-foreground">
                               {booking.customer.photoURL ? (
-                                <img src={booking.customer.photoURL} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+                                <OptimizedImage src={booking.customer.photoURL} alt="" width={28} className="absolute inset-0 h-full w-full object-cover" />
                               ) : null}
                               <span className={booking.customer.photoURL ? "opacity-0" : ""}>
                                 {(booking.customer.name || "?").charAt(0).toUpperCase()}
@@ -398,7 +399,7 @@ export default function BookingsPage() {
                           <div className="flex items-center gap-2 min-w-0 max-w-[220px]">
                             <div className="w-7 h-7 rounded-lg shrink-0 overflow-hidden bg-surface-muted border border-border">
                               {booking.tour.coverPhoto ? (
-                                <img src={booking.tour.coverPhoto} alt="" className="w-full h-full object-cover" loading="lazy" />
+                                <OptimizedImage src={booking.tour.coverPhoto} alt="" width={28} className="w-full h-full object-cover" />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center">
                                   <MapPin className="h-3 w-3 text-text-tertiary" />

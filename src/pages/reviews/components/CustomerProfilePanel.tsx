@@ -17,6 +17,7 @@ import api from "@/lib/axios";
 import { cn, timeAgo } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import OptimizedImage from "@/components/shared/OptimizedImage";
 
 interface CustomerProfilePanelProps {
   customerId: string;
@@ -130,7 +131,7 @@ export function CustomerProfilePanel({ customerId, onClose }: CustomerProfilePan
               <div className="flex items-start gap-4">
                 <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-indigo-100 text-lg font-bold text-indigo-600 ring-2 ring-indigo-100">
                   {user.photoURL ? (
-                    <img src={user.photoURL} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+                    <OptimizedImage src={user.photoURL} alt="" width={56} className="absolute inset-0 h-full w-full object-cover" />
                   ) : null}
                   <span className={user.photoURL ? "opacity-0" : ""}>
                     {(user.name || "?").charAt(0).toUpperCase()}
@@ -258,7 +259,7 @@ export function CustomerProfilePanel({ customerId, onClose }: CustomerProfilePan
                       <div className="flex items-start gap-3">
                         <div className="w-10 h-10 rounded-lg shrink-0 overflow-hidden bg-surface-muted border border-border">
                           {booking.tour?.coverPhoto ? (
-                            <img src={booking.tour.coverPhoto} alt="" className="w-full h-full object-cover" loading="lazy" />
+                            <OptimizedImage src={booking.tour.coverPhoto} alt="" width={40} className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
                               <Ticket className="h-4 w-4 text-text-tertiary" />

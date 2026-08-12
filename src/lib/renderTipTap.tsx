@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import OptimizedImage from "@/components/shared/OptimizedImage";
 
 interface TipTapAttrs {
   level?: number;
@@ -105,7 +106,7 @@ export function renderTipTapNode(node: TipTapNode, key?: number): ReactNode {
     case "image":
       return (
         <figure key={key} className="my-6 max-w-full">
-          <img src={node.attrs?.src} alt={node.attrs?.alt || ""} className="max-w-full h-auto rounded-sm" />
+          <OptimizedImage src={node.attrs?.src} alt={node.attrs?.alt || ""} width={800} className="max-w-full h-auto rounded-sm" fit="fill" />
           {node.attrs?.title && <figcaption className="mt-2 text-center text-sm text-gray-500">{node.attrs.title}</figcaption>}
         </figure>
       );

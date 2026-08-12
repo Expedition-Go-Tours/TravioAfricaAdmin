@@ -26,6 +26,7 @@ import { GoogleSnippetPreview } from "./components/GoogleSnippetPreview";
 import { ExitConfirmDialog } from "./components/ExitConfirmDialog";
 import { EditorHeader } from "./components/EditorHeader";
 import type { ArticleStatus } from "@/types/blog";
+import OptimizedImage from "@/components/shared/OptimizedImage";
 
 function SectionDivider({ label }: { label: string }) {
   return (
@@ -395,7 +396,7 @@ export default function BlogEditorPage() {
             <div className="space-y-3">
               {featuredImage ? (
                 <div className="relative rounded-sm overflow-hidden border border-border aspect-[3/1]">
-                  <img src={featuredImage} alt="Featured" className="w-full h-full object-cover" />
+                  <OptimizedImage src={featuredImage} alt="Featured" width={800} className="w-full h-full object-cover" />
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center rounded-sm border border-dashed border-muted-foreground/30 py-6 text-center">

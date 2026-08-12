@@ -44,6 +44,7 @@ import { AnimatedNumber } from "@/components/shared/AnimatedNumber";
 import api from "@/lib/axios";
 import { cn, timeAgo } from "@/lib/utils";
 import { CustomerProfilePanel } from "./components/CustomerProfilePanel";
+import OptimizedImage from "@/components/shared/OptimizedImage";
 
 interface Review {
   id: string;
@@ -334,7 +335,7 @@ export default function ReviewModerationPage() {
   const renderAvatar = (url?: string, name?: string) => (
     <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-muted text-xs font-bold text-text-tertiary ring-1 ring-border">
       {url ? (
-        <img src={url} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+        <OptimizedImage src={url} alt="" width={36} className="absolute inset-0 h-full w-full object-cover" />
       ) : null}
       <span className={url ? "opacity-0" : ""}>{(name || "?").charAt(0).toUpperCase()}</span>
     </div>
@@ -761,7 +762,7 @@ export default function ReviewModerationPage() {
                     <div className="flex items-start gap-3">
                       <div className="w-10 h-10 rounded-lg shrink-0 overflow-hidden bg-surface-muted border border-border relative">
                         {group.coverPhoto ? (
-                          <img src={group.coverPhoto} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+                          <OptimizedImage src={group.coverPhoto} alt="" width={40} className="absolute inset-0 w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-xs font-bold text-text-tertiary">
                             {group.tourTitle.charAt(0)}

@@ -2,6 +2,7 @@
 import { Star, Users } from "lucide-react";
 import { formatCurrency, formatNumber } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import OptimizedImage from "@/components/shared/OptimizedImage";
 
 interface Supplier {
   id?: string;
@@ -61,7 +62,7 @@ export function TopSuppliers({ suppliers = [], loading }: TopSuppliersProps) {
               >
                 <div className="relative">
                   {supplier.user?.photoURL ? (
-                    <img src={supplier.user.photoURL} alt="" className="h-10 w-10 rounded-full object-cover" />
+                    <OptimizedImage src={supplier.user.photoURL} alt="" width={40} className="h-10 w-10 rounded-full object-cover" />
                   ) : (
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/10 text-sm font-semibold text-primary">
                       {supplier.user?.name?.charAt(0)?.toUpperCase() || "S"}
