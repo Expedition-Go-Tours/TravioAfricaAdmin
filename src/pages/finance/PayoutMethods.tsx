@@ -27,6 +27,7 @@ import { SectionEmpty } from "@/components/shared/SectionEmpty";
 import { usePermission } from "@/hooks/usePermission";
 import api from "@/lib/axios";
 import { formatDate } from "@/lib/utils";
+import OptimizedImage from "@/components/shared/OptimizedImage";
 
 interface PayoutMethodSupplier {
   id: string;
@@ -114,12 +115,12 @@ export default function PayoutMethodsPage() {
           <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-xs font-bold text-white">
             <span>{initial}</span>
             {photoUrl && (
-              <img
+              <OptimizedImage
                 src={photoUrl}
                 alt={name}
                 referrerPolicy="no-referrer"
                 className="absolute inset-0 h-full w-full object-cover"
-                loading="lazy"
+                width={32}
                 onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
               />
             )}
@@ -246,12 +247,12 @@ export default function PayoutMethodsPage() {
               <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/20 text-base font-bold text-white shadow-inner">
                 <span>{(selectedSupplier?.name || selectedSupplier?.user?.name)?.charAt(0)?.toUpperCase() || "?"}</span>
                 {selectedSupplier?.photoURL && (
-                  <img
+                  <OptimizedImage
                     src={selectedSupplier.photoURL}
                     alt={selectedSupplier?.name || ""}
                     referrerPolicy="no-referrer"
                     className="absolute inset-0 h-full w-full object-cover"
-                    loading="lazy"
+                    width={48}
                     onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                   />
                 )}

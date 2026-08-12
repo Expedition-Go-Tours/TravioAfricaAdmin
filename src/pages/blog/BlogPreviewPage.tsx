@@ -4,6 +4,7 @@ import { ChevronLeft, Edit3 } from "lucide-react"
 import { getArticleById } from "@/services/blogService"
 import { renderTipTap, type TipTapNode } from "@/lib/renderTipTap"
 import type { Article } from "@/types/blog"
+import OptimizedImage from "@/components/shared/OptimizedImage";
 
 const formatDate = (dateStr: string | null) => {
   if (!dateStr) return ""
@@ -78,20 +79,22 @@ export default function BlogPreviewPage() {
 
           {article.featuredImage && (
             <div className="w-full aspect-[3/1] overflow-hidden bg-[#E5E6EA] mb-8">
-              <img
+              <OptimizedImage
                 src={article.featuredImage}
                 alt={article.title}
                 className="w-full h-full object-cover"
+                width={800}
               />
             </div>
           )}
 
           <div className="flex items-center gap-3 pb-6 border-b border-[#E5E6EA] mb-8">
             {article.author?.photoURL ? (
-              <img
+              <OptimizedImage
                 src={article.author.photoURL}
                 alt=""
                 className="h-10 w-10 rounded-full object-cover shrink-0"
+                width={40}
               />
             ) : (
               <div className="h-10 w-10 rounded-full bg-[#E5E6EA] shrink-0" />

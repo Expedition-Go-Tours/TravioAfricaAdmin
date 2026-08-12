@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePermission } from "@/hooks/usePermission";
+import OptimizedImage from "@/components/shared/OptimizedImage";
 
 interface ChildItem {
   label: string;
@@ -194,12 +195,12 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             <div className="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-white/20 ring-2 ring-white/30 text-base font-semibold text-white">
               <span>{user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "A"}</span>
               {user?.photoURL && (
-                <img
+                <OptimizedImage
                   src={user.photoURL}
                   alt=""
                   referrerPolicy="no-referrer"
                   className="absolute inset-0 h-full w-full object-cover"
-                  loading="lazy"
+                  width={56}
                   onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                 />
               )}

@@ -3,6 +3,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, ImagePlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import OptimizedImage from "@/components/shared/OptimizedImage";
 
 interface PhotoGalleryProps {
   photos: string[];
@@ -47,11 +48,11 @@ export function PhotoGallery({ photos, maxVisible = 6 }: PhotoGalleryProps) {
             onClick={() => openLightbox(i)}
             className="group relative aspect-[16/10] overflow-hidden rounded-lg border border-border/40 transition-all duration-200 hover:shadow-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <img
+            <OptimizedImage
               src={photo}
               alt={`Tour photo ${i + 1}`}
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-              loading="lazy"
+              width={600}
             />
             {i === maxVisible - 1 && overflow > 0 && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-[2px]">
@@ -65,10 +66,12 @@ export function PhotoGallery({ photos, maxVisible = 6 }: PhotoGalleryProps) {
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
         <DialogContent className="max-w-4xl border-0 bg-black/95 p-0 backdrop-blur-sm [&>button]:text-white/70 [&>button]:hover:text-white">
           <div className="relative flex items-center justify-center">
-            <img
+            <OptimizedImage
               src={photos[activeIndex]}
               alt={`Tour photo ${activeIndex + 1}`}
               className="max-h-[80vh] rounded-lg object-contain"
+              width={1600}
+              fit="fill"
             />
 
             {photos.length > 1 && (

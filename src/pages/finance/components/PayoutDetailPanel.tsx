@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { cn, formatCurrency, formatDate, formatDateTime } from "@/lib/utils";
 import type { Payout } from "@/types/payout";
+import OptimizedImage from "@/components/shared/OptimizedImage";
 
 interface PayoutDetailPanelProps {
   payout: Payout;
@@ -160,12 +161,12 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
                   <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-surface-muted text-sm font-semibold text-text-secondary ring-2 ring-border">
                     <span className={photoUrl ? "opacity-0" : ""}>{(supplier?.name || "?").charAt(0).toUpperCase()}</span>
                     {photoUrl && (
-                      <img
+                      <OptimizedImage
                         src={photoUrl}
                         alt={supplier?.name || ""}
                         referrerPolicy="no-referrer"
                         className="absolute inset-0 h-full w-full object-cover"
-                        loading="lazy"
+                        width={40}
                         onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                       />
                     )}

@@ -16,6 +16,7 @@ import { usePermission } from "@/hooks/usePermission";
 import { useSocketInvalidate } from "@/hooks/useSocketEvent";
 import api from "@/lib/axios";
 import { formatDate } from "@/lib/utils";
+import OptimizedImage from "@/components/shared/OptimizedImage";
 
 interface Supplier {
   id: string;
@@ -69,12 +70,12 @@ export default function ActiveSuppliersPage() {
             <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-xs font-bold text-white">
               <span>{initial}</span>
               {r.user?.photoURL && (
-                <img
+                <OptimizedImage
                   src={r.user.photoURL}
                   alt={name}
                   referrerPolicy="no-referrer"
                   className="absolute inset-0 h-full w-full object-cover"
-                  loading="lazy"
+                  width={32}
                   onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                 />
               )}

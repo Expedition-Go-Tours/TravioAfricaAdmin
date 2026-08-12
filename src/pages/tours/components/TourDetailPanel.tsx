@@ -35,6 +35,7 @@ import {
 import { PhotoGallery } from './PhotoGallery';
 import { DiffViewer } from './DiffViewer';
 import type { ReviewQueueTour, TourDraftReview } from '@/services/tourService';
+import OptimizedImage from "@/components/shared/OptimizedImage";
 
 interface TourDetailPanelProps {
   tour: ReviewQueueTour | null;
@@ -591,10 +592,11 @@ export function TourDetailPanel({
                   )}
                   {content.meetingPointPicture && (
                     <div className="mt-2 overflow-hidden rounded-lg">
-                      <img
+                      <OptimizedImage
                         src={content.meetingPointPicture as string}
                         alt="Meeting point"
                         className="h-32 w-full object-cover"
+                        width={800}
                       />
                     </div>
                   )}

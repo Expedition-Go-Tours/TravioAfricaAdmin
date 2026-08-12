@@ -3,6 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { CalendarCheck } from "lucide-react";
+import OptimizedImage from "@/components/shared/OptimizedImage";
 
 interface Booking {
   id: string;
@@ -55,10 +56,11 @@ export function RecentBookingsTable({ bookings = [], loading }: RecentBookingsTa
               onClick={() => navigate(`/admin/bookings?bookingId=${booking.id}`, { state: { bookingId: booking.id } })}
             >
               {booking.customer?.photoURL ? (
-                <img
+                <OptimizedImage
                   src={booking.customer.photoURL}
                   alt=""
                   className="h-10 w-10 rounded-full object-cover shrink-0"
+                  width={40}
                 />
               ) : (
                 <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-sm font-semibold shrink-0">

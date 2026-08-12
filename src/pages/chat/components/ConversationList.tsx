@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { cn, timeAgo } from "@/lib/utils";
 import { MailOpen, Inbox, Eye, Building2, Headphones } from "lucide-react";
 import type { Conversation } from "@/services/chatService";
+import OptimizedImage from "@/components/shared/OptimizedImage";
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -175,12 +176,12 @@ export function ConversationList({
                   <div className={cn("relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br text-sm font-bold text-white", a.gradient)}>
                     <span>{name.charAt(0).toUpperCase()}</span>
                     {otherUser?.photoURL && (
-                      <img
+                      <OptimizedImage
                         src={otherUser.photoURL}
                         alt=""
                         referrerPolicy="no-referrer"
                         className="absolute inset-0 h-full w-full object-cover"
-                        loading="lazy"
+                        width={40}
                         onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                       />
                     )}

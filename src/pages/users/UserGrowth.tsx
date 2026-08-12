@@ -16,6 +16,7 @@ import { SectionEmpty } from "@/components/shared/SectionEmpty";
 import api from "@/lib/axios";
 import { staggerContainer, fadeIn } from "@/lib/animations";
 import { formatNumber, formatDate } from "@/lib/utils";
+import OptimizedImage from "@/components/shared/OptimizedImage";
 
 const periods = [
   { value: "30d", label: "30 days" },
@@ -249,12 +250,12 @@ export default function UserGrowthPage() {
                       <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-xs font-bold text-white mt-0.5">
                         <span>{(u.name || u.email || "?").charAt(0).toUpperCase()}</span>
                         {u.photoURL && (
-                          <img
+                          <OptimizedImage
                             src={u.photoURL}
                             alt={u.name || ""}
                             referrerPolicy="no-referrer"
                             className="absolute inset-0 h-full w-full object-cover"
-                            loading="lazy"
+                            width={36}
                             onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                           />
                         )}

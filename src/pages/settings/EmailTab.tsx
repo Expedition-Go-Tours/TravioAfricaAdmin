@@ -10,6 +10,7 @@ import { queryClient } from "@/lib/query-client";
 import { isSuperAdmin } from "@/hooks/usePermission";
 import { cn } from "@/lib/utils";
 import { useUnsavedChangesWarning, QueryErrorState, SettingsCard, FormSkeleton, type FieldDef, validateAllFields } from "./shared";
+import OptimizedImage from "@/components/shared/OptimizedImage";
 
 interface EmailField extends FieldDef {
   hint: string;
@@ -59,10 +60,12 @@ function ImagePreview({ url, label }: { url: string; label: string }) {
         </div>
         <span className="text-[10px] text-text-tertiary font-mono truncate ml-2">{label}</span>
       </div>
-      <img
+      <OptimizedImage
         src={url}
         alt={label}
         className="w-full h-28 object-contain p-3 bg-white"
+        width={800}
+        fit="fill"
         onError={() => setLoaded(false)}
       />
     </div>

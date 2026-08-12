@@ -12,6 +12,7 @@ import { usePermission } from "@/hooks/usePermission";
 import { useSocketInvalidate } from "@/hooks/useSocketEvent";
 import api from "@/lib/axios";
 import { formatDate } from "@/lib/utils";
+import OptimizedImage from "@/components/shared/OptimizedImage";
 
 interface Application {
   id: string;
@@ -51,12 +52,12 @@ export default function SupplierApplicationsPage() {
         <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-400 to-green-600 text-xs font-bold text-white">
           <span>{(r.user?.name || r.user?.email || "?").charAt(0).toUpperCase()}</span>
           {r.user?.photoURL && (
-            <img
+            <OptimizedImage
               src={r.user.photoURL}
               alt=""
               referrerPolicy="no-referrer"
               className="absolute inset-0 h-full w-full object-cover"
-              loading="lazy"
+              width={32}
               onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
             />
           )}

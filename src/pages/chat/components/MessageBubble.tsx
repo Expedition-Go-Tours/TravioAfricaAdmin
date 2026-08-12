@@ -2,6 +2,7 @@
 import { Check, CheckCheck, Loader2, MoreVertical, Pencil, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Message } from "@/services/chatService";
+import OptimizedImage from "@/components/shared/OptimizedImage";
 
 export type MessageStatus = "sending" | "sent" | "delivered" | "read";
 
@@ -135,12 +136,12 @@ export function MessageBubble({
         >
           <span>{senderName?.charAt(0)?.toUpperCase() || "?"}</span>
           {senderAvatar && (
-            <img
+            <OptimizedImage
               src={senderAvatar}
               alt=""
               referrerPolicy="no-referrer"
               className="absolute inset-0 h-full w-full object-cover"
-              loading="lazy"
+              width={32}
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = "none";
               }}
@@ -192,10 +193,12 @@ export function MessageBubble({
             <>
               {message.attachmentUrl && (
                 <div className={cn("-mx-3.5 -mt-2 cursor-pointer border border-black/10 overflow-hidden", message.content ? "rounded-t-[18px] mb-1" : "rounded-[18px]")}>
-                  <img
+                  <OptimizedImage
                     src={message.attachmentUrl}
                     alt=""
                     className="max-h-72 w-full object-cover hover:scale-105 transition-transform duration-200"
+                    width={600}
+                    fit="fill"
                     onClick={() => setFullscreenImage(message.attachmentUrl!)}
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = "none";
@@ -283,10 +286,12 @@ export function MessageBubble({
           >
             <X className="h-5 w-5" />
           </button>
-          <img
+          <OptimizedImage
             src={fullscreenImage}
             alt=""
             className="max-h-full max-w-full rounded-lg object-contain shadow-2xl"
+            width={1600}
+            fit="fill"
             onClick={(e) => e.stopPropagation()}
           />
         </div>

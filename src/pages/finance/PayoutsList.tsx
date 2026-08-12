@@ -39,6 +39,7 @@ interface PayoutMethod {
 }
 
 import type { Payout } from "@/types/payout";
+import OptimizedImage from "@/components/shared/OptimizedImage";
 
 interface PayoutSummary {
   totalAmount?: number;
@@ -180,12 +181,12 @@ export default function PayoutsList() {
             <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-muted text-[11px] font-semibold text-text-secondary">
               <span className={photoUrl ? "opacity-0" : ""}>{initials}</span>
               {photoUrl && (
-                <img
+                <OptimizedImage
                   src={photoUrl}
                   alt={name}
                   referrerPolicy="no-referrer"
                   className="absolute inset-0 h-full w-full object-cover"
-                  loading="lazy"
+                  width={32}
                   onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                 />
               )}
