@@ -84,7 +84,11 @@ export default function ConversionFunnelPage() {
   const dailyTrend = useMemo(() => {
     const map = new Map<string, Record<string, number | string>>();
     for (const row of rawDaily) {
-      const day = row.day as string;
+      const raw = row.day as string;
+      // `DATE_TRUNC('day', ...)` serializes as a full ISO timestamp
+      // (e.g. 2026-08-12T00:00:00.000Z); keep only the YYYY-MM-DD part for a
+      // clean chart axis.
+      const day = raw ? String(raw).slice(0, 10) : raw;
       if (!map.has(day)) map.set(day, { date: day, views: 0, cartAdds: 0, checkouts: 0, bookings: 0 });
       const entry = map.get(day)!;
       const dk = STEP_DATAKEY_MAP[row.name as string];
@@ -169,6 +173,13 @@ export default function ConversionFunnelPage() {
                 const info = STEPS[idx];
                 const Icon = info?.icon || CheckCircle;
                 const pct = ((step.users || 0) / firstUsers) * 100;
+                // Compute drop-off from this step vs the previous step so we can
+                // show "—" when the parent stage has zero users (the backend
+                // emits "100%" in that case, which is misleading).
+                const prevUsers = idx > 0 ? (funnel[idx - 1]?.users || 0) : 0;
+                const dropOff = idx > 0 && prevUsers > 0
+                  ? `${(100 - ((step.users || 0) / prevUsers) * 100).toFixed(1)}%`
+                  : null;
                 return (
                   <div key={step.step}>
                     <div className="flex items-center gap-4">
@@ -186,10 +197,10 @@ export default function ConversionFunnelPage() {
                       </div>
                       <div className="w-28 text-right shrink-0">
                         <p className="text-xs text-text-tertiary">{pct.toFixed(1)}% of top</p>
-                        {idx > 0 && step.dropOff != null && (
+                        {idx > 0 && dropOff && (
                           <p className="mt-0.5 text-xs text-red-500 flex items-center justify-end gap-1">
                             <ArrowDown className="h-3 w-3" />
-                            {step.dropOff} drop-off
+                            {dropOff} drop-off
                           </p>
                         )}
                       </div>
