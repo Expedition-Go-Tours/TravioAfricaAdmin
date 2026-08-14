@@ -124,7 +124,6 @@ export function ChatWindow({
   const [input, setInput] = useState("");
   const [typingUser, setTypingUser] = useState<string | null>(null);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeoutRef = useRef<number | undefined>(undefined);
@@ -143,7 +142,10 @@ export function ChatWindow({
 
   const scrollToBottom = useCallback((force = false) => {
     if (force || isNearBottom()) {
-      messagesEndRef.current?.scrollIntoView({ behavior: force ? "auto" : "smooth" });
+      const el = messagesContainerRef.current;
+      if (el) {
+        el.scrollTop = el.scrollHeight;
+      }
     }
   }, [isNearBottom]);
 
@@ -454,7 +456,6 @@ export function ChatWindow({
                 </div>
               </div>
             )}
-            <div ref={messagesEndRef} />
           </div>
         </div>
       </div>

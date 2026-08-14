@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Plus } from "lucide-react";
@@ -91,29 +91,6 @@ export default function ChatPage() {
       queryClient.invalidateQueries({ queryKey: ["chat", "conversations"] });
     }, 500);
   }, [queryClient]);
-
-  useLayoutEffect(() => {
-    const el = document.querySelector("main");
-    if (!el) return;
-    const prevOverflow = el.style.overflow;
-    const prevPadding = el.style.padding;
-    el.style.overflow = "clip";
-    el.style.padding = "0";
-    const motionDiv = el.querySelector(":scope > div") as HTMLElement | null;
-    if (motionDiv) {
-      const prevHeight = motionDiv.style.height;
-      motionDiv.style.height = "100%";
-      return () => {
-        el.style.overflow = prevOverflow;
-        el.style.padding = prevPadding;
-        motionDiv.style.height = prevHeight;
-      };
-    }
-    return () => {
-      el.style.overflow = prevOverflow;
-      el.style.padding = prevPadding;
-    };
-  }, []);
 
   useEffect(() => {
     const convId = (location.state as { conversationId?: string })?.conversationId;

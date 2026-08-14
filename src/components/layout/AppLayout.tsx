@@ -23,7 +23,7 @@ export function AppLayout() {
         <Sidebar open={sidebarOpen} onClose={closeSidebar} onOpen={() => setSidebarOpen(true)} />
         <div className="flex min-w-0 flex-1 flex-col">
           <Header onMenuClick={() => setSidebarOpen(true)} />
-          <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+          <main className="flex flex-1 flex-col overflow-y-auto p-4 md:p-6 lg:p-8">
             <AnimatePresence mode="wait">
               <motion.div
                 key={location.pathname}
@@ -31,7 +31,7 @@ export function AppLayout() {
                 initial="initial"
                 animate="animate"
                 exit="exit"
-                className="mx-auto w-full max-w-[1440px]"
+                className="mx-auto w-full max-w-[1440px] flex-1 min-h-0"
               >
                 <Outlet />
               </motion.div>
