@@ -188,7 +188,7 @@ export function PayoutsListTab({ initialStatus, onStatusChange }: PayoutsListTab
     }
   };
 
-  const payoutsRaw = useMemo(() => data?.data?.payouts || data?.payouts || [], [data]);
+  const payoutsRaw = useMemo<Payout[]>(() => (data?.data?.payouts || data?.payouts || []) as Payout[], [data]);
   const pagination = data?.data?.pagination || data?.pagination;
   const statusCounts = useMemo(() => data?.data?.statusCounts || data?.statusCounts || {}, [data]);
   const summary = data?.data?.summary || data?.summary;
