@@ -5,7 +5,6 @@ import {
   Search, X, Globe, CheckCircle, ExternalLink, Building2, ChevronRight,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SafeImage } from "@/components/shared/SafeImage";
 import { SectionError } from "@/components/shared/SectionError";
