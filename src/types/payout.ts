@@ -27,7 +27,12 @@ export interface Payout {
   commissionAmount?: number | string;
   status?: string;
   createdAt?: string;
+  approvedAt?: string;
+  approvedBy?: string;
+  processedAt?: string;
+  processedBy?: string;
   paidAt?: string;
+  notes?: string;
   commission?: number | string;
   payoutMethod?: {
     id?: string;

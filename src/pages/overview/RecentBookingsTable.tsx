@@ -25,34 +25,34 @@ export function RecentBookingsTable({ bookings = [], loading }: RecentBookingsTa
   const navigate = useNavigate();
 
   return (
-    <div className="rounded-2xl bg-white border-0 shadow-sm p-5 h-full">
-      <div className="flex items-center justify-between mb-4">
+    <div className="h-full rounded-lg border border-border/80 bg-surface-base p-5 shadow-soft">
+      <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <CalendarCheck className="h-4 w-4 text-gray-500" />
-          <h3 className="text-[15px] font-semibold text-gray-900">Recent Bookings</h3>
+          <CalendarCheck className="h-4 w-4 text-text-tertiary" />
+          <h3 className="text-[15px] font-semibold text-text-primary">Recent Bookings</h3>
         </div>
-        <button 
+        <button
           onClick={() => navigate("/admin/bookings")}
-          className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+          className="text-xs font-medium text-primary hover:underline"
         >
           View all
         </button>
       </div>
-      
+
       {loading ? (
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-16 w-full rounded-xl" />
+            <Skeleton key={i} className="h-16 w-full" />
           ))}
         </div>
       ) : bookings.length === 0 ? (
-        <div className="py-10 text-center text-sm text-gray-500">No recent bookings</div>
+        <div className="py-10 text-center text-sm text-text-secondary">No recent bookings</div>
       ) : (
         <div className="space-y-2">
           {bookings.slice(0, 5).map((booking) => (
-            <div 
-              key={booking.id} 
-              className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors"
+            <div
+              key={booking.id}
+              className="flex items-center gap-3 rounded-lg p-3 transition-colors hover:bg-surface-muted/50 cursor-pointer"
               onClick={() => navigate(`/admin/bookings?bookingId=${booking.id}`, { state: { bookingId: booking.id } })}
             >
               {booking.customer?.photoURL ? (
@@ -63,26 +63,26 @@ export function RecentBookingsTable({ bookings = [], loading }: RecentBookingsTa
                   width={40}
                 />
               ) : (
-                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-sm font-semibold shrink-0">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-semibold text-accent-foreground">
                   {booking.customer?.name?.charAt(0)?.toUpperCase() || "?"}
                 </div>
               )}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="truncate text-sm font-medium text-text-primary">
                     {booking.customer?.name || "Unknown"}
                   </p>
                   <StatusBadge status={booking.status} />
                 </div>
-                <p className="text-xs text-gray-500 truncate mt-0.5">
+                <p className="mt-0.5 truncate text-xs text-text-tertiary">
                   {booking.tour?.title || "—"} · {formatDate(booking.createdAt)}
                 </p>
               </div>
-              <div className="text-right shrink-0">
-                <p className="text-sm font-semibold text-gray-900">
+              <div className="shrink-0 text-right">
+                <p className="text-sm font-semibold text-text-primary">
                   {formatCurrency(booking.total)}
                 </p>
-                <p className="text-[10px] text-gray-400">{booking.bookingNumber}</p>
+                <p className="text-[10px] text-text-tertiary">{booking.bookingNumber}</p>
               </div>
             </div>
           ))}

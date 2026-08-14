@@ -1,10 +1,12 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 import { LogOut, Loader2, Settings, UserCircle, Menu, ChevronRight } from "lucide-react";
 import { NotificationBell } from "@/components/ui/NotificationBell";
 import { useAuth } from "@/auth/useAuth";
 import { isSuperAdmin, hasPermission } from "@/hooks/usePermission";
+import api from "@/lib/axios";
 
 const breadcrumbMap: Record<string, string> = {
   overview: "Overview",
@@ -16,10 +18,8 @@ const breadcrumbMap: Record<string, string> = {
   funnel: "Conversion Funnel",
   tours: "Tour Performance",
   "tour-moderation": "Tour Moderation",
-  suppliers: "Supplier Applications",
-  active: "Active Suppliers",
+  suppliers: "Suppliers",
   payouts: "Payouts",
-  "payout-methods": "Payout Methods",
   reviews: "Review Moderation",
   chat: "Messages",
   bookings: "Bookings",
@@ -39,6 +39,35 @@ export function Header({ onMenuClick }: HeaderProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const segments = location.pathname.split("/").filter(Boolean);
   const superAdmin = isSuperAdmin();
+
+  const isTourDetail = segments[1] === "tours" && segments.length === 3 && !!segments[2];
+  const tourId = isTourDetail ? segments[2] : null;
+
+  const isSupplierDetail = segments[1] === "suppliers" && segments.length === 3 && !!segments[2];
+  const supplierId = isSupplierDetail ? segments[2] : null;
+
+  const { data: tourTitle } = useQuery({
+    queryKey: ["admin", "tour-title", tourId],
+    queryFn: async () => {
+      const res = await api.get(`/admin/tours/${tourId}`);
+      const body = res.data as { data?: { tour?: { title?: unknown } }; tour?: { title?: unknown } };
+      const t = body?.data?.tour ?? body?.tour ?? (body as Record<string, unknown>);
+      const title = typeof t === "object" && t !== null && "title" in t ? (t as { title?: unknown }).title : undefined;
+      return typeof title === "string" && title ? title : null;
+    },
+    enabled: isTourDetail,
+  });
+
+  const { data: supplierName } = useQuery({
+    queryKey: ["admin", "supplier-name", supplierId],
+    queryFn: async () => {
+      const res = await api.get(`/suppliers/admin/${supplierId}/profile`);
+      const body = res.data as { data?: { supplier?: { name?: unknown } } };
+      const name = body?.data?.supplier?.name;
+      return typeof name === "string" && name ? name : null;
+    },
+    enabled: isSupplierDetail,
+  });
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -75,6 +104,7 @@ export function Header({ onMenuClick }: HeaderProps) {
           {segments.slice(1).map((seg, idx) => {
             const label = breadcrumbMap[seg] || seg.charAt(0).toUpperCase() + seg.slice(1);
             const isLast = idx === segments.slice(1).length - 1;
+            const displayLabel = isLast ? (isTourDetail ? tourTitle || tourId : isSupplierDetail ? supplierName || supplierId : label) : label;
             return (
               <span key={seg} className="flex items-center gap-1.5 min-w-0">
                 <ChevronRight className="h-3 w-3 shrink-0 text-text-tertiary" />
@@ -82,7 +112,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                   "truncate",
                   isLast ? "text-text-primary font-medium" : "text-text-secondary"
                 )}>
-                  {label}
+                  {displayLabel}
                 </span>
               </span>
             );

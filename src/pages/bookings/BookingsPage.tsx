@@ -14,8 +14,6 @@ import {
   Ban,
   Inbox,
   AlertCircle,
-  ChevronLeft,
-  ChevronRight,
   Calendar,
   Hash,
   MapPin,
@@ -24,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Pagination } from "@/components/shared/Pagination";
 import { useSocketInvalidate } from "@/hooks/useSocketEvent";
 import api from "@/lib/axios";
 import { cn } from "@/lib/utils";
@@ -42,6 +41,16 @@ const STATUS_BADGE: Record<string, "success" | "warning" | "error" | "info"> = {
   REFUNDED: "warning",
 };
 
+const PAYMENT_BADGE: Record<string, "success" | "warning" | "error"> = {
+  PAID: "success",
+  SUCCEEDED: "success",
+  PENDING: "warning",
+  PROCESSING: "warning",
+  FAILED: "error",
+  REFUNDED: "warning",
+  PARTIALLY_REFUNDED: "warning",
+};
+
 const STAGGER_LIST = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.06 } },
@@ -55,11 +64,11 @@ const FADE_SLIDE = {
 const STATUS_PILLS = ["All", "Pending", "Confirmed", "Completed", "Cancelled"];
 
 const statCards = [
-  { label: "Total", key: "total", bg: "bg-indigo-50", text: "text-indigo-500", Icon: ShoppingCart },
-  { label: "Pending", key: "PENDING", bg: "bg-amber-50", text: "text-amber-600", Icon: Clock },
-  { label: "Confirmed", key: "CONFIRMED", bg: "bg-blue-50", text: "text-blue-600", Icon: CheckCircle2 },
-  { label: "Completed", key: "COMPLETED", bg: "bg-emerald-50", text: "text-emerald-600", Icon: CheckCircle2 },
-  { label: "Cancelled", key: "CANCELLED", bg: "bg-red-50", text: "text-red-500", Icon: Ban },
+  { label: "Total", key: "total", gradient: "bg-gradient-to-br from-blue-50 to-blue-100", Icon: ShoppingCart },
+  { label: "Pending", key: "PENDING", gradient: "bg-gradient-to-br from-amber-50 to-amber-100", Icon: Clock },
+  { label: "Confirmed", key: "CONFIRMED", gradient: "bg-gradient-to-br from-emerald-50 to-emerald-100", Icon: CheckCircle2 },
+  { label: "Completed", key: "COMPLETED", gradient: "bg-gradient-to-br from-green-50 to-green-100", Icon: CheckCircle2 },
+  { label: "Cancelled", key: "CANCELLED", gradient: "bg-gradient-to-br from-purple-50 to-purple-100", Icon: Ban },
 ];
 
 export default function BookingsPage() {
@@ -176,7 +185,7 @@ export default function BookingsPage() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate(-1)}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-surface-base hover:bg-surface-muted transition-colors"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-surface-base hover:bg-surface-muted transition-colors"
             >
               <ArrowLeft className="h-4 w-4 text-text-secondary" />
             </motion.button>
@@ -190,7 +199,7 @@ export default function BookingsPage() {
             whileTap={{ scale: 0.98 }}
             onClick={() => refetch()}
             disabled={isRefetching}
-            className="inline-flex items-center justify-center h-9 px-3 text-xs font-medium rounded-xl border border-border bg-surface-base text-text-secondary hover:bg-surface-muted transition-colors disabled:opacity-50 gap-1.5 shrink-0"
+            className="inline-flex items-center justify-center h-9 px-3 text-xs font-medium rounded-md border border-border bg-surface-base text-text-secondary hover:bg-surface-muted transition-colors disabled:opacity-50 gap-1.5 shrink-0"
           >
             <RefreshCw className={cn("h-3.5 w-3.5", isRefetching && "animate-spin")} />
             <span className="hidden sm:inline">{isRefetching ? "Refreshing..." : "Refresh"}</span>
@@ -199,7 +208,7 @@ export default function BookingsPage() {
       </motion.div>
 
       <motion.div
-        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 md:gap-3"
+        className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5"
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.05 }}
@@ -207,22 +216,21 @@ export default function BookingsPage() {
         {statCards.map((stat) => (
           <motion.div
             key={stat.label}
-            whileHover={{ y: -2 }}
-            className="rounded-xl border border-border bg-surface-base p-3.5 md:p-4 transition-shadow hover:shadow-soft"
+            className={`rounded-lg shadow-sm border-0 p-5 ${stat.gradient}`}
           >
-            <div className="flex items-center gap-2.5 md:gap-3">
-              <div className={cn("flex h-9 w-9 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-lg", stat.bg)}>
-                <stat.Icon className={cn("h-4 w-4 md:h-5 md:w-5", stat.text)} />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] md:text-xs font-medium text-text-secondary">{stat.label}</p>
-                <div className="text-lg md:text-xl font-bold text-text-primary tabular-nums">
+            <div className="flex items-start justify-between">
+              <div className="min-w-0 space-y-1.5">
+                <p className="text-sm font-medium text-muted-foreground truncate">{stat.label}</p>
+                <div className="text-3xl font-bold tracking-tight text-text-primary tabular-nums">
                   {isLoading ? (
-                    <Skeleton className="inline-block w-8 h-5 md:h-6 align-middle" />
+                    <Skeleton className="inline-block w-10 h-8 align-middle" />
                   ) : (
                     counts[stat.key] ?? 0
                   )}
                 </div>
+              </div>
+              <div className="p-3 rounded-xl bg-primary/10 text-primary shrink-0">
+                <stat.Icon className="h-5 w-5" />
               </div>
             </div>
           </motion.div>
@@ -253,21 +261,21 @@ export default function BookingsPage() {
           )}
         </div>
 
-        <div className="flex gap-1 bg-surface-muted p-0.5 rounded-xl border border-border w-full sm:w-auto overflow-x-auto scrollbar-none">
+        <div className="flex gap-1 bg-surface-muted p-0.5 rounded-lg border border-border w-full sm:w-auto overflow-x-auto scrollbar-none">
           {STATUS_PILLS.map((pill) => (
             <motion.button
               key={pill}
               layout
               onClick={() => { setStatusFilter(pill); setPage(1); }}
               className={cn(
-                "relative px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors",
-                statusFilter === pill ? "text-indigo-700" : "text-text-secondary hover:text-text-primary",
+                "relative px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-colors",
+                statusFilter === pill ? "text-primary" : "text-text-secondary hover:text-text-primary",
               )}
             >
               {statusFilter === pill && (
                 <motion.span
                   layoutId="activePill"
-                  className="absolute inset-0 bg-surface-base rounded-lg border border-border shadow-sm"
+                  className="absolute inset-0 bg-surface-base rounded-md border border-border shadow-sm"
                   transition={{ type: "spring", stiffness: 380, damping: 30 }}
                 />
               )}
@@ -290,7 +298,7 @@ export default function BookingsPage() {
               <motion.div
                 key={i}
                 variants={FADE_SLIDE}
-                className="flex items-center gap-4 rounded-xl border border-border bg-surface-base p-4"
+                className="flex items-center gap-4 rounded-lg border border-border bg-surface-base p-4"
               >
                 <Skeleton className="h-10 w-10 rounded-full" />
                 <div className="flex-1 space-y-2">
@@ -309,7 +317,7 @@ export default function BookingsPage() {
             animate={{ opacity: 1 }}
             className="flex flex-col items-center justify-center py-16 text-center flex-1"
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-destructive/10 mb-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-destructive/10 mb-3">
               <AlertCircle className="h-6 w-6 text-destructive" />
             </div>
             <p className="text-sm font-medium text-text-primary mb-1">Failed to load bookings</p>
@@ -326,7 +334,7 @@ export default function BookingsPage() {
             animate={{ opacity: 1 }}
             className="flex flex-col items-center justify-center py-16 text-center flex-1"
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-surface-muted mb-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-surface-muted mb-3">
               <Inbox className="h-6 w-6 text-text-tertiary" />
             </div>
             <p className="text-sm font-medium text-text-primary mb-1">
@@ -344,19 +352,20 @@ export default function BookingsPage() {
             animate="visible"
             className="flex-1 min-h-0"
           >
-            <div className="rounded-xl border border-border bg-surface-base overflow-hidden">
+            <div className="rounded-lg border border-border bg-surface-base overflow-hidden">
               <div className="overflow-x-auto scrollbar-thin">
-                <table className="w-full min-w-[700px] border-collapse">
+                <table className="w-full min-w-[760px] border-collapse">
                   <thead>
-                    <tr className="border-b border-border bg-surface-muted/50">
-                      <th className="text-left text-[11px] font-semibold text-text-secondary uppercase tracking-wider px-4 py-3">Booking #</th>
-                      <th className="text-left text-[11px] font-semibold text-text-secondary uppercase tracking-wider px-4 py-3">Customer</th>
-                      <th className="text-left text-[11px] font-semibold text-text-secondary uppercase tracking-wider px-4 py-3">Tour</th>
-                      <th className="text-left text-[11px] font-semibold text-text-secondary uppercase tracking-wider px-4 py-3">Tour Date</th>
-                      <th className="text-left text-[11px] font-semibold text-text-secondary uppercase tracking-wider px-4 py-3">Created</th>
-                      <th className="text-right text-[11px] font-semibold text-text-secondary uppercase tracking-wider px-4 py-3">Total</th>
-                      <th className="text-center text-[11px] font-semibold text-text-secondary uppercase tracking-wider px-4 py-3">Status</th>
-                      <th className="text-center text-[11px] font-semibold text-text-secondary uppercase tracking-wider px-4 py-3">Payment</th>
+                    <tr className="border-b border-border/60 bg-surface-muted/60">
+                      <th className="whitespace-nowrap text-left text-xs font-semibold text-text-secondary px-4 py-3">Booking #</th>
+                      <th className="whitespace-nowrap text-left text-xs font-semibold text-text-secondary px-4 py-3">Customer</th>
+                      <th className="whitespace-nowrap text-left text-xs font-semibold text-text-secondary px-4 py-3">Tour</th>
+                      <th className="whitespace-nowrap text-left text-xs font-semibold text-text-secondary px-4 py-3">Tour Date</th>
+                      <th className="whitespace-nowrap text-left text-xs font-semibold text-text-secondary px-4 py-3">Created</th>
+                      <th className="whitespace-nowrap text-center text-xs font-semibold text-text-secondary px-4 py-3">Guests</th>
+                      <th className="whitespace-nowrap text-right text-xs font-semibold text-text-secondary px-4 py-3">Total</th>
+                      <th className="whitespace-nowrap text-center text-xs font-semibold text-text-secondary px-4 py-3">Status</th>
+                      <th className="whitespace-nowrap text-center text-xs font-semibold text-text-secondary px-4 py-3">Payment</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -369,19 +378,19 @@ export default function BookingsPage() {
                           setSearchParams({ bookingId: booking.id });
                         }}
                         className={cn(
-                          "border-b border-border/50 cursor-pointer transition-colors hover:bg-surface-muted/30",
+                          "min-h-[48px] border-b border-border/50 cursor-pointer transition-colors hover:bg-surface-muted/40",
                           selectedBooking?.id === booking.id && "bg-primary/5",
                         )}
                       >
-                        <td className="px-4 py-3.5">
+                        <td className="px-4 py-3">
                           <div className="flex items-center gap-1.5">
                             <Hash className="h-3 w-3 text-text-tertiary" />
                             <span className="text-xs font-medium text-text-primary">{booking.bookingNumber}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3.5">
+                        <td className="px-4 py-3">
                           <div className="flex items-center gap-2.5">
-                            <div className="relative flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-accent text-[10px] font-bold text-accent-foreground">
+                            <div className="relative flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-md bg-accent text-[10px] font-bold text-accent-foreground">
                               {booking.customer.photoURL ? (
                                 <OptimizedImage src={booking.customer.photoURL} alt="" width={28} className="absolute inset-0 h-full w-full object-cover" />
                               ) : null}
@@ -395,9 +404,9 @@ export default function BookingsPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-3.5">
+                        <td className="px-4 py-3">
                           <div className="flex items-center gap-2 min-w-0 max-w-[220px]">
-                            <div className="w-7 h-7 rounded-lg shrink-0 overflow-hidden bg-surface-muted border border-border">
+                            <div className="w-7 h-7 rounded-md shrink-0 overflow-hidden bg-surface-muted border border-border">
                               {booking.tour.coverPhoto ? (
                                 <OptimizedImage src={booking.tour.coverPhoto} alt="" width={28} className="w-full h-full object-cover" />
                               ) : (
@@ -412,7 +421,7 @@ export default function BookingsPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-3.5">
+                        <td className="px-4 py-3">
                           <div className="flex items-center gap-1.5">
                             <Calendar className="h-3 w-3 text-text-tertiary" />
                             <span className="text-xs text-text-secondary">
@@ -420,7 +429,7 @@ export default function BookingsPage() {
                             </span>
                           </div>
                         </td>
-                        <td className="px-4 py-3.5">
+                        <td className="px-4 py-3">
                           <div className="flex items-center gap-1.5">
                             <Clock className="h-3 w-3 text-text-tertiary" />
                             <span className="text-xs text-text-tertiary">
@@ -428,25 +437,23 @@ export default function BookingsPage() {
                             </span>
                           </div>
                         </td>
-                        <td className="px-4 py-3.5 text-right">
+                        <td className="px-4 py-3 text-center">
+                          <span className="text-xs font-medium text-text-secondary tabular-nums">
+                            {booking.travelers?.length ?? 0}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
                           <span className="text-xs font-semibold text-text-primary tabular-nums">
                             {booking.currency} {Number(booking.total).toLocaleString()}
                           </span>
                         </td>
-                        <td className="px-4 py-3.5 text-center">
+                        <td className="px-4 py-3 text-center">
                           <Badge variant={STATUS_BADGE[booking.status] || "info"} className="text-[10px] px-1.5 py-0">
                             {booking.status}
                           </Badge>
                         </td>
-                        <td className="px-4 py-3.5 text-center">
-                          <span className={cn(
-                            "inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full",
-                            isPaymentPaid(booking.paymentStatus)
-                              ? "bg-status-active/10 text-status-active"
-                              : booking.paymentStatus === "FAILED"
-                                ? "bg-destructive/10 text-destructive"
-                                : "bg-status-pending/10 text-status-pending",
-                          )}>
+                        <td className="px-4 py-3 text-center">
+                          <Badge variant={PAYMENT_BADGE[booking.paymentStatus] || "warning"} className="text-[10px] px-1.5 py-0">
                             {isPaymentPaid(booking.paymentStatus) ? (
                               <><CheckCircle2 className="h-2.5 w-2.5" /> Paid</>
                             ) : booking.paymentStatus === "FAILED" ? (
@@ -456,7 +463,7 @@ export default function BookingsPage() {
                             ) : (
                               "Pending"
                             )}
-                          </span>
+                          </Badge>
                         </td>
                       </motion.tr>
                     ))}
@@ -466,31 +473,13 @@ export default function BookingsPage() {
             </div>
 
             {pagination && pagination.totalPages > 1 && (
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border border-border rounded-xl bg-surface-base mt-3">
-                <p className="text-xs text-text-tertiary order-2 sm:order-1">
-                  Page {pagination.currentPage} of {pagination.totalPages} &middot; {pagination.totalCount} total
-                </p>
-                <div className="flex gap-2 order-1 sm:order-2 w-full sm:w-auto">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    disabled={pagination.currentPage <= 1}
-                    onClick={() => setPage((p) => p - 1)}
-                    className="inline-flex flex-1 sm:flex-none items-center justify-center h-9 px-3 text-xs font-medium rounded-xl border border-border bg-surface-base text-text-secondary hover:bg-surface-muted transition-colors disabled:opacity-40 disabled:pointer-events-none gap-1"
-                  >
-                    <ChevronLeft className="h-3.5 w-3.5" /> Previous
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    disabled={pagination.currentPage >= pagination.totalPages}
-                    onClick={() => setPage((p) => p + 1)}
-                    className="inline-flex flex-1 sm:flex-none items-center justify-center h-9 px-3 text-xs font-medium rounded-xl border border-border bg-surface-base text-text-secondary hover:bg-surface-muted transition-colors disabled:opacity-40 disabled:pointer-events-none gap-1"
-                  >
-                    Next <ChevronRight className="h-3.5 w-3.5" />
-                  </motion.button>
-                </div>
-              </div>
+              <Pagination
+                page={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                totalCount={pagination.totalCount}
+                onPageChange={setPage}
+                className="mt-3"
+              />
             )}
           </motion.div>
         )}

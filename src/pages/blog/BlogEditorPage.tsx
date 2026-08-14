@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate, useBlocker } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Image, Calendar } from "lucide-react";
+import { Image, Calendar, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getArticleById, createArticle, updateArticle, getCategories, getTags } from "@/services/blogService";
+import { getArticleById, createArticle, updateArticle, getCategories, getTags, createCategory, createTag } from "@/services/blogService";
 import api from "@/lib/axios";
 import { RichTextEditor } from "./components/RichTextEditor";
 import { ImageUploadDialog } from "./components/ImageUploadDialog";
@@ -25,6 +25,8 @@ import { TourSelector } from "./components/TourSelector";
 import { GoogleSnippetPreview } from "./components/GoogleSnippetPreview";
 import { ExitConfirmDialog } from "./components/ExitConfirmDialog";
 import { EditorHeader } from "./components/EditorHeader";
+import { CategoryDialog } from "./components/CategoryDialog";
+import { TagDialog } from "./components/TagDialog";
 import type { ArticleStatus } from "@/types/blog";
 import OptimizedImage from "@/components/shared/OptimizedImage";
 
@@ -53,6 +55,8 @@ export default function BlogEditorPage() {
   const [publishDate, setPublishDate] = useState("");
   const [slugError, setSlugError] = useState("");
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+  const [tagDialogOpen, setTagDialogOpen] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [articleStatus, setArticleStatus] = useState<string>("DRAFT");
   const [navigatingAfterSave, setNavigatingAfterSave] = useState(false);
@@ -128,6 +132,34 @@ export default function BlogEditorPage() {
   const categories = categoriesData?.data?.categories || [];
   const tags = tagsData?.data?.tags || [];
   const tours = Array.isArray(toursData) ? toursData : toursData?.tours || [];
+
+  const createCategoryMutation = useMutation({
+    mutationFn: (data: { name: string; slug: string; description?: string; parentId?: string }) => createCategory(data),
+    onSuccess: (res) => {
+      const created = res?.data?.data?.category as { id?: string } | undefined;
+      if (created?.id) setCategoryId(created.id);
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      toast.success("Category created");
+    },
+    onError: (err: unknown) => {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to create category";
+      toast.error(msg);
+    },
+  });
+
+  const createTagMutation = useMutation({
+    mutationFn: (data: { name: string; slug: string }) => createTag(data),
+    onSuccess: (res) => {
+      const created = res?.data?.data?.tag as { id?: string } | undefined;
+      if (created?.id) setTagIds((prev) => (prev.includes(created.id as string) ? prev : [...prev, created.id as string]));
+      queryClient.invalidateQueries({ queryKey: ["tags"] });
+      toast.success("Tag created");
+    },
+    onError: (err: unknown) => {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to create tag";
+      toast.error(msg);
+    },
+  });
 
   if (article && article.id !== lastLoadedArticleId) {
     setLastLoadedArticleId(article.id);
@@ -350,7 +382,18 @@ export default function BlogEditorPage() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-muted-foreground">Category</Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-medium text-muted-foreground">Category</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-1.5 text-xs text-primary hover:text-primary/80"
+                    onClick={() => setCategoryDialogOpen(true)}
+                  >
+                    <Plus className="h-3 w-3 mr-0.5" /> New
+                  </Button>
+                </div>
                 <Select value={categoryId || "none"} onValueChange={(v) => setCategoryId(v === "none" ? "" : v)}>
                   <SelectTrigger>
                     <SelectValue placeholder={categoriesError ? "Failed to load" : categories.length === 0 ? "No categories yet" : "No category"} />
@@ -379,6 +422,17 @@ export default function BlogEditorPage() {
             </div>
 
             <SectionDivider label="Tags" />
+            <div className="flex items-center justify-end -mt-2 mb-1">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-6 px-1.5 text-xs text-primary hover:text-primary/80"
+                onClick={() => setTagDialogOpen(true)}
+              >
+                <Plus className="h-3 w-3 mr-0.5" /> New Tag
+              </Button>
+            </div>
             {tagsError ? (
               <p className="text-xs text-destructive">Could not load tags</p>
             ) : (
@@ -461,6 +515,24 @@ export default function BlogEditorPage() {
         onOpenChange={setImageDialogOpen}
         onImageSelect={handleFeaturedImageSelect}
         title="Featured Image"
+      />
+
+      <CategoryDialog
+        open={categoryDialogOpen}
+        onOpenChange={setCategoryDialogOpen}
+        category={null}
+        categories={categories}
+        onSave={async (data) => {
+          await createCategoryMutation.mutateAsync(data);
+        }}
+      />
+
+      <TagDialog
+        open={tagDialogOpen}
+        onOpenChange={setTagDialogOpen}
+        onSave={async (data) => {
+          await createTagMutation.mutateAsync(data);
+        }}
       />
 
       <ExitConfirmDialog

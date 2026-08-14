@@ -103,6 +103,8 @@ export function getStatusColor(status: string): string {
     COMPLETED: "bg-status-approved/10 text-status-approved border-status-approved/30",
     NO_SHOW: "bg-status-suspended/10 text-status-suspended border-status-suspended/30",
     PAID: "bg-status-active/10 text-status-active border-status-active/30",
+    SUCCEEDED: "bg-status-active/10 text-status-active border-status-active/30",
+    PARTIALLY_REFUNDED: "bg-status-flagged/10 text-status-flagged border-status-flagged/30",
     FAILED: "bg-status-rejected/10 text-status-rejected border-status-rejected/30",
     DRAFT: "bg-status-suspended/10 text-status-suspended border-status-suspended/30",
     ARCHIVED: "bg-status-suspended/10 text-status-suspended border-status-suspended/30",

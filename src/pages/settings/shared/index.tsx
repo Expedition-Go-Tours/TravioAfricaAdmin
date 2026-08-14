@@ -1,7 +1,6 @@
 ﻿/* eslint-disable react-refresh/only-export-components -- shared settings library module (hooks + helpers + components) */
-import { useState, useEffect, type ReactNode } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { AlertTriangle, RefreshCw, ChevronDown, Loader2, Save, CheckCircle2, X } from "lucide-react";
+import { useEffect, type ReactNode } from "react";
+import { AlertTriangle, RefreshCw, Loader2, Save, CheckCircle2, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -134,84 +133,48 @@ export function FormSkeleton({ rows = 3, fieldsPerRow = 4 }: { rows?: number; fi
   );
 }
 
-const SECTION_ACCENTS: Record<string, string> = {
-  Platform: "from-emerald-500 to-green-600",
-  "Commission & Fees": "from-amber-400 to-orange-500",
-  "Booking Rules": "from-blue-400 to-indigo-500",
-  Branding: "from-violet-400 to-purple-500",
-  System: "from-rose-400 to-pink-500",
-};
-
 export function SettingsCard({
   title,
   description,
+  icon,
   children,
   className,
-  section,
   errorCount,
-  defaultOpen = true,
 }: {
   title: string;
   description: string;
+  icon?: ReactNode;
   children: ReactNode;
   className?: string;
-  section?: string;
   errorCount?: number;
-  defaultOpen?: boolean;
 }) {
-  const [open, setOpen] = useState(defaultOpen);
-
   return (
     <div
       className={cn(
         "rounded-xl border border-border/60 bg-white shadow-sm overflow-hidden",
-        section && SECTION_ACCENTS[section] && "border-t-0",
         className,
       )}
     >
-      {section && SECTION_ACCENTS[section] && (
-        <div className={cn("h-1 w-full bg-gradient-to-r", SECTION_ACCENTS[section])} />
-      )}
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-6 py-4 hover:bg-surface-muted/60 transition-colors"
-      >
-        <div className="min-w-0">
-          <h3 className="text-sm font-semibold text-text-primary">{title}</h3>
-          <p className="text-xs text-text-secondary/80">{description}</p>
-        </div>
-        <div className="flex items-center gap-3 shrink-0">
-          {errorCount !== undefined && errorCount > 0 ? (
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-100 px-2.5 py-0.5 rounded-full">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-              {errorCount} error{errorCount !== 1 ? "s" : ""}
-            </span>
-          ) : open && errorCount === 0 ? (
-            <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-50 border border-green-100 px-2.5 py-0.5 rounded-full">
-              <CheckCircle2 className="h-3 w-3" />
-              Good
-            </span>
-          ) : null}
-          <div className="flex items-center justify-center w-6 h-6 rounded-md bg-surface-muted border border-border/50">
-            <ChevronDown className={cn("h-3.5 w-3.5 text-text-tertiary transition-transform duration-200", open && "rotate-180")} />
+      <div className="flex items-start justify-between gap-3 px-6 py-4">
+        <div className="flex items-start gap-3 min-w-0">
+          {icon && (
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-text-primary/5 text-text-primary">
+              {icon}
+            </div>
+          )}
+          <div className="min-w-0">
+            <h3 className="text-sm font-semibold text-text-primary">{title}</h3>
+            <p className="text-xs text-text-tertiary mt-0.5">{description}</p>
           </div>
         </div>
-      </button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            key="content"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="overflow-hidden"
-          >
-            <div className="px-6 pb-5 pt-4 border-t border-border/40">{children}</div>
-          </motion.div>
+        {errorCount !== undefined && errorCount > 0 && (
+          <span className="shrink-0 inline-flex items-center gap-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-100 px-2.5 py-0.5 rounded-full">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+            {errorCount} error{errorCount !== 1 ? "s" : ""}
+          </span>
         )}
-      </AnimatePresence>
+      </div>
+      <div className="px-6 pb-5 pt-4 border-t border-border/40">{children}</div>
     </div>
   );
 }
@@ -232,8 +195,8 @@ export function SettingsSaveBar({
   onReset: () => void;
 }) {
   return (
-    <div className="sticky bottom-6 z-20">
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 rounded-xl border border-border/50 bg-white/90 backdrop-blur-md px-6 py-4 shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
+    <div className="rounded-xl border border-border/50 bg-white px-6 py-4 shadow-sm">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
         <div className="text-sm text-center sm:text-left">
           {dirty ? (
             <span className="flex items-center justify-center sm:justify-start gap-2 text-amber-700 font-medium">

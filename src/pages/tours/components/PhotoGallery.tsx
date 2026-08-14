@@ -46,7 +46,7 @@ export function PhotoGallery({ photos, maxVisible = 6 }: PhotoGalleryProps) {
           <button
             key={photo}
             onClick={() => openLightbox(i)}
-            className="group relative aspect-[16/10] overflow-hidden rounded-lg border border-border/40 transition-all duration-200 hover:shadow-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="group relative aspect-[16/10] overflow-hidden rounded-lg border border-border/40 transition-all duration-200 hover:shadow-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-secondary/30"
           >
             <OptimizedImage
               src={photo}

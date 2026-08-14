@@ -40,23 +40,23 @@ export default function CategoryManagerPage() {
   const renderCategory = (cat: ArticleCategory, depth = 0) => (
     <div key={cat.id}>
       <div
-        className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 rounded-lg group"
+        className="flex items-center justify-between px-4 py-3 hover:bg-surface-muted/50 rounded-lg group"
         style={{ paddingLeft: `${16 + depth * 24}px` }}
       >
         <div className="flex items-center gap-2">
           {childCategories(cat.id).length > 0 && (
             <button onClick={() => setExpanded((prev) => { const next = new Set(prev); if (next.has(cat.id)) next.delete(cat.id); else next.add(cat.id); return next; })}>
-              {expanded.has(cat.id) ? <ChevronDown className="h-4 w-4 text-gray-400" /> : <ChevronRight className="h-4 w-4 text-gray-400" />}
+              {expanded.has(cat.id) ? <ChevronDown className="h-4 w-4 text-text-tertiary" /> : <ChevronRight className="h-4 w-4 text-text-tertiary" />}
             </button>
           )}
-          <span className="text-sm font-medium text-gray-900">{cat.name}</span>
-          <span className="text-xs text-gray-400 ml-2">({cat.articleCount || 0})</span>
+          <span className="text-sm font-medium text-text-primary">{cat.name}</span>
+          <span className="text-xs text-text-tertiary ml-2">({cat.articleCount || 0})</span>
         </div>
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingCategory(cat); setDialogOpen(true); }}>
             <Edit className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => setDeleteConfirm(cat.id)}>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-status-rejected" onClick={() => setDeleteConfirm(cat.id)}>
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
@@ -69,10 +69,10 @@ export default function CategoryManagerPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Categories</h1>
-          <p className="mt-1 text-sm text-gray-500">Organize your articles into categories</p>
+          <h1 className="text-2xl font-semibold text-text-primary">Categories</h1>
+          <p className="mt-1 text-sm text-text-secondary">Organize your articles into categories</p>
         </div>
-        <Button onClick={() => { setEditingCategory(null); setDialogOpen(true); }} className="bg-[#5645d4] hover:bg-[#4534b3]">
+        <Button onClick={() => { setEditingCategory(null); setDialogOpen(true); }} className="bg-primary hover:bg-primary/90">
           <Plus className="mr-2 h-4 w-4" /> New Category
         </Button>
       </div>
@@ -80,19 +80,19 @@ export default function CategoryManagerPage() {
       {isLoading ? (
         <div className="space-y-2">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-14 rounded-lg bg-gray-100 animate-pulse" />
+            <div key={i} className="h-14 rounded-lg bg-surface-muted animate-pulse" />
           ))}
         </div>
       ) : rootCategories.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="rounded-full bg-gray-100 p-4 mb-4">
-            <FolderTree className="h-8 w-8 text-gray-400" />
+          <div className="rounded-full bg-surface-muted p-4 mb-4">
+            <FolderTree className="h-8 w-8 text-text-tertiary" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900">No categories yet</h3>
-          <p className="mt-1 text-sm text-gray-500">Create your first category to organize articles.</p>
+          <h3 className="text-lg font-medium text-text-primary">No categories yet</h3>
+          <p className="mt-1 text-sm text-text-secondary">Create your first category to organize articles.</p>
         </div>
       ) : (
-        <div className="rounded-xl border bg-white divide-y">
+        <div className="rounded-xl border border-border bg-surface-base divide-y divide-border">
           {rootCategories.map((cat) => renderCategory(cat))}
         </div>
       )}

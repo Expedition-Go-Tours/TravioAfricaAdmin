@@ -56,7 +56,7 @@ export const TourListPanel = forwardRef<HTMLDivElement, TourListPanelProps>(func
             placeholder="Search tours..."
             value={searchValue}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="h-10 rounded-xl border-border/60 bg-surface-muted/50 pl-9 text-sm placeholder:text-muted-foreground/60 focus:border-ring focus:ring-ring/20"
+            className="h-10 rounded-xl border-border/60 bg-surface-muted/50 pl-9 text-sm placeholder:text-muted-foreground/60 focus:border-text-secondary/50 focus:ring-text-secondary/20"
           />
         </div>
 

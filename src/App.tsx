@@ -1,4 +1,5 @@
-import { createBrowserRouter, RouterProvider, Navigate, useNavigate, useSearchParams } from "react-router-dom";
+﻿import { createBrowserRouter, RouterProvider, Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { useState } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { queryClient } from "@/lib/query-client";
@@ -24,11 +25,10 @@ import TourDetailPage from "@/pages/tours/TourDetail";
 import TourModerationPage from "@/pages/tours/TourModeration";
 import SupplierApplicationsPage from "@/pages/suppliers/SupplierApplications";
 import SupplierDetailPage from "@/pages/suppliers/SupplierDetail";
-import ActiveSuppliersPage from "@/pages/suppliers/ActiveSuppliers";
 import { ArrowLeft } from "lucide-react";
-import PayoutsOverview from "@/pages/finance/PayoutsOverview";
-import PayoutsList from "@/pages/finance/PayoutsList";
-import PayoutMethodsPage from "@/pages/finance/PayoutMethods";
+import { PayoutsPaymentsTab } from "@/pages/finance/components/PayoutsPaymentsTab";
+import { PayoutsListTab } from "@/pages/finance/components/PayoutsListTab";
+import { PayoutsMethodsTab } from "@/pages/finance/components/PayoutsMethodsTab";
 import ReviewModerationPage from "@/pages/reviews/ReviewModeration";
 import BookingsPage from "@/pages/bookings/BookingsPage";
 import ChatPage from "@/pages/chat/ChatPage";
@@ -63,42 +63,55 @@ function PermissionRoute({ permission, children }: { permission: string; childre
   return <>{children}</>;
 }
 
+type PayoutTab = "payments" | "payouts" | "methods";
+
 function PayoutsTabPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const tab = searchParams.get("tab") === "list" ? "list" : "overview";
+  const tab: PayoutTab = (["payments", "payouts", "methods"] as const).find((t) => searchParams.get("tab") === t) ?? "payments";
+  const [statusOverride, setStatusOverride] = useState<string | undefined>(undefined);
 
-  const switchTab = (t: "overview" | "list") => {
+  const switchTab = (t: PayoutTab) => {
     const next = new URLSearchParams(searchParams);
-    if (t === "list") next.set("tab", "list");
-    else next.delete("tab");
+    if (t === "payments") next.delete("tab");
+    else next.set("tab", t);
     setSearchParams(next, { replace: true });
+    setStatusOverride(undefined);
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <button onClick={() => navigate(-1)} className="rounded-sm bg-white p-1.5 shadow-sm hover:ring-2 hover:ring-green-300 transition-all">
+        <button onClick={() => navigate(-1)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-surface-base text-text-secondary transition-colors hover:bg-surface-muted hover:text-text-primary">
           <ArrowLeft className="h-4 w-4 text-text-primary" />
         </button>
-        <h1 className="text-lg font-semibold text-text-primary">Payouts</h1>
+        <div>
+          <h1 className="text-lg font-semibold text-text-primary">Payouts</h1>
+          <p className="mt-0.5 text-sm text-text-tertiary">Manage supplier payouts across approval, release, and settlement</p>
+        </div>
       </div>
       <div className="flex gap-2 border-b border-border-muted">
-        {(["overview", "list"] as const).map((t) => (
+        {([
+          { key: "payments", label: "Payments" },
+          { key: "payouts", label: "All Payouts" },
+          { key: "methods", label: "Supplier Methods" },
+        ] as const).map(({ key, label }) => (
           <button
-            key={t}
-            className={`px-4 py-2 text-sm font-medium capitalize transition-colors focus:outline-none ${
-              tab === t
-                ? "border-b-2 border-green-600 text-green-700"
-                : "text-text-secondary hover:text-green-600"
+            key={key}
+            className={`px-4 py-2 text-sm font-medium transition-colors focus:outline-none ${
+              tab === key
+                ? "border-b-2 border-primary text-primary"
+                : "text-text-secondary hover:text-primary"
             }`}
-            onClick={() => switchTab(t)}
+            onClick={() => switchTab(key)}
           >
-            {t === "overview" ? "Overview" : "All Payouts"}
+            {label}
           </button>
         ))}
       </div>
-      {tab === "overview" ? <PayoutsOverview /> : <PayoutsList />}
+      {tab === "payments" && <PayoutsPaymentsTab onSwitchToList={(status) => { setStatusOverride(status); setSearchParams((prev) => { const next = new URLSearchParams(prev); next.set("tab", "payouts"); return next; }, { replace: true }); }} />}
+      {tab === "payouts" && <PayoutsListTab initialStatus={statusOverride} onStatusChange={setStatusOverride} />}
+      {tab === "methods" && <PayoutsMethodsTab />}
     </div>
   );
 }
@@ -131,9 +144,9 @@ const router = createBrowserRouter([
       { path: "tour-moderation", element: <PermissionRoute permission="tours.view"><TourModerationPage /></PermissionRoute> },
       { path: "suppliers", element: <PermissionRoute permission="suppliers.view"><SupplierApplicationsPage /></PermissionRoute> },
       { path: "suppliers/:id", element: <PermissionRoute permission="suppliers.view"><SupplierDetailPage /></PermissionRoute> },
-      { path: "suppliers/active", element: <PermissionRoute permission="suppliers.view"><ActiveSuppliersPage /></PermissionRoute> },
+      { path: "suppliers/active", element: <Navigate to="/admin/suppliers" replace /> },
       { path: "payouts", element: <PermissionRoute permission="payouts.view"><PayoutsTabPage /></PermissionRoute> },
-      { path: "payout-methods", element: <PermissionRoute permission="payout-methods.view"><PayoutMethodsPage /></PermissionRoute> },
+      { path: "payout-methods", element: <PermissionRoute permission="payout-methods.view"><Navigate to="/admin/payouts?tab=methods" replace /></PermissionRoute> },
       { path: "bookings", element: <PermissionRoute permission="bookings.view"><BookingsPage /></PermissionRoute> },
       { path: "reviews", element: <PermissionRoute permission="reviews.view"><ReviewModerationPage /></PermissionRoute> },
       { path: "chat/suppliers", element: <PermissionRoute permission="chat.suppliers"><ChatPage /></PermissionRoute> },

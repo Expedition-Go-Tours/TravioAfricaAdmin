@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import {
   ArrowLeft, ChevronRight, ChevronLeft, Star, Eye, Calendar, DollarSign,
   Clock, Users, Shield, Globe, Check, X, Camera, MapPin, Bed, UtensilsCrossed,
-  MoonStar, Ticket, Lock, Headphones, BookOpen, Flag, CheckCircle, XCircle,
+  MoonStar, Ticket, Lock, Headphones, BookOpen, Flag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -423,15 +423,6 @@ export default function TourDetailPage() {
     onError: (err: Error) => toast.error(err.message || "Action failed"),
   });
 
-  const expeditionMutation = useMutation({
-    mutationFn: (isActive: boolean) => api.patch(`/admin/tours/${id}/expedition-publish`, { isActive }),
-    onSuccess: (_, isActive) => {
-      toast.success(isActive ? "Published to Expedition Go" : "Removed from Expedition Go");
-      queryClient.invalidateQueries({ queryKey: ["admin", "tour-detail", id] });
-    },
-    onError: () => toast.error("Failed to update Expedition Go listing"),
-  });
-
   const allPhotos = useMemo(() => {
     const set = new Set<string>();
     if (tour?.coverPhoto) set.add(tour.coverPhoto);
@@ -496,7 +487,7 @@ export default function TourDetailPage() {
   return (
     <div className="min-h-screen bg-slate-50/80">
       {/* Sticky header */}
-      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-slate-200/60">
+      <div className="bg-white shadow-sm shadow-slate-900/5 border-b border-slate-200">
         <div className="max-w-5xl mx-auto px-4 md:px-6">
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-2 min-w-0">
@@ -753,6 +744,33 @@ export default function TourDetailPage() {
 
           {/* Right column */}
           <div className="lg:col-span-4 space-y-5">
+            {/* Supplier */}
+            {can("suppliers.view") && tour.supplier && (
+              <SectionCard title="Supplier">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (tour.supplier?.id) navigate(`/admin/suppliers/${tour.supplier.id}`);
+                  }}
+                  disabled={!tour.supplier.id}
+                  className="group flex w-full items-center gap-3 text-left rounded-lg transition-all disabled:cursor-default"
+                >
+                  {tour.supplier.photoURL ? (
+                    <OptimizedImage src={tour.supplier.photoURL} alt="" width={40} className="h-10 w-10 shrink-0 rounded-full object-cover" />
+                  ) : (
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-600">{tour.supplier.name?.charAt(0)?.toUpperCase() || "?"}</div>
+                  )}
+                  <div className="min-w-0">
+                    <p className={cn("text-sm font-medium text-slate-900", tour.supplier.id && "hover:text-emerald-700")}>{tour.supplier.name || "Unknown"}</p>
+                    {tour.supplier.email && <p className="text-xs text-slate-400 truncate">{tour.supplier.email}</p>}
+                  </div>
+                  {tour.supplier.id && (
+                    <ChevronRight size={14} className="ml-auto shrink-0 text-slate-300 group-hover:text-emerald-600 transition-colors" />
+                  )}
+                </button>
+              </SectionCard>
+            )}
+
             {/* Pricing */}
             <SectionCard title="Pricing">
               <div className="space-y-3">
@@ -914,45 +932,6 @@ export default function TourDetailPage() {
               </SectionCard>
             )}
 
-            {/* Expedition Go */}
-            <SectionCard title="Expedition Go Tours">
-              {tour.expeditionTour?.isActive ? (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full"><CheckCircle size={12} /> Published</span>
-                    <Button size="sm" variant="outline" className="h-7 text-xs text-red-600 border-red-200 hover:bg-red-50" onClick={() => expeditionMutation.mutate(false)} disabled={expeditionMutation.isPending}>Unpublish</Button>
-                  </div>
-                  <div className="text-xs text-slate-500 space-y-1">
-                    <p><span className="font-medium text-slate-700">Flow:</span> {tour.expeditionTour.bookingFlow === "DIRECT" ? "Direct booking on EG" : "External → TravioAfrica"}</p>
-                    {tour.expeditionTour.externalUrl && <p className="truncate"><span className="font-medium text-slate-700">Link:</span> <a href={tour.expeditionTour.externalUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{tour.expeditionTour.externalUrl}</a></p>}
-                    {tour.expeditionTour.syncStatus && <p className="flex items-center gap-1.5"><span className="font-medium text-slate-700">Sync:</span> <span className={`inline-block h-2 w-2 rounded-full ${tour.expeditionTour.syncStatus === "synced" ? "bg-emerald-500" : tour.expeditionTour.syncStatus === "failed" ? "bg-red-500" : "bg-amber-400"}`} /> <span className="capitalize">{tour.expeditionTour.syncStatus}</span></p>}
-                    {tour.expeditionTour.publishedAt && <p><span className="font-medium text-slate-700">Published:</span> {formatDate(tour.expeditionTour.publishedAt)}</p>}
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full"><XCircle size={12} /> Not Published</span>
-                  <Button size="sm" className="h-7 text-xs w-full" onClick={() => expeditionMutation.mutate(true)} disabled={expeditionMutation.isPending}>Publish to Expedition Go</Button>
-                </div>
-              )}
-            </SectionCard>
-
-            {/* Supplier */}
-            {can("suppliers.view") && tour.supplier && (
-              <SectionCard title="Supplier">
-                <div className="flex items-center gap-3">
-                  {tour.supplier.photoURL ? (
-                    <OptimizedImage src={tour.supplier.photoURL} alt="" width={40} className="h-10 w-10 shrink-0 rounded-full object-cover" />
-                  ) : (
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-600">{tour.supplier.name?.charAt(0)?.toUpperCase() || "?"}</div>
-                  )}
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-slate-900">{tour.supplier.name || "Unknown"}</p>
-                    {tour.supplier.email && <p className="text-xs text-slate-400 truncate">{tour.supplier.email}</p>}
-                  </div>
-                </div>
-              </SectionCard>
-            )}
           </div>
         </div>
       </div>

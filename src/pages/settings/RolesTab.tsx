@@ -12,18 +12,6 @@ import api from "@/lib/axios";
 import { cn } from "@/lib/utils";
 import type { AdminRole, AdminPermission, PermissionGroup } from "@/lib/permissions";
 
-const CATEGORY_COLORS: Record<string, string> = {
-  Dashboard: "from-blue-500 to-blue-600",
-  Analytics: "from-purple-500 to-purple-600",
-  Suppliers: "from-orange-500 to-orange-600",
-  Finance: "from-emerald-500 to-green-600",
-  Reviews: "from-pink-500 to-pink-600",
-  Tours: "from-indigo-500 to-indigo-600",
-  Users: "from-cyan-500 to-cyan-600",
-  Chat: "from-yellow-500 to-yellow-600",
-  Settings: "from-slate-500 to-slate-600",
-};
-
 function TableSkeleton() {
   return (
     <div className="space-y-4">
@@ -196,7 +184,7 @@ export function RolesTab() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gradient-to-r from-green-50/50 to-transparent border-b border-border/40">
+              <tr className="bg-surface-muted/40 border-b border-border/40">
                 <th className="px-5 py-3.5 text-left font-semibold text-text-secondary text-xs uppercase tracking-wider">Role</th>
                 <th className="px-5 py-3.5 text-left font-semibold text-text-secondary text-xs uppercase tracking-wider">Admins</th>
                 <th className="px-5 py-3.5 text-left font-semibold text-text-secondary text-xs uppercase tracking-wider">Permissions</th>
@@ -206,12 +194,12 @@ export function RolesTab() {
             <tbody>
               {filteredRoles.map((role, idx) => (
                 <tr key={role.id} className={cn(
-                  "border-b border-border/30 transition-colors hover:bg-green-50/20",
+                  "border-b border-border/30 transition-colors hover:bg-surface-muted/50",
                   idx === filteredRoles.length - 1 && "border-b-0",
                 )}>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white shadow-sm shrink-0">
+                      <div className="w-8 h-8 rounded-lg bg-text-primary/5 text-text-primary flex items-center justify-center shrink-0">
                         <ShieldCheck className="h-4 w-4" />
                       </div>
                       <div>
@@ -250,7 +238,7 @@ export function RolesTab() {
                   <td className="px-5 py-4 text-right">
                     {!role.isSystem && (
                       <div className="flex items-center justify-end gap-0.5">
-                        <Button variant="ghost" size="icon" className="h-9 w-9 sm:h-8 sm:w-8 hover:bg-green-50 hover:text-green-700" onClick={() => openEditor(role)}>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 sm:h-8 sm:w-8 hover:bg-surface-muted hover:text-text-primary" onClick={() => openEditor(role)}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
                         <Button variant="ghost" size="icon" className="h-9 w-9 sm:h-8 sm:w-8 text-red-400 hover:text-red-600 hover:bg-red-50" onClick={() => setShowDelete(role)}>
@@ -278,7 +266,7 @@ export function RolesTab() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto !bg-white/95 backdrop-blur-xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white">
+              <div className="w-7 h-7 rounded-lg bg-text-primary/5 text-text-primary flex items-center justify-center">
                 <ShieldCheck className="h-3.5 w-3.5" />
               </div>
               {editingRole ? "Edit Role" : "Create Role"}
@@ -319,14 +307,15 @@ export function RolesTab() {
               ) : (
                 Object.entries(groupedPerms).map(([category, perms]) => (
                   <div key={category} className="mb-3 rounded-xl border border-border/60 bg-white shadow-sm overflow-hidden">
-                    <div className={cn("h-0.5 w-full bg-gradient-to-r", CATEGORY_COLORS[category] || "from-gray-400 to-gray-500")} />
-                    <div className="p-3">
-                      <h4 className="mb-2.5 text-xs font-semibold text-text-secondary">
+                    <div className="flex items-center justify-between px-4 py-2.5 bg-surface-muted/60 border-b border-border/40">
+                      <h4 className="text-xs font-semibold text-text-secondary">
                         <span className="inline-flex items-center gap-1.5">
                           {category}
                           <span className="text-text-tertiary font-normal">({perms.length})</span>
                         </span>
                       </h4>
+                    </div>
+                    <div className="p-3">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
                         {perms.map((perm) => (
                           <label
@@ -334,14 +323,14 @@ export function RolesTab() {
                             className={cn(
                               "flex items-center gap-2.5 rounded-lg px-3 py-2.5 cursor-pointer transition-colors text-sm",
                               editPerms.has(perm.id)
-                                ? "bg-green-50 border border-green-200/60"
+                                ? "bg-text-primary/5 border border-text-primary/15"
                                 : "hover:bg-surface-muted border border-transparent",
                             )}
                           >
                             <div className={cn(
                               "w-4 h-4 rounded flex items-center justify-center shrink-0 border-2 transition-all duration-150",
                               editPerms.has(perm.id)
-                                ? "bg-green-600 border-green-600"
+                                ? "bg-text-primary border-text-primary"
                                 : "border-border bg-surface-base",
                             )}>
                               {editPerms.has(perm.id) && (

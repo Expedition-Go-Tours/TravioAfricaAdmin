@@ -129,7 +129,7 @@ export function CustomerProfilePanel({ customerId, onClose }: CustomerProfilePan
           ) : user ? (
             <div className="p-5 space-y-5">
               <div className="flex items-start gap-4">
-                <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-indigo-100 text-lg font-bold text-indigo-600 ring-2 ring-indigo-100">
+                <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-lg font-bold text-primary ring-2 ring-primary/10">
                   {user.photoURL ? (
                     <OptimizedImage src={user.photoURL} alt="" width={56} className="absolute inset-0 h-full w-full object-cover" />
                   ) : null}
@@ -140,7 +140,7 @@ export function CustomerProfilePanel({ customerId, onClose }: CustomerProfilePan
                 <div className="flex-1 min-w-0 space-y-1">
                   <h3 className="text-base font-semibold text-text-primary break-words">{user.name}</h3>
                   <div className="flex items-center gap-1.5 text-xs text-text-secondary">
-                    <span className={cn("inline-block h-1.5 w-1.5 rounded-full", user.active ? "bg-emerald-500" : "bg-text-tertiary")} />
+                    <span className={cn("inline-block h-1.5 w-1.5 rounded-full", user.active ? "bg-status-active" : "bg-text-tertiary")} />
                     {user.active ? "Active" : "Inactive"}
                     {user.lastLoginAt && (
                       <>
@@ -197,7 +197,7 @@ export function CustomerProfilePanel({ customerId, onClose }: CustomerProfilePan
                     className={cn(
                       "flex items-center gap-1.5 pb-2.5 text-xs font-medium border-b-2 transition-colors whitespace-nowrap",
                       activeTab === "reviews"
-                        ? "border-indigo-600 text-indigo-600"
+                        ? "border-primary text-primary"
                         : "border-transparent text-text-tertiary hover:text-text-secondary"
                     )}
                   >
@@ -209,7 +209,7 @@ export function CustomerProfilePanel({ customerId, onClose }: CustomerProfilePan
                     className={cn(
                       "flex items-center gap-1.5 pb-2.5 text-xs font-medium border-b-2 transition-colors ml-6 whitespace-nowrap",
                       activeTab === "bookings"
-                        ? "border-indigo-600 text-indigo-600"
+                        ? "border-primary text-primary"
                         : "border-transparent text-text-tertiary hover:text-text-secondary"
                     )}
                   >

@@ -52,7 +52,7 @@ const ROUTE_PRIORITY = [
   { permission: 'payouts.view', route: '/admin/payouts' },
   { permission: 'tours.view', route: '/admin/tours' },
   { permission: 'users.view', route: '/admin/user-growth' },
-  { permission: 'payout-methods.view', route: '/admin/payout-methods' },
+  { permission: 'payout-methods.view', route: '/admin/payouts?tab=methods' },
   { permission: 'settings.access', route: '/admin/settings' },
   { permission: 'blog.manage', route: '/admin/blog' },
 ];

@@ -1,11 +1,10 @@
-import { useState, useMemo } from "react";
+﻿import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
-import { Eye, ShoppingCart, CreditCard, CheckCircle, TrendingUp, ArrowRight, ArrowDown, ArrowLeft, Users } from "lucide-react";
+import { Eye, ShoppingCart, CreditCard, CheckCircle, TrendingUp, ArrowRight, ArrowDown, Users, Route } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -13,8 +12,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SectionError } from "@/components/shared/SectionError";
 import { SectionEmpty } from "@/components/shared/SectionEmpty";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { PageInsight } from "@/components/shared/PageInsight";
+import { StatCard } from "@/components/shared/StatCard";
+import { ChartTooltip } from "@/components/shared/ChartTooltip";
+import { chartColors, chartAxis } from "@/components/shared/chartTheme";
 import api from "@/lib/axios";
-import { staggerContainer, fadeIn } from "@/lib/animations";
+import { staggerContainer } from "@/lib/animations";
 import { formatNumber } from "@/lib/utils";
 
 const periods = [
@@ -25,10 +29,10 @@ const periods = [
 ];
 
 const STEPS = [
-  { key: "viewed", label: "Tour Viewed", icon: Eye, color: "#3b82f6" },
-  { key: "cart_added", label: "Added to Cart", icon: ShoppingCart, color: "#d97706" },
-  { key: "checkout_started", label: "Checkout Started", icon: CreditCard, color: "#d45a0a" },
-  { key: "booking_completed", label: "Booking Completed", icon: CheckCircle, color: "#40966e" },
+  { key: "viewed", label: "Tour Viewed", icon: Eye, color: chartColors.blue },
+  { key: "cart_added", label: "Added to Cart", icon: ShoppingCart, color: chartColors.amber },
+  { key: "checkout_started", label: "Checkout Started", icon: CreditCard, color: chartColors.violet },
+  { key: "booking_completed", label: "Booking Completed", icon: CheckCircle, color: chartColors.green },
 ];
 
 const STEP_DATAKEY_MAP: Record<string, string> = {
@@ -39,27 +43,11 @@ const STEP_DATAKEY_MAP: Record<string, string> = {
 };
 
 const LEGEND = [
-  { key: "views", label: "Views", color: "#3b82f6" },
-  { key: "cartAdds", label: "Cart Adds", color: "#d97706" },
-  { key: "checkouts", label: "Checkouts", color: "#d45a0a" },
-  { key: "bookings", label: "Bookings", color: "#40966e" },
+  { key: "views", label: "Views", color: chartColors.blue },
+  { key: "cartAdds", label: "Cart Adds", color: chartColors.amber },
+  { key: "checkouts", label: "Checkouts", color: chartColors.violet },
+  { key: "bookings", label: "Bookings", color: chartColors.green },
 ];
-
-function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: { dataKey: string; color: string; name: string; value: number }[]; label?: string }) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="rounded-sm border border-border bg-white p-3 shadow-lg">
-      <p className="mb-1.5 text-xs font-medium text-text-tertiary">{label}</p>
-      {payload.map((e) => (
-        <div key={e.dataKey} className="flex items-center gap-2 text-sm">
-          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: e.color }} />
-          <span className="text-text-secondary">{e.name}:</span>
-          <span className="font-semibold text-text-primary">{e.value.toLocaleString()}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 interface FunnelStep {
   step?: string;
@@ -68,7 +56,6 @@ interface FunnelStep {
 }
 
 export default function ConversionFunnelPage() {
-  const navigate = useNavigate();
   const [period, setPeriod] = useState("30d");
 
   const { data, isLoading, isError, refetch } = useQuery({
@@ -85,9 +72,6 @@ export default function ConversionFunnelPage() {
     const map = new Map<string, Record<string, number | string>>();
     for (const row of rawDaily) {
       const raw = row.day as string;
-      // `DATE_TRUNC('day', ...)` serializes as a full ISO timestamp
-      // (e.g. 2026-08-12T00:00:00.000Z); keep only the YYYY-MM-DD part for a
-      // clean chart axis.
       const day = raw ? String(raw).slice(0, 10) : raw;
       if (!map.has(day)) map.set(day, { date: day, views: 0, cartAdds: 0, checkouts: 0, bookings: 0 });
       const entry = map.get(day)!;
@@ -101,17 +85,10 @@ export default function ConversionFunnelPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <button onClick={() => navigate(-1)} className="rounded-sm bg-white p-1.5 shadow-sm hover:ring-2 hover:ring-green-300 transition-all shrink-0">
-            <ArrowLeft className="h-4 w-4 text-text-primary" />
-          </button>
-          <div>
-            <h1 className="text-xl font-semibold text-text-primary">Conversion Funnel</h1>
-            <p className="mt-0.5 text-sm text-text-tertiary">Track how users progress from browsing to booking</p>
-          </div>
-        </div>
+      <PageHeader
+        title="Conversion Funnel"
+        subtitle="From first tour view to completed booking, where each step loses users"
+      >
         <Select value={period} onValueChange={setPeriod}>
           <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -120,41 +97,56 @@ export default function ConversionFunnelPage() {
             ))}
           </SelectContent>
         </Select>
-      </div>
+      </PageHeader>
 
-      {/* Conversion Rate KPI Cards */}
-      <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <motion.div variants={fadeIn}><KpiCard
+      <PageInsight icon={<Route className="h-4 w-4" />} title="Find the leak, fix it first">
+        The funnel tracks every user from first tour view through to a completed booking. Each step shows how many made it and how many dropped off. The biggest gap between two steps is your single highest impact friction point, and the one to tackle first. Overall is the headline number, how well the entire journey converts. Compare periods to see whether changes to listings, pricing, or checkout actually move the needle.
+      </PageInsight>
+
+      <motion.div
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-2 gap-4 lg:grid-cols-4"
+      >
+        <StatCard
           label="View to Cart"
           value={isLoadingValue ? "..." : conversionRates?.viewToCart != null ? `${conversionRates.viewToCart.toFixed(1)}%` : "—"}
-          icon={<ArrowRight className="h-4 w-4" />}
+          icon={<ArrowRight className="h-5 w-5" />}
           accent="blue"
-        /></motion.div>
-        <motion.div variants={fadeIn}><KpiCard
+          loading={isLoadingValue}
+          subtitle="Views that led to adding a tour"
+        />
+        <StatCard
           label="Cart to Checkout"
           value={isLoadingValue ? "..." : conversionRates?.cartToCheckout != null ? `${conversionRates.cartToCheckout.toFixed(1)}%` : "—"}
-          icon={<ArrowRight className="h-4 w-4" />}
+          icon={<ArrowRight className="h-5 w-5" />}
           accent="amber"
-        /></motion.div>
-        <motion.div variants={fadeIn}><KpiCard
+          loading={isLoadingValue}
+          subtitle="Carts that reached checkout"
+        />
+        <StatCard
           label="Checkout to Complete"
           value={isLoadingValue ? "..." : conversionRates?.checkoutToComplete != null ? `${conversionRates.checkoutToComplete.toFixed(1)}%` : "—"}
-          icon={<ArrowRight className="h-4 w-4" />}
-          accent="green"
-        /></motion.div>
-        <motion.div variants={fadeIn}><KpiCard
+          icon={<ArrowRight className="h-5 w-5" />}
+          accent="emerald"
+          loading={isLoadingValue}
+          subtitle="Checkouts that became bookings"
+        />
+        <StatCard
           label="Overall (View to Book)"
           value={isLoadingValue ? "..." : conversionRates?.overall != null ? `${conversionRates.overall.toFixed(1)}%` : "—"}
-          icon={<CheckCircle className="h-4 w-4" />}
-          accent="green"
-        /></motion.div>
+          icon={<CheckCircle className="h-5 w-5" />}
+          accent="emerald"
+          loading={isLoadingValue}
+          subtitle="View to completed booking"
+        />
       </motion.div>
 
-      {/* Funnel Visualization */}
-      <Card className="border-l-2 border-l-green-500/60">
+      <Card>
         <CardHeader className="border-b border-border pb-3">
           <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
-            <Users className="h-4 w-4 text-blue-600" />
+            <Users className="h-4 w-4 text-primary" />
             User Journey Funnel
           </CardTitle>
         </CardHeader>
@@ -173,9 +165,6 @@ export default function ConversionFunnelPage() {
                 const info = STEPS[idx];
                 const Icon = info?.icon || CheckCircle;
                 const pct = ((step.users || 0) / firstUsers) * 100;
-                // Compute drop-off from this step vs the previous step so we can
-                // show "—" when the parent stage has zero users (the backend
-                // emits "100%" in that case, which is misleading).
                 const prevUsers = idx > 0 ? (funnel[idx - 1]?.users || 0) : 0;
                 const dropOff = idx > 0 && prevUsers > 0
                   ? `${(100 - ((step.users || 0) / prevUsers) * 100).toFixed(1)}%`
@@ -198,7 +187,7 @@ export default function ConversionFunnelPage() {
                       <div className="w-28 text-right shrink-0">
                         <p className="text-xs text-text-tertiary">{pct.toFixed(1)}% of top</p>
                         {idx > 0 && dropOff && (
-                          <p className="mt-0.5 text-xs text-red-500 flex items-center justify-end gap-1">
+                          <p className="mt-0.5 text-xs text-status-rejected flex items-center justify-end gap-1">
                             <ArrowDown className="h-3 w-3" />
                             {dropOff} drop-off
                           </p>
@@ -218,11 +207,10 @@ export default function ConversionFunnelPage() {
         </CardContent>
       </Card>
 
-      {/* Daily Trend Chart */}
-      <Card className="border-l-2 border-l-green-500/60">
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between border-b border-border pb-3">
           <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
-            <TrendingUp className="h-4 w-4 text-green-600" />
+            <TrendingUp className="h-4 w-4 text-primary" />
             Daily Event Trend
           </CardTitle>
         </CardHeader>
@@ -237,10 +225,10 @@ export default function ConversionFunnelPage() {
             <>
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={dailyTrend}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#dee3e8" vertical={false} />
-                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#8a9ba8" }} axisLine={{ stroke: "#dee3e8" }} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: "#8a9ba8" }} axisLine={false} tickLine={false} />
-                  <Tooltip content={<ChartTooltip />} cursor={{ stroke: "#dee3e8", strokeDasharray: "3 3" }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartAxis.grid} vertical={false} />
+                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: chartAxis.tick }} axisLine={{ stroke: chartAxis.axis }} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: chartAxis.tick }} axisLine={false} tickLine={false} />
+                  <Tooltip content={<ChartTooltip formatter={(value) => formatNumber(Number(value))} />} cursor={{ stroke: chartAxis.reference, strokeDasharray: "3 3" }} />
                   {LEGEND.map((item) => (
                     <Line key={item.key} type="monotone" dataKey={item.key} stroke={item.color} name={item.label} strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
                   ))}
@@ -259,29 +247,5 @@ export default function ConversionFunnelPage() {
         </CardContent>
       </Card>
     </div>
-  );
-}
-
-function KpiCard({ label, value, icon, accent }: { label: string; value: string; icon: React.ReactNode; accent: "green" | "blue" | "amber" }) {
-  const m = {
-    green: { bg: "bg-gradient-to-br from-green-50 to-white", border: "border-green-200/40", ib: "bg-green-100", ic: "text-green-600" },
-    blue: { bg: "bg-gradient-to-br from-blue-50 to-white", border: "border-blue-200/40", ib: "bg-blue-100", ic: "text-blue-600" },
-    amber: { bg: "bg-gradient-to-br from-amber-50 to-white", border: "border-amber-200/40", ib: "bg-amber-100", ic: "text-amber-600" },
-  }[accent];
-  return (
-    <motion.div
-      whileHover={{ y: -2 }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ duration: 0.2, ease: "easeOut" }}
-      className={`rounded-sm border ${m.border} ${m.bg} p-3.5 shadow-2 transition-all hover:shadow-md`}
-    >
-      <div className="flex items-start justify-between">
-        <div className="min-w-0">
-          <p className="text-xs text-text-secondary truncate">{label}</p>
-          <p className="mt-1 text-xl font-bold text-text-primary leading-tight">{value}</p>
-        </div>
-        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${m.ib} ${m.ic}`}>{icon}</div>
-      </div>
-    </motion.div>
   );
 }

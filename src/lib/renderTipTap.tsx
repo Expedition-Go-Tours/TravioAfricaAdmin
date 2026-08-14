@@ -40,11 +40,11 @@ function renderMarks(text: string, marks?: TipTapMark[]): ReactNode {
         node = <s key={Math.random()}>{node}</s>;
         break;
       case "code":
-        node = <code key={Math.random()} className="rounded bg-gray-100 px-1 py-0.5 text-sm font-mono text-pink-600">{node}</code>;
+        node = <code key={Math.random()} className="rounded bg-surface-muted px-1 py-0.5 text-sm font-mono text-text-primary">{node}</code>;
         break;
       case "link":
         node = (
-          <a key={Math.random()} href={mark.attrs?.href as string | undefined} target="_blank" rel="noopener noreferrer" className="text-[#5645d4] underline hover:text-[#4534b3]">
+          <a key={Math.random()} href={mark.attrs?.href as string | undefined} target="_blank" rel="noopener noreferrer" className="text-primary underline hover:text-primary/80">
             {node}
           </a>
         );
@@ -64,13 +64,13 @@ export function renderTipTapNode(node: TipTapNode, key?: number): ReactNode {
     case "paragraph": {
       const hasText = node.content?.some((n) => n.text);
       if (!hasText) return <div key={key} className="h-4" />;
-      return <p key={key} className="text-base leading-relaxed text-gray-800">{children}</p>;
+      return <p key={key} className="text-base leading-relaxed text-text-primary">{children}</p>;
     }
 
     case "heading": {
       const level = node.attrs?.level || 1;
       const styles = ["text-3xl font-bold", "text-2xl font-semibold", "text-xl font-semibold"];
-      const className = `${styles[Math.min(level - 1, 2)]} text-gray-900`;
+      const className = `${styles[Math.min(level - 1, 2)]} text-text-primary`;
       if (level === 1) return <h1 key={key} className={className}>{children}</h1>;
       if (level === 2) return <h2 key={key} className={className}>{children}</h2>;
       if (level === 3) return <h3 key={key} className={className}>{children}</h3>;
@@ -78,17 +78,17 @@ export function renderTipTapNode(node: TipTapNode, key?: number): ReactNode {
     }
 
     case "bulletList":
-      return <ul key={key} className="list-disc pl-6 space-y-1 text-gray-800">{children}</ul>;
+      return <ul key={key} className="list-disc pl-6 space-y-1 text-text-primary">{children}</ul>;
 
     case "orderedList":
-      return <ol key={key} className="list-decimal pl-6 space-y-1 text-gray-800">{children}</ol>;
+      return <ol key={key} className="list-decimal pl-6 space-y-1 text-text-primary">{children}</ol>;
 
     case "listItem":
       return <li key={key}>{children}</li>;
 
     case "blockquote":
       return (
-        <blockquote key={key} className="border-l-4 border-[#5645d4]/30 pl-4 italic text-gray-600">
+        <blockquote key={key} className="border-l-4 border-primary/30 pl-4 italic text-text-secondary">
           {children}
         </blockquote>
       );
@@ -101,13 +101,13 @@ export function renderTipTapNode(node: TipTapNode, key?: number): ReactNode {
       );
 
     case "horizontalRule":
-      return <hr key={key} className="border-gray-200" />;
+      return <hr key={key} className="border-border-muted" />;
 
     case "image":
       return (
         <figure key={key} className="my-6 max-w-full">
           <OptimizedImage src={node.attrs?.src} alt={node.attrs?.alt || ""} width={800} className="max-w-full h-auto rounded-sm" fit="fill" />
-          {node.attrs?.title && <figcaption className="mt-2 text-center text-sm text-gray-500">{node.attrs.title}</figcaption>}
+          {node.attrs?.title && <figcaption className="mt-2 text-center text-sm text-text-tertiary">{node.attrs.title}</figcaption>}
         </figure>
       );
 

@@ -1,22 +1,25 @@
-import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+﻿import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import {
   Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from "recharts";
-import { Users, CalendarCheck, DollarSign, Repeat, ShoppingBag, ArrowLeft } from "lucide-react";
+import { Users, CalendarCheck, DollarSign, Repeat, ShoppingBag } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable } from "@/components/shared/DataTable";
 import type { Column } from "@/components/shared/DataTable";
 import { SectionError } from "@/components/shared/SectionError";
 import { SectionEmpty } from "@/components/shared/SectionEmpty";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { PageInsight } from "@/components/shared/PageInsight";
+import { StatCard } from "@/components/shared/StatCard";
+import { chartColors } from "@/components/shared/chartTheme";
 import api from "@/lib/axios";
-import { staggerContainer, fadeIn } from "@/lib/animations";
+import { staggerContainer } from "@/lib/animations";
 import { formatCurrency, formatNumber, formatDate } from "@/lib/utils";
 
-const DIST_COLORS = ["#3b82f6", "#40966e", "#d97706", "#d45a0a", "#8b5cf6"];
+const DIST_COLORS = [chartColors.blue, chartColors.green, chartColors.amber, chartColors.violet, chartColors.red];
 
 const BOOKING_LABELS: Record<string, string> = {
   "1": "1 Booking",
@@ -35,7 +38,6 @@ interface CLVData {
 }
 
 export default function CustomerLifetimeValuePage() {
-  const navigate = useNavigate();
   const { data, isLoading, isError, refetch } = useQuery<CLVData & { data?: CLVData }>({
     queryKey: ["admin", "clv"],
     queryFn: () => api.get("/admin/analytics/clv").then((r) => r.data),
@@ -44,47 +46,57 @@ export default function CustomerLifetimeValuePage() {
   const topColumns: Column<{ id?: string; name?: string; email?: string; totalBookings?: number; totalSpent?: number; avgBookingValue?: number; lastBookingDate?: string }>[] = [
     { key: "name", header: "Name", render: (r) => <span className="font-medium text-text-primary">{r.name || "—"}</span> },
     { key: "email", header: "Email", render: (r) => <span className="text-text-secondary">{r.email || "—"}</span> },
-    { key: "totalBookings", header: "Bookings", render: (r) => <span className="font-semibold text-text-primary">{formatNumber(r.totalBookings)}</span> },
-    { key: "totalSpent", header: "Total Spent", render: (r) => <span className="font-semibold text-green-700">{formatCurrency(r.totalSpent)}</span> },
-    { key: "avgBookingValue", header: "Avg Value", render: (r) => formatCurrency(r.avgBookingValue) },
+    { key: "totalBookings", header: "Bookings", align: "right", render: (r) => <span className="font-semibold text-text-primary tabular-nums">{formatNumber(r.totalBookings)}</span> },
+    { key: "totalSpent", header: "Total Spent", align: "right", render: (r) => <span className="font-semibold text-text-primary tabular-nums">{formatCurrency(r.totalSpent)}</span> },
+    { key: "avgBookingValue", header: "Avg Value", align: "right", render: (r) => <span className="text-text-secondary tabular-nums">{formatCurrency(r.avgBookingValue)}</span> },
     { key: "lastBookingDate", header: "Last Booking", render: (r) => <span className="text-xs text-text-tertiary">{formatDate(r.lastBookingDate)}</span> },
   ];
 
   const cohortColumns: Column<{ month?: string; users?: number; bookings?: number; revenue?: number; bookingsPerUser?: number; revenuePerUser?: number }>[] = [
     { key: "month", header: "Month", render: (r) => <span className="font-medium text-text-primary">{r.month || "—"}</span> },
-    { key: "users", header: "Users", render: (r) => formatNumber(r.users) },
-    { key: "bookings", header: "Bookings", render: (r) => formatNumber(r.bookings) },
-    { key: "revenue", header: "Revenue", render: (r) => <span className="font-semibold text-green-700">{formatCurrency(r.revenue)}</span> },
-    { key: "bookingsPerUser", header: "Bookings/User", render: (r) => r.bookingsPerUser?.toFixed(2) || "—" },
-    { key: "revenuePerUser", header: "Revenue/User", render: (r) => formatCurrency(r.revenuePerUser) },
+    { key: "users", header: "Users", align: "right", render: (r) => <span className="tabular-nums">{formatNumber(r.users)}</span> },
+    { key: "bookings", header: "Bookings", align: "right", render: (r) => <span className="tabular-nums">{formatNumber(r.bookings)}</span> },
+    { key: "revenue", header: "Revenue", align: "right", render: (r) => <span className="font-semibold text-text-primary tabular-nums">{formatCurrency(r.revenue)}</span> },
+    { key: "bookingsPerUser", header: "Bookings/User", align: "right", render: (r) => <span className="tabular-nums">{r.bookingsPerUser?.toFixed(2) || "—"}</span> },
+    { key: "revenuePerUser", header: "Revenue/User", align: "right", render: (r) => <span className="text-text-secondary tabular-nums">{formatCurrency(r.revenuePerUser)}</span> },
   ];
 
   const chartData = data?.data?.distribution || data?.distribution || [];
+  const overview = data?.data?.overview ?? data?.overview;
+  const repeatRate = data?.data?.repeatRate ?? data?.repeatRate;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <button onClick={() => navigate(-1)} className="rounded-sm bg-white p-1.5 shadow-sm hover:ring-2 hover:ring-green-300 transition-all">
-          <ArrowLeft className="h-4 w-4 text-text-primary" />
-        </button>
-        <h1 className="text-lg font-semibold text-text-primary">Customer Lifetime Value</h1>
-      </div>
+      <PageHeader
+        title="Customer Lifetime Value"
+        subtitle="How much customers are worth over time, and which segments drive that value"
+      />
 
-      <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        <motion.div variants={fadeIn}><KpiCard label="Total Customers" value={isLoading ? "..." : formatNumber(data?.data?.overview?.totalCustomers ?? data?.overview?.totalCustomers)} icon={<Users className="h-4 w-4" />} accent="blue" /></motion.div>
+      <PageInsight icon={<Repeat className="h-4 w-4" />} title="Why repeat customers matter">
+        Customer lifetime value is the total revenue one customer brings across all their bookings. Avg CLV equals total revenue divided by total customers. The strongest lever on CLV is retention. A customer who books twice is worth far more than two one time customers, which is exactly what Repeat Rate measures. Use the cohorts table to see which acquisition months produced loyal, high value users, then double down on the channels and campaigns that brought them in.
+      </PageInsight>
 
-        <motion.div variants={fadeIn}><KpiCard label="Total Bookings" value={isLoading ? "..." : formatNumber(data?.data?.overview?.totalBookings ?? data?.overview?.totalBookings)} icon={<CalendarCheck className="h-4 w-4" />} accent="green" /></motion.div>
-
-        <motion.div variants={fadeIn}><KpiCard label="Avg Booking Value" value={isLoading ? "..." : formatCurrency(data?.data?.overview?.avgBookingValue ?? data?.overview?.avgBookingValue)} icon={<ShoppingBag className="h-4 w-4" />} accent="amber" /></motion.div>
-
-        <motion.div variants={fadeIn}><KpiCard label="Total Revenue" value={isLoading ? "..." : formatCurrency(data?.data?.overview?.totalRevenue ?? data?.overview?.totalRevenue)} icon={<DollarSign className="h-4 w-4" />} accent="green" /></motion.div>
-
-        <motion.div variants={fadeIn}><KpiCard label="Avg CLV" value={isLoading ? "..." : formatCurrency(data?.data?.overview?.avgCLV ?? data?.overview?.avgCLV)} icon={<Repeat className="h-4 w-4" />} accent="blue" /></motion.div>
+      <motion.div
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5"
+      >
+        <StatCard label="Total Customers" value={isLoading ? "..." : formatNumber(overview?.totalCustomers)} icon={<Users className="h-5 w-5" />} accent="blue" loading={isLoading} subtitle="Registered customer accounts" />
+        <StatCard label="Total Bookings" value={isLoading ? "..." : formatNumber(overview?.totalBookings)} icon={<CalendarCheck className="h-5 w-5" />} accent="emerald" loading={isLoading} subtitle="Completed bookings to date" />
+        <StatCard label="Avg Booking Value" value={isLoading ? "..." : formatCurrency(overview?.avgBookingValue)} icon={<ShoppingBag className="h-5 w-5" />} accent="amber" loading={isLoading} subtitle="Mean spend per completed booking" />
+        <StatCard label="Total Revenue" value={isLoading ? "..." : formatCurrency(overview?.totalRevenue)} icon={<DollarSign className="h-5 w-5" />} accent="emerald" loading={isLoading} subtitle="Lifetime gross booking value" />
+        <StatCard label="Avg CLV" value={isLoading ? "..." : formatCurrency(overview?.avgCLV)} icon={<Repeat className="h-5 w-5" />} accent="blue" loading={isLoading} subtitle="Lifetime revenue per customer" />
       </motion.div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-        <Card className="lg:col-span-2 border-l-2 border-l-green-500/60">
-          <CardHeader className="border-b border-border pb-3"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary"><Repeat className="h-4 w-4 text-green-600" /> Repeat Rate</CardTitle></CardHeader>
+        <Card className="lg:col-span-2">
+          <CardHeader className="border-b border-border pb-3">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+              <Repeat className="h-4 w-4 text-primary" />
+              Repeat Rate
+            </CardTitle>
+          </CardHeader>
           <CardContent>
             {isLoading ? (
               <Skeleton className="h-24 w-full" />
@@ -92,18 +104,18 @@ export default function CustomerLifetimeValuePage() {
               <SectionError message="Failed to load repeat rate" onRetry={() => refetch()} />
             ) : (
               <div className="text-center py-2">
-                <p className="text-4xl font-bold text-text-primary">{(data?.data?.repeatRate?.repeatRate ?? data?.repeatRate?.repeatRate)?.toFixed(1) || "0"}%</p>
+                <p className="text-4xl font-bold text-text-primary">{repeatRate?.repeatRate?.toFixed(1) || "0"}%</p>
                 <p className="text-sm text-text-secondary mt-1">of customers book more than once</p>
-                <div className="mt-4 inline-flex items-center gap-2 rounded-sm bg-green-50 px-4 py-2 text-sm">
-                  <ShoppingBag className="h-4 w-4 text-green-600" />
-                  <span className="text-text-secondary">Avg <strong className="text-green-700">{(data?.data?.repeatRate?.avgBookingsPerCustomer ?? data?.repeatRate?.avgBookingsPerCustomer)?.toFixed(2) || "0"}</strong> bookings per customer</span>
+                <div className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary/10 px-4 py-2 text-sm">
+                  <ShoppingBag className="h-4 w-4 text-primary" />
+                  <span className="text-text-secondary">Avg <strong className="text-primary">{repeatRate?.avgBookingsPerCustomer?.toFixed(2) || "0"}</strong> bookings per customer</span>
                 </div>
               </div>
             )}
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-3 border-l-2 border-l-green-500/60">
+        <Card className="lg:col-span-3">
           <CardHeader className="border-b border-border pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-semibold text-text-primary">Booking Distribution</CardTitle>
@@ -170,7 +182,7 @@ export default function CustomerLifetimeValuePage() {
         </Card>
       </div>
 
-      <Card className="border-l-2 border-l-green-500/60">
+      <Card>
         <CardHeader className="border-b border-border pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-semibold text-text-primary">Top 20 Customers</CardTitle>
@@ -190,7 +202,7 @@ export default function CustomerLifetimeValuePage() {
         </CardContent>
       </Card>
 
-      <Card className="border-l-2 border-l-green-500/60">
+      <Card>
         <CardHeader className="border-b border-border pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-semibold text-text-primary">Monthly Cohorts</CardTitle>
@@ -210,30 +222,5 @@ export default function CustomerLifetimeValuePage() {
         </CardContent>
       </Card>
     </div>
-  );
-}
-
-function KpiCard({ label, value, icon, accent }: { label: string; value: string; icon: React.ReactNode; accent: "green" | "blue" | "amber" }) {
-  const accentMap = {
-    green: { bg: "bg-gradient-to-br from-green-50 to-white", border: "border-green-200/40", iconBg: "bg-green-100", iconColor: "text-green-600" },
-    blue: { bg: "bg-gradient-to-br from-blue-50 to-white", border: "border-blue-200/40", iconBg: "bg-blue-100", iconColor: "text-blue-600" },
-    amber: { bg: "bg-gradient-to-br from-amber-50 to-white", border: "border-amber-200/40", iconBg: "bg-amber-100", iconColor: "text-amber-600" },
-  };
-  const a = accentMap[accent];
-  return (
-    <motion.div
-      whileHover={{ y: -2 }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ duration: 0.2, ease: "easeOut" }}
-      className={`rounded-sm border ${a.border} ${a.bg} p-3.5 shadow-2 transition-all hover:shadow-md`}
-    >
-      <div className="flex items-start justify-between">
-        <div className="min-w-0">
-          <p className="text-xs text-text-secondary truncate">{label}</p>
-          <p className="mt-1 text-lg font-bold text-text-primary leading-tight">{value}</p>
-        </div>
-        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${a.iconBg} ${a.iconColor}`}>{icon}</div>
-      </div>
-    </motion.div>
   );
 }

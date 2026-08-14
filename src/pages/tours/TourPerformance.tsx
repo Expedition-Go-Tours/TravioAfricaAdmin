@@ -9,13 +9,12 @@ import {
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { DataTable } from "@/components/shared/DataTable";
 import type { Column } from "@/components/shared/DataTable";
-import { StatusBadge } from "@/components/shared/StatusBadge";
+import { CellThumb, CellTitle, MoneyCell, DateCell, StatusCell } from "@/components/shared/table-cells";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import api from "@/lib/axios";
 import { staggerContainer, fadeIn } from "@/lib/animations";
-import { formatCurrency, formatNumber, formatDate } from "@/lib/utils";
-import OptimizedImage from "@/components/shared/OptimizedImage";
+import { formatCurrency, formatNumber } from "@/lib/utils";
 
 interface Tour {
   id: string;
@@ -89,45 +88,72 @@ export default function TourPerformancePage() {
       key: "title",
       header: "Tour",
       render: (r) => (
-        <div className="flex items-center gap-3">
-          <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-400 to-green-600 text-xs font-bold text-white">
-            <span>{r.title?.charAt(0)?.toUpperCase() || "?"}</span>
-            {r.coverPhoto && (
-              <OptimizedImage
-                src={r.coverPhoto}
-                alt=""
-                className="absolute inset-0 h-full w-full object-cover"
-                width={36}
-                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-              />
-            )}
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-text-primary truncate">{r.title || "—"}</p>
-            <p className="text-xs text-text-tertiary">{r.supplier?.name || "No supplier"}</p>
-          </div>
+        <div className="flex items-center gap-3 min-w-0">
+          <CellThumb src={r.coverPhoto} alt="" fallbackIcon={<Map className="h-3.5 w-3.5" />} />
+          <CellTitle title={r.title || "—"} subtitle={r.supplier?.name || "No supplier"} />
         </div>
       ),
     },
-    { key: "status", header: "Status", render: (r) => <StatusBadge status={r.status || "UNKNOWN"} /> },
-    { key: "totalBookings", header: "Bookings", sortable: true, render: (r) => <span className="font-semibold text-text-primary">{formatNumber(r._count?.bookings ?? r.totalBookings)}</span> },
-    { key: "totalRevenue", header: "Revenue", sortable: true, render: (r) => <span className="font-semibold text-green-700">{formatCurrency(r.totalRevenue)}</span> },
-    { key: "averageRating", header: "Rating", sortable: true, render: (r) => (
-      <span className="inline-flex items-center gap-1 text-amber-600">
-        {Number(r.averageRating ?? 0).toFixed(1)} <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-      </span>
-    )},
-    { key: "reviewCount", header: "Reviews", sortable: true, render: (r) => formatNumber(r.reviewCount) },
-    { key: "viewCount", header: "Views", sortable: true, render: (r) => formatNumber(r.viewCount) },
-    { key: "createdAt", header: "Created", render: (r) => <span className="text-xs text-text-tertiary">{formatDate(r.createdAt)}</span> },
+    { key: "status", header: "Status", render: (r) => <StatusCell status={r.status || "UNKNOWN"} /> },
+    {
+      key: "totalBookings",
+      header: "Bookings",
+      sortable: true,
+      align: "right",
+      render: (r) => <span className="font-semibold text-text-primary tabular-nums">{formatNumber(r._count?.bookings ?? r.totalBookings)}</span>,
+    },
+    {
+      key: "totalRevenue",
+      header: "Revenue",
+      sortable: true,
+      align: "right",
+      render: (r) => <MoneyCell value={r.totalRevenue} />,
+    },
+    {
+      key: "conversion",
+      header: "Conv %",
+      align: "right",
+      render: (r) => {
+        const views = Number(r.viewCount || 0);
+        const bookings = Number(r._count?.bookings ?? r.totalBookings ?? 0);
+        const rate = views > 0 ? (bookings / views) * 100 : 0;
+        return <span className="text-xs font-medium text-text-secondary tabular-nums">{rate.toFixed(1)}%</span>;
+      },
+    },
+    {
+      key: "averageRating",
+      header: "Rating",
+      sortable: true,
+      align: "right",
+      render: (r) => (
+        <span className="inline-flex items-center gap-1 text-sm font-medium text-text-primary tabular-nums">
+          {Number(r.averageRating ?? 0).toFixed(1)} <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+        </span>
+      ),
+    },
+    {
+      key: "reviewCount",
+      header: "Reviews",
+      sortable: true,
+      align: "right",
+      render: (r) => <span className="text-text-secondary tabular-nums">{formatNumber(r.reviewCount)}</span>,
+    },
+    {
+      key: "viewCount",
+      header: "Views",
+      sortable: true,
+      align: "right",
+      render: (r) => <span className="text-text-secondary tabular-nums">{formatNumber(r.viewCount)}</span>,
+    },
+    { key: "createdAt", header: "Created", render: (r) => <DateCell value={r.createdAt} /> },
   ];
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate(-1)} className="rounded-sm bg-white p-1.5 shadow-sm hover:ring-2 hover:ring-green-300 transition-all">
-            <ArrowLeft className="h-4 w-4 text-text-primary" />
+          <button onClick={() => navigate(-1)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-surface-base text-text-secondary transition-colors hover:bg-surface-muted hover:text-text-primary">
+            <ArrowLeft className="h-4 w-4" />
           </button>
           <h1 className="text-lg font-semibold text-text-primary">Tour Performance</h1>
         </div>
@@ -141,34 +167,34 @@ export default function TourPerformancePage() {
         <motion.div variants={fadeIn}><KpiCard
           label="Total Tours"
           value={isLoading ? "..." : formatNumber(totalCount)}
-          icon={<Map className="h-4 w-4" />}
-          accent="green"
+          icon={<Map className="h-5 w-5" />}
+          accent="emerald"
         /></motion.div>
         <motion.div variants={fadeIn}><KpiCard
           label="Total Revenue"
           value={isLoading ? "..." : formatCurrency(aggregate.revenue)}
-          icon={<DollarSign className="h-4 w-4" />}
+          icon={<DollarSign className="h-5 w-5" />}
           accent="blue"
         /></motion.div>
         <motion.div variants={fadeIn}><KpiCard
           label="Total Bookings"
           value={isLoading ? "..." : formatNumber(aggregate.bookings)}
-          icon={<TrendingUp className="h-4 w-4" />}
+          icon={<TrendingUp className="h-5 w-5" />}
           accent="amber"
         /></motion.div>
         <motion.div variants={fadeIn}><KpiCard
           label="Total Views"
           value={isLoading ? "..." : formatNumber(aggregate.views)}
-          icon={<Eye className="h-4 w-4" />}
-          accent="green"
+          icon={<Eye className="h-5 w-5" />}
+          accent="emerald"
         /></motion.div>
       </motion.div>
 
-      <Card className="rounded-xl border border-slate-200 shadow-sm">
-        <CardHeader className="border-b border-slate-100 pb-4 pl-5 pr-5 pt-5">
+      <Card>
+        <CardHeader className="border-b border-border/60 pb-4 pl-5 pr-5 pt-5">
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative flex-1 min-w-[200px] max-w-xs">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" />
               <Input
                 placeholder="Search tours..."
                 value={searchQuery}
@@ -178,7 +204,7 @@ export default function TourPerformancePage() {
               {searchQuery && (
                 <button
                   onClick={() => { setSearchQuery(""); setPage(1); }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-secondary"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -222,25 +248,25 @@ export default function TourPerformancePage() {
   );
 }
 
-function KpiCard({ label, value, icon, accent }: { label: string; value: string; icon: React.ReactNode; accent: "green" | "blue" | "amber" }) {
-  const m = {
-    green: { l: "border-l-green-500", bg: "bg-gradient-to-br from-green-50 to-white", ib: "bg-green-100", ic: "text-green-600" },
-    blue: { l: "border-l-blue-500", bg: "bg-gradient-to-br from-blue-50 to-white", ib: "bg-blue-100", ic: "text-blue-600" },
-    amber: { l: "border-l-amber-500", bg: "bg-gradient-to-br from-amber-50 to-white", ib: "bg-amber-100", ic: "text-amber-600" },
+function KpiCard({ label, value, icon, accent }: { label: string; value: string; icon: React.ReactNode; accent: "emerald" | "blue" | "amber" }) {
+  const bg = {
+    emerald: "bg-gradient-to-br from-emerald-50 to-emerald-100",
+    blue: "bg-gradient-to-br from-blue-50 to-blue-100",
+    amber: "bg-gradient-to-br from-amber-50 to-amber-100",
   }[accent];
   return (
     <motion.div
       whileHover={{ y: -2 }}
       whileTap={{ scale: 0.98 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
-      className={`rounded-sm border border-border-muted border-l-[3px] ${m.l} ${m.bg} p-4 shadow-2 transition-all hover:shadow-md`}
+      className={`rounded-lg shadow-sm border-0 p-5 ${bg}`}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium text-text-secondary truncate">{label}</p>
-          <p className="mt-1 text-xl font-bold text-text-primary leading-tight">{value}</p>
+      <div className="flex items-start justify-between">
+        <div className="space-y-1.5">
+          <p className="text-sm font-medium text-muted-foreground">{label}</p>
+          <p className="text-3xl font-bold tracking-tight text-text-primary tabular-nums">{value}</p>
         </div>
-        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${m.ib} ${m.ic} mt-0.5`}>{icon}</div>
+        <div className="rounded-xl bg-primary/10 p-3 text-primary">{icon}</div>
       </div>
     </motion.div>
   );

@@ -118,11 +118,11 @@ const config: Config = {
         },
       },
       borderRadius: {
-        sm: "8px",
-        md: "12px",
-        lg: "16px",
-        xl: "20px",
-        "2xl": "24px",
+        sm: "6px",
+        md: "8px",
+        lg: "12px",
+        xl: "16px",
+        "2xl": "20px",
       },
       boxShadow: {
         "2": "0 0 2px rgba(145,158,171,0.2), 0 12px 24px -4px rgba(145,158,171,0.12)",

@@ -64,11 +64,11 @@
     --green-800: 152 72% 16%;
     --green-900: 152 75% 10%;
 
-    --sidebar-bg: 210 20% 6%;
-    --sidebar-surface: 210 18% 10%;
-    --sidebar-border: 210 15% 16%;
-    --sidebar-text: 210 15% 70%;
-    --sidebar-text-active: 0 0% 100%;
+    --sidebar-bg: 0 0% 100%;
+    --sidebar-surface: 210 14% 96%;
+    --sidebar-border: 210 14% 90%;
+    --sidebar-text: 210 12% 45%;
+    --sidebar-text-active: 210 20% 12%;
   }
 
   .dark {
@@ -183,7 +183,12 @@
   }
 
   :focus-visible {
-    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+    @apply outline-none ring-2 ring-text-secondary/25;
+  }
+
+  input:focus-visible,
+  textarea:focus-visible {
+    @apply ring-0;
   }
 }
 

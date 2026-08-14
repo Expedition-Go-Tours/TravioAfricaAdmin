@@ -31,6 +31,7 @@ interface PayoutDetailPanelProps {
   onClose: () => void;
   onApprove?: (payout: Payout) => void;
   onRelease?: (payout: Payout) => void;
+  onSettle?: (payout: Payout) => void;
   onFail?: (payout: Payout) => void;
 }
 
@@ -56,17 +57,8 @@ function SectionDivider({ label }: { label: string }) {
   );
 }
 
-export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove, onRelease, onFail }: PayoutDetailPanelProps) {
+export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove, onRelease, onSettle, onFail }: PayoutDetailPanelProps) {
   const navigate = useNavigate();
-
-  const statusColor: Record<string, string> = {
-    PENDING: "bg-amber-50 border-amber-200 text-amber-700",
-    APPROVED: "bg-blue-50 border-blue-200 text-blue-700",
-    PROCESSING: "bg-indigo-50 border-indigo-200 text-indigo-700",
-    PAID: "bg-emerald-50 border-emerald-200 text-emerald-700",
-    FAILED: "bg-red-50 border-red-200 text-red-700",
-    CANCELLED: "bg-surface-muted border-border text-text-secondary",
-  };
 
   const status = payout.status || "UNKNOWN";
   const amount = Number(payout.amount) || 0;
@@ -76,14 +68,13 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
 
   const method = payout.payoutMethod;
   const isBank = method?.type?.toLowerCase().includes("bank");
-  const isPaypal = method?.type?.toLowerCase().includes("paypal");
-  const MethodIcon = isBank ? Building2 : isPaypal ? Wallet : Smartphone;
+  const MethodIcon = isBank ? Building2 : Wallet;
 
   const timelineSteps = [
     { label: "Created", date: payout.createdAt || null, active: true },
-    { label: "Approved", date: payout.statusHistory?.find((s) => s.status === "APPROVED")?.timestamp || null, active: ["APPROVED", "PROCESSING", "PAID", "FAILED"].includes(status) },
-    { label: "Processing", date: payout.statusHistory?.find((s) => s.status === "PROCESSING")?.timestamp || null, active: ["PROCESSING", "PAID"].includes(status) },
-    { label: payout.status === "FAILED" ? "Failed" : "Paid", date: payout.paidAt || payout.statusHistory?.find((s) => s.status === "PAID")?.timestamp || null, active: status === "PAID" || status === "FAILED" },
+    { label: "Approved", date: payout.approvedAt || null, active: ["APPROVED", "PROCESSING", "PAID"].includes(status) },
+    { label: "Processing", date: payout.processedAt || null, active: ["PROCESSING", "PAID"].includes(status) },
+    { label: status === "FAILED" ? "Failed" : "Paid", date: payout.paidAt || null, active: status === "PAID" || status === "FAILED" },
   ];
 
   const supplier = payout.supplier;
@@ -123,16 +114,8 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
 
         <div className="flex-1 overflow-y-auto">
           {/* Status Banner */}
-          <div className={cn("px-5 py-3 border-b text-xs font-semibold flex items-center gap-2", statusColor[status] || "bg-surface-muted")}>
-            <span className={cn(
-              "inline-block h-1.5 w-1.5 rounded-full",
-              status === "PENDING" ? "bg-amber-500" :
-              status === "APPROVED" ? "bg-blue-500" :
-              status === "PROCESSING" ? "bg-indigo-500" :
-              status === "PAID" ? "bg-emerald-500" :
-              status === "FAILED" ? "bg-red-500" :
-              "bg-text-tertiary"
-            )} />
+          <div className="flex items-center gap-2 border-b bg-surface-muted/40 px-5 py-3 text-xs font-semibold">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-status-pending" />
             {status.replace(/_/g, " ")}
           </div>
 
@@ -155,7 +138,7 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
               <div className="flex items-start gap-3 mb-3">
                 <button
                   onClick={() => supplier?.id && navigate(`/admin/suppliers/${supplier.id}`)}
-                  className="shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded-full"
+                  className="shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                   title="View supplier profile"
                 >
                   <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-surface-muted text-sm font-semibold text-text-secondary ring-2 ring-border">
@@ -216,6 +199,12 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
                   {payout.createdAt && (
                     <DetailRow icon={<Calendar className="h-3 w-3" />} label="Created">{formatDate(payout.createdAt)}</DetailRow>
                   )}
+                  {payout.approvedAt && (
+                    <DetailRow icon={<CheckCircle className="h-3 w-3" />} label="Approved">{formatDate(payout.approvedAt)}</DetailRow>
+                  )}
+                  {payout.processedAt && (
+                    <DetailRow icon={<Send className="h-3 w-3" />} label="Released">{formatDateTime(payout.processedAt)}</DetailRow>
+                  )}
                   {payout.paidAt && (
                     <DetailRow icon={<Clock className="h-3 w-3" />} label="Paid At">{formatDateTime(payout.paidAt)}</DetailRow>
                   )}
@@ -234,7 +223,7 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
                 </DetailRow>
                 <div className="border-t border-border pt-2 mt-2 flex items-center justify-between">
                   <span className="text-xs font-semibold text-text-primary">Net Payout</span>
-                  <span className="text-sm font-bold text-emerald-700 tabular-nums">{formatCurrency(netPayout)}</span>
+                  <span className="text-sm font-bold text-status-active tabular-nums">{formatCurrency(netPayout)}</span>
                 </div>
               </div>
             </div>
@@ -246,7 +235,7 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
                 <div className="rounded-xl border border-border p-4 space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-muted">
-                      <MethodIcon className="h-4.5 w-4.5 text-text-secondary" />
+                      <MethodIcon className="h-4 w-4 text-text-secondary" />
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-text-primary">{method.type?.replace(/_/g, " ")}</p>
@@ -254,13 +243,13 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
                         {method.verified !== undefined && (
                           <span className={cn(
                             "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium",
-                            method.verified ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                            method.verified ? "bg-status-active/10 text-status-active" : "bg-status-pending/10 text-status-pending"
                           )}>
                             {method.verified ? "Verified" : "Unverified"}
                           </span>
                         )}
                         {method.isDefault && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium text-blue-700">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-status-approved/10 px-2 py-0.5 text-[10px] font-medium text-status-approved">
                             Default
                           </span>
                         )}
@@ -273,7 +262,7 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
                   {method.bankName && (
                     <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border">
                       {method.bankName && <Field label="Bank" value={method.bankName} />}
-                      {method.accountNumber && <Field label="Account" value={`****${method.accountNumber.slice(-4)}`} />}
+                      {method.accountNumber && <Field label="Account" value={method.accountNumber} />}
                     </div>
                   )}
                 </div>
@@ -288,16 +277,16 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
                   {timelineSteps.map((step, idx) => {
                     const isLast = idx === timelineSteps.length - 1;
                     const dotClass = step.active
-                      ? "bg-indigo-500 border-indigo-200"
+                      ? "bg-status-processing border-status-processing/30"
                       : step.date
-                      ? "bg-emerald-500 border-emerald-200"
+                      ? "bg-status-active border-status-active/30"
                       : "bg-border border-border";
                     return (
                       <div key={step.label} className="relative flex gap-3">
                         {!isLast && (
                           <div className={cn(
                             "absolute left-[11px] top-5 w-0.5 h-full -translate-x-1/2",
-                            step.date ? "bg-indigo-100" : "bg-border"
+                            step.date ? "bg-status-processing/40" : "bg-border"
                           )} />
                         )}
                         <div className="flex flex-col items-center shrink-0 pt-0.5">
@@ -318,7 +307,7 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
                         <div className={cn("pb-5", isLast && "pb-0")}>
                           <p className={cn(
                             "text-xs font-medium",
-                            step.active ? "text-indigo-700" : step.date ? "text-text-primary" : "text-text-tertiary"
+                            step.active ? "text-status-processing" : step.date ? "text-text-primary" : "text-text-tertiary"
                           )}>
                             {step.label}
                           </p>
@@ -347,7 +336,7 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
           {status === "PENDING" && onApprove && (
             <Button
               onClick={() => { onApprove(payout); onClose(); }}
-              className="w-full gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="w-full gap-1.5"
               size="sm"
             >
               <CheckCircle className="h-4 w-4" /> Approve Payout
@@ -368,7 +357,7 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
                 <Button
                   onClick={() => { onFail(payout); onClose(); }}
                   variant="outline"
-                  className="flex-1 gap-1.5 border-red-200 text-red-700 hover:bg-red-50"
+                  className="flex-1 gap-1.5 border-status-rejected/30 text-status-rejected hover:bg-status-rejected/10"
                   size="sm"
                 >
                   <XCircle className="h-4 w-4" /> Fail
@@ -376,15 +365,28 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
               )}
             </div>
           )}
-          {status === "PROCESSING" && onFail && (
-            <Button
-              onClick={() => { onFail(payout); onClose(); }}
-              variant="outline"
-              className="w-full gap-1.5 border-red-200 text-red-700 hover:bg-red-50"
-              size="sm"
-            >
-              <Ban className="h-4 w-4" /> Mark as Failed
-            </Button>
+          {status === "PROCESSING" && (
+            <div className="flex gap-2">
+              {onSettle && (
+                <Button
+                  onClick={() => { onSettle(payout); onClose(); }}
+                  className="flex-1 gap-1.5"
+                  size="sm"
+                >
+                  <CheckCircle className="h-4 w-4" /> Settle
+                </Button>
+              )}
+              {onFail && (
+                <Button
+                  onClick={() => { onFail(payout); onClose(); }}
+                  variant="outline"
+                  className="flex-1 gap-1.5 border-status-rejected/30 text-status-rejected hover:bg-status-rejected/10"
+                  size="sm"
+                >
+                  <Ban className="h-4 w-4" /> Fail
+                </Button>
+              )}
+            </div>
           )}
           <Button
             onClick={onClose}

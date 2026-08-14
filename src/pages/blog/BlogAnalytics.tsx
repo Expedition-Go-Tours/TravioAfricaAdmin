@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+﻿import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Eye, Share2, FileText, BookMarked, Archive } from "lucide-react";
 import { Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
@@ -34,7 +34,7 @@ export default function BlogAnalytics() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <button onClick={() => navigate(-1)} className="rounded-sm bg-white p-1.5 shadow-sm hover:ring-2 hover:ring-green-300 transition-all">
+        <button onClick={() => navigate(-1)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-surface-base text-text-secondary transition-colors hover:bg-surface-muted hover:text-text-primary">
           <ArrowLeft className="h-4 w-4 text-text-primary" />
         </button>
         <h1 className="text-lg font-semibold text-text-primary">Blog Analytics</h1>
@@ -52,7 +52,7 @@ export default function BlogAnalytics() {
         <>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {kpis.map((kpi) => (
-              <Card key={kpi.label} className="border-l-2 border-l-green-500/60">
+              <Card key={kpi.label} className="border-l-2 border-l-primary/50">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
                     <div className={`rounded-lg p-2 ${kpi.bg}`}>

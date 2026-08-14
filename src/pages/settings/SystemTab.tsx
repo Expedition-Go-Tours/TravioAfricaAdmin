@@ -49,7 +49,6 @@ export function SystemTab() {
   return (
     <div className="space-y-6">
       <div className="rounded-xl border border-border/60 bg-white shadow-sm overflow-hidden">
-        <div className={cn("h-1 w-full bg-gradient-to-r", isEnabled ? "from-rose-400 to-pink-500" : "from-emerald-400 to-green-500")} />
         <div className="px-6 py-5">
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
@@ -62,10 +61,10 @@ export function SystemTab() {
               <span className={cn(
                 "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border",
                 isEnabled
-                  ? "bg-rose-50 text-rose-700 border-rose-200"
-                  : "bg-green-50 text-green-700 border-green-200",
+                  ? "bg-status-rejected/10 text-status-rejected border-status-rejected/20"
+                  : "bg-status-active/10 text-status-active border-status-active/20",
               )}>
-                <span className={cn("w-1.5 h-1.5 rounded-full", isEnabled ? "bg-rose-500" : "bg-green-500")} />
+                <span className={cn("w-1.5 h-1.5 rounded-full", isEnabled ? "bg-status-rejected" : "bg-status-active")} />
                 {isEnabled ? "Under Maintenance" : "Live"}
               </span>
             </div>
@@ -74,15 +73,10 @@ export function SystemTab() {
         <div className="px-6 pb-5">
           <div className="flex items-center gap-4 pt-4 border-t border-border/40">
             <Button
-              variant="outline"
+              variant={isEnabled ? "outline" : "destructive"}
               disabled={toggleMaint.isPending}
               onClick={() => setShowConfirm(true)}
-              className={cn(
-                "gap-2 shadow-sm",
-                isEnabled
-                  ? "text-green-700 border-green-200 hover:bg-green-50 hover:text-green-800"
-                  : "text-rose-700 border-rose-200 hover:bg-rose-50 hover:text-rose-800",
-              )}
+              className="gap-2 shadow-sm"
             >
               {toggleMaint.isPending ? (
                 <RotateCw className="h-4 w-4 animate-spin" />
@@ -109,14 +103,11 @@ export function SystemTab() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <div className="flex items-start gap-4">
-              <div className={cn(
-                "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
-                isEnabled ? "bg-green-100" : "bg-rose-100",
-              )}>
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-text-primary/5">
                 {isEnabled ? (
-                  <Power className="h-5 w-5 text-green-600" />
+                  <Power className="h-5 w-5 text-text-primary" />
                 ) : (
-                  <AlertTriangle className="h-5 w-5 text-rose-600" />
+                  <AlertTriangle className="h-5 w-5 text-text-primary" />
                 )}
               </div>
               <div>

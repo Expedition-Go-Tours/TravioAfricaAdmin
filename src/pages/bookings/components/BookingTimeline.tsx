@@ -13,9 +13,9 @@ interface BookingTimelineProps {
 }
 
 const dotColors = {
-  active: "bg-indigo-500 border-indigo-200",
-  completed: "bg-emerald-500 border-emerald-200",
-  pending: "bg-slate-200 border-slate-100",
+  active: "bg-primary border-primary/30",
+  completed: "bg-status-active border-status-active/30",
+  pending: "bg-border border-border/60",
 };
 
 export function BookingTimeline({ steps }: BookingTimelineProps) {
@@ -30,7 +30,7 @@ export function BookingTimeline({ steps }: BookingTimelineProps) {
             {!isLast && (
               <div className={cn(
                 "absolute left-[11px] top-5 w-0.5 h-full -translate-x-1/2",
-                step.date ? "bg-indigo-100" : "bg-slate-100"
+                step.date ? "bg-primary/20" : "bg-border"
               )} />
             )}
             <div className="flex flex-col items-center shrink-0 pt-0.5">
@@ -51,12 +51,12 @@ export function BookingTimeline({ steps }: BookingTimelineProps) {
             <div className={cn("pb-5", isLast && "pb-0")}>
               <p className={cn(
                 "text-xs font-medium",
-                step.active ? "text-indigo-700" : step.date ? "text-slate-900" : "text-slate-400"
+                step.active ? "text-primary" : step.date ? "text-text-primary" : "text-text-tertiary"
               )}>
                 {step.label}
               </p>
               {step.date && (
-                <p className="text-[10px] text-slate-400 mt-0.5">
+                <p className="text-[10px] text-text-tertiary mt-0.5">
                   {new Date(step.date).toLocaleDateString("en-US", {
                     month: "short",
                     day: "numeric",
@@ -66,7 +66,7 @@ export function BookingTimeline({ steps }: BookingTimelineProps) {
                 </p>
               )}
               {step.description && (
-                <p className="text-[10px] text-slate-500 mt-0.5">{step.description}</p>
+                <p className="text-[10px] text-text-secondary mt-0.5">{step.description}</p>
               )}
             </div>
           </div>

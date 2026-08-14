@@ -468,10 +468,10 @@ export default function OverviewPage() {
                                 <div className="flex items-center gap-3">
                                   <span className="w-5 text-center text-xs font-medium text-text-tertiary shrink-0">{idx + 1}</span>
                                   {tour.coverPhoto ? (
-                                    <OptimizedImage src={tour.coverPhoto} alt="" width={32} className="h-8 w-8 rounded-lg object-cover shrink-0" />
+                                    <OptimizedImage src={tour.coverPhoto} alt="" width={32} className="h-8 w-8 rounded-md object-cover shrink-0" />
                                   ) : (
-                                    <div className="h-8 w-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
-                                      <MapPin className="h-4 w-4 text-gray-400" />
+                                    <div className="h-8 w-8 rounded-md bg-surface-muted flex items-center justify-center shrink-0">
+                                      <MapPin className="h-4 w-4 text-text-tertiary" />
                                     </div>
                                   )}
                                   <span className="font-medium text-text-primary truncate">{tour.title}</span>
@@ -699,10 +699,10 @@ function ModalShell({ title, children, onClose, wide }: { title: string; childre
         exit={{ opacity: 0, y: 40, scale: 0.97 }}
         transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
         className={cn(
-          "relative w-full sm:rounded-2xl bg-surface-base border border-border shadow-soft-lg overflow-hidden",
+          "relative w-full sm:rounded-xl bg-surface-base border border-border shadow-soft-lg overflow-hidden",
           "max-h-[85dvh] flex flex-col",
           wide ? "max-w-2xl" : "max-w-lg",
-          "rounded-t-2xl sm:rounded-2xl"
+          "rounded-t-xl sm:rounded-xl"
         )}
         onClick={(e) => e.stopPropagation()}
       >
@@ -710,7 +710,7 @@ function ModalShell({ title, children, onClose, wide }: { title: string; childre
           <h2 className="text-sm font-semibold text-text-primary">{title}</h2>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-xl text-text-tertiary hover:bg-surface-muted transition-colors"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-text-tertiary hover:bg-surface-muted transition-colors"
             aria-label="Close"
           >
             <X className="h-4 w-4" />
@@ -756,9 +756,9 @@ function WelcomeDashboard() {
             <button
               key={section.route}
               onClick={() => navigate(section.route)}
-              className="group flex flex-col items-start gap-3 rounded-2xl border border-border bg-surface-base p-5 text-left transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-primary/30 hover:shadow-tinted hover:-translate-y-0.5"
+              className="group flex flex-col items-start gap-3 rounded-lg border border-border bg-surface-base p-5 text-left transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-primary/30 hover:shadow-tinted hover:-translate-y-0.5"
             >
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent text-accent-foreground group-hover:scale-105 transition-transform duration-300">
+              <div className="flex h-11 w-11 items-center justify-center rounded-md bg-accent text-accent-foreground group-hover:scale-105 transition-transform duration-300">
                 {section.icon}
               </div>
               <div>
@@ -805,8 +805,8 @@ function KPICardWithSparkline({
   return (
     <div
       className={cn(
-        "rounded-2xl bg-white border-0 shadow-sm transition-all duration-200", styles.kpiCard,
-        onClick ? "cursor-pointer hover:shadow-md hover:-translate-y-0.5" : "",
+        "rounded-lg border border-border/80 bg-surface-base shadow-soft transition-all duration-200", styles.kpiCard,
+        onClick ? "cursor-pointer hover:shadow-soft-lg hover:-translate-y-0.5" : "",
       )}
       onClick={onClick}
       role={onClick ? "button" : undefined}
@@ -815,14 +815,14 @@ function KPICardWithSparkline({
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <p className="text-[13px] font-medium text-gray-500">{label}</p>
+          <p className="text-[13px] font-medium text-text-secondary">{label}</p>
           {loading ? (
             <Skeleton className="h-8 w-28 mt-2" />
           ) : (
-            <p className="mt-2 text-3xl font-bold text-gray-900 tabular-nums">{displayValue}</p>
+            <p className="mt-2 text-3xl font-bold text-text-primary tabular-nums">{displayValue}</p>
           )}
           {!loading && trend && (
-            <p className={cn("mt-2 text-xs font-medium flex items-center gap-1", trend.isPositive ? "text-emerald-600" : "text-red-500")}>
+            <p className={cn("mt-2 text-xs font-medium flex items-center gap-1", trend.isPositive ? "text-status-active" : "text-status-rejected")}>
               {trend.isPositive ? (
                 <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />

@@ -1,11 +1,10 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
-import { ShoppingCart, TrendingDown, Percent, ArrowLeft, X } from "lucide-react";
+import { ShoppingCart, X, Percent, TrendingDown } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -15,8 +14,13 @@ import { DataTable } from "@/components/shared/DataTable";
 import type { Column } from "@/components/shared/DataTable";
 import { SectionError } from "@/components/shared/SectionError";
 import { SectionEmpty } from "@/components/shared/SectionEmpty";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { PageInsight } from "@/components/shared/PageInsight";
+import { StatCard } from "@/components/shared/StatCard";
+import { ChartTooltip } from "@/components/shared/ChartTooltip";
+import { chartColors, chartAxis } from "@/components/shared/chartTheme";
 import api from "@/lib/axios";
-import { staggerContainer, fadeIn } from "@/lib/animations";
+import { staggerContainer } from "@/lib/animations";
 import { formatNumber } from "@/lib/utils";
 
 const periods = [
@@ -26,32 +30,13 @@ const periods = [
   { value: "1y", label: "1 year" },
 ];
 
-const ChartTooltip = ({ active, payload, label }: { active?: boolean; payload?: { dataKey: string; color: string; name: string; value: number }[]; label?: string }) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="rounded-lg border border-border bg-surface-base p-3 shadow-lg">
-      <p className="mb-2 text-xs font-medium text-text-tertiary">{label}</p>
-      {payload.map((entry) => (
-        <div key={entry.dataKey} className="flex items-center gap-2 text-sm">
-          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
-          <span className="text-text-secondary">{entry.name}:</span>
-          <span className="font-semibold text-text-primary">
-            {entry.dataKey === "abandonmentRate" ? `${entry.value.toFixed(1)}%` : formatNumber(entry.value)}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-};
-
 const legendPayload = [
-  { value: "Carts", color: "#d97706" },
-  { value: "Conversions", color: "#40966e" },
-  { value: "Abandonment Rate %", color: "#3b82f6" },
+  { value: "Carts", color: chartColors.amber },
+  { value: "Conversions", color: chartColors.green },
+  { value: "Abandonment Rate %", color: chartColors.blue },
 ];
 
 export default function CartAbandonmentPage() {
-  const navigate = useNavigate();
   const [period, setPeriod] = useState("30d");
 
   const { data, isLoading, isError, refetch } = useQuery({
@@ -65,24 +50,17 @@ export default function CartAbandonmentPage() {
 
   const byTourColumns: Column<{ tourTitle?: string; cartsAdded?: number; converted?: number; abandonmentRate?: number }>[] = [
     { key: "tourTitle", header: "Tour Name", render: (r) => r.tourTitle || "—" },
-    { key: "cartsAdded", header: "Carts Added", sortable: true, render: (r) => <span className="font-semibold text-text-primary">{formatNumber(r.cartsAdded)}</span> },
-    { key: "converted", header: "Converted", sortable: true, render: (r) => <span className="font-semibold text-green-700">{formatNumber(r.converted)}</span> },
-    { key: "abandonmentRate", header: "Abandonment Rate", sortable: true, render: (r) => r.abandonmentRate != null ? <span className="font-semibold text-amber-600">{r.abandonmentRate.toFixed(1)}%</span> : "—" },
+    { key: "cartsAdded", header: "Carts Added", sortable: true, align: "right", render: (r) => <span className="font-semibold text-text-primary tabular-nums">{formatNumber(r.cartsAdded)}</span> },
+    { key: "converted", header: "Converted", sortable: true, align: "right", render: (r) => <span className="font-semibold text-text-primary tabular-nums">{formatNumber(r.converted)}</span> },
+    { key: "abandonmentRate", header: "Abandonment Rate", sortable: true, align: "right", render: (r) => r.abandonmentRate != null ? <span className="font-semibold text-status-pending tabular-nums">{r.abandonmentRate.toFixed(1)}%</span> : "—" },
   ];
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <button onClick={() => navigate(-1)} className="rounded-sm bg-white p-1.5 shadow-sm hover:ring-2 hover:ring-green-300 transition-all shrink-0">
-            <ArrowLeft className="h-4 w-4 text-text-primary" />
-          </button>
-          <div>
-            <h1 className="text-xl font-semibold text-text-primary">Cart Abandonment</h1>
-            <p className="mt-0.5 text-sm text-text-tertiary">Monitor how many carts are abandoned before checkout</p>
-          </div>
-        </div>
+      <PageHeader
+        title="Cart Abandonment"
+        subtitle="Where carts get dropped before a booking is confirmed"
+      >
         <Select value={period} onValueChange={setPeriod}>
           <SelectTrigger className="w-32">
             <SelectValue />
@@ -93,65 +71,56 @@ export default function CartAbandonmentPage() {
             ))}
           </SelectContent>
         </Select>
-      </div>
+      </PageHeader>
 
-      {/* KPI Cards */}
-      <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <motion.div variants={fadeIn}><KpiCard
+      <PageInsight icon={<ShoppingCart className="h-4 w-4" />} title="Recoverable revenue">
+        A cart is abandoned when it's created but never turns into a booking. High abandonment usually signals friction at the final step, such as hidden pricing, unavailable dates, or a clunky checkout. The Abandonment by Tour table is the one to act on. Listings that get added to carts but rarely convert are costing you revenue at the very last moment, so they are the highest leverage fixes in this report.
+      </PageInsight>
+
+      <motion.div
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-2 gap-4 lg:grid-cols-4"
+      >
+        <StatCard
           label="Carts Created"
           value={isLoading ? "..." : formatNumber(overview?.cartsCreated)}
-          icon={<ShoppingCart className="h-4 w-4" />}
-          accent="amber"
-        /></motion.div>
-        <motion.div variants={fadeIn}><KpiCard
+          icon={<ShoppingCart className="h-5 w-5" />}
+          accent="blue"
+          loading={isLoading}
+          subtitle="Carts with at least one tour added"
+        />
+        <StatCard
           label="Carts Abandoned"
           value={isLoading ? "..." : formatNumber(cartsAbandoned)}
-          icon={<X className="h-4 w-4" />}
+          icon={<X className="h-5 w-5" />}
           accent="red"
-        /></motion.div>
-        <motion.div variants={fadeIn}><KpiCard
+          loading={isLoading}
+          subtitle="Carts left without a booking"
+        />
+        <StatCard
           label="Carts Converted"
           value={isLoading ? "..." : formatNumber(overview?.cartsConverted)}
-          icon={<ShoppingCart className="h-4 w-4" />}
-          accent="green"
-        /></motion.div>
-        <motion.div variants={fadeIn}><KpiCard
+          icon={<ShoppingCart className="h-5 w-5" />}
+          accent="emerald"
+          loading={isLoading}
+          subtitle="Carts that ended in a booking"
+        />
+        <StatCard
           label="Abandonment Rate"
           value={isLoading ? "..." : overview?.abandonmentRate != null ? `${overview.abandonmentRate.toFixed(1)}%` : "—"}
-          icon={<Percent className="h-4 w-4" />}
-          accent="blue"
-        /></motion.div>
+          icon={<Percent className="h-5 w-5" />}
+          accent="amber"
+          loading={isLoading}
+          subtitle="Share of carts that never converted"
+        />
       </motion.div>
 
-      {/* By Tour Table */}
-      <Card className="border-l-2 border-l-green-500/60">
-        <CardHeader className="border-b border-border pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
-              <TrendingDown className="h-4 w-4 text-amber-500" />
-              Abandonment by Tour
-            </CardTitle>
-            <span className="text-xs text-text-tertiary">Tours with highest cart abandonment</span>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <DataTable
-            columns={byTourColumns}
-            data={data?.data?.byTour || data?.byTour || []}
-            loading={isLoading}
-            error={isError ? "Failed to load tour data" : null}
-            emptyMessage="No tour abandonment data"
-            onRetry={() => refetch()}
-            keyExtractor={(r) => r.tourTitle || Math.random().toString()}
-          />
-        </CardContent>
-      </Card>
-
-      {/* Daily Trend */}
-      <Card className="border-l-2 border-l-green-500/60">
+      <Card>
         <CardHeader className="border-b border-border pb-3">
           <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
-            <TrendingDown className="h-4 w-4 text-amber-500" />
+            <TrendingDown className="h-4 w-4 text-status-pending" />
             Daily Trend
           </CardTitle>
         </CardHeader>
@@ -166,13 +135,16 @@ export default function CartAbandonmentPage() {
             <>
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={dailyTrend}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#dee3e8" vertical={false} />
-                  <XAxis dataKey="day" tick={{ fontSize: 11, fill: "#8a9ba8" }} axisLine={{ stroke: "#dee3e8" }} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: "#8a9ba8" }} axisLine={false} tickLine={false} />
-                  <Tooltip content={<ChartTooltip />} cursor={{ stroke: "#dee3e8", strokeDasharray: "3 3" }} />
-                  <Line type="monotone" dataKey="cartsAdded" stroke="#d97706" name="Carts" strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
-                  <Line type="monotone" dataKey="converted" stroke="#40966e" name="Conversions" strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
-                  <Line type="monotone" dataKey="abandonmentRate" stroke="#3b82f6" name="Abandonment Rate %" strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartAxis.grid} vertical={false} />
+                  <XAxis dataKey="day" tick={{ fontSize: 11, fill: chartAxis.tick }} axisLine={{ stroke: chartAxis.axis }} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: chartAxis.tick }} axisLine={false} tickLine={false} />
+                  <Tooltip
+                    content={<ChartTooltip formatter={(value, name) => name === "Abandonment Rate %" ? `${Number(value).toFixed(1)}%` : formatNumber(Number(value))} />}
+                    cursor={{ stroke: chartAxis.reference, strokeDasharray: "3 3" }}
+                  />
+                  <Line type="monotone" dataKey="cartsAdded" stroke={legendPayload[0].color} name="Carts" strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
+                  <Line type="monotone" dataKey="converted" stroke={legendPayload[1].color} name="Conversions" strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
+                  <Line type="monotone" dataKey="abandonmentRate" stroke={legendPayload[2].color} name="Abandonment Rate %" strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
                 </LineChart>
               </ResponsiveContainer>
               <div className="flex justify-center gap-6 pt-3">
@@ -187,41 +159,29 @@ export default function CartAbandonmentPage() {
           )}
         </CardContent>
       </Card>
-    </div>
-  );
-}
 
-function KpiCard({
-  label,
-  value,
-  icon,
-  accent,
-}: {
-  label: string;
-  value: string;
-  icon: React.ReactNode;
-  accent: "green" | "blue" | "amber" | "red";
-}) {
-  const m = {
-    green: { l: "border-l-green-500", bg: "bg-gradient-to-br from-green-50 to-white", ib: "bg-green-100", ic: "text-green-600" },
-    blue: { l: "border-l-blue-500", bg: "bg-gradient-to-br from-blue-50 to-white", ib: "bg-blue-100", ic: "text-blue-600" },
-    amber: { l: "border-l-amber-500", bg: "bg-gradient-to-br from-amber-50 to-white", ib: "bg-amber-100", ic: "text-amber-600" },
-    red: { l: "border-l-red-500", bg: "bg-gradient-to-br from-red-50 to-white", ib: "bg-red-100", ic: "text-red-600" },
-  }[accent];
-  return (
-    <motion.div
-      whileHover={{ y: -2 }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ duration: 0.2, ease: "easeOut" }}
-      className={`rounded-sm border border-border-muted border-l-[3px] ${m.l} ${m.bg} p-4 shadow-2 transition-all hover:shadow-md`}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium text-text-secondary truncate">{label}</p>
-          <p className="mt-1 text-xl font-bold text-text-primary leading-tight">{value}</p>
-        </div>
-        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${m.ib} ${m.ic} mt-0.5`}>{icon}</div>
-      </div>
-    </motion.div>
+      <Card>
+        <CardHeader className="border-b border-border pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+              <TrendingDown className="h-4 w-4 text-status-pending" />
+              Abandonment by Tour
+            </CardTitle>
+            <span className="text-xs text-text-tertiary">Tours with highest cart abandonment</span>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <DataTable
+            columns={byTourColumns}
+            data={data?.data?.byTour || data?.byTour || []}
+            loading={isLoading}
+            error={isError ? "Failed to load tour data" : null}
+            emptyMessage="No tour abandonment data"
+            onRetry={() => refetch()}
+            keyExtractor={(r) => r.tourTitle || Math.random().toString()}
+          />
+        </CardContent>
+      </Card>
+    </div>
   );
 }

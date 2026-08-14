@@ -1,6 +1,5 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   Area,
@@ -8,9 +7,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
-  ReferenceLine,
   ComposedChart,
 } from "recharts";
 import {
@@ -21,7 +18,6 @@ import {
   Eye,
   ShoppingCart,
   TrendingUp,
-  ArrowLeft,
 } from "lucide-react";
 import {
   Select,
@@ -37,8 +33,13 @@ import { DataTable } from "@/components/shared/DataTable";
 import type { Column } from "@/components/shared/DataTable";
 import { SectionError } from "@/components/shared/SectionError";
 import { SectionEmpty } from "@/components/shared/SectionEmpty";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { PageInsight } from "@/components/shared/PageInsight";
+import { StatCard } from "@/components/shared/StatCard";
+import { ChartTooltip } from "@/components/shared/ChartTooltip";
+import { chartColors, chartAxis } from "@/components/shared/chartTheme";
 import api from "@/lib/axios";
-import { staggerContainer, fadeIn } from "@/lib/animations";
+import { staggerContainer } from "@/lib/animations";
 import { formatNumber } from "@/lib/utils";
 
 const periods = [
@@ -48,38 +49,7 @@ const periods = [
   { value: "1y", label: "1 year" },
 ];
 
-const ChartTooltip = ({ active, payload, label }: { active?: boolean; payload?: { dataKey: string; color: string; name: string; value: number }[]; label?: string }) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="rounded-lg border border-border bg-surface-base p-3 shadow-lg">
-      <p className="mb-2 text-xs font-medium text-text-tertiary">{label}</p>
-      {payload.map((entry) => (
-        <div key={entry.dataKey} className="flex items-center gap-2 text-sm">
-          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
-          <span className="text-text-secondary">{entry.name}:</span>
-          <span className="font-semibold text-text-primary">{entry.value.toLocaleString()}</span>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-const ChartLegend = ({ payload }: { payload?: { dataKey: string; color: string; value: string }[] }) => {
-  if (!payload) return null;
-  return (
-    <div className="flex items-center justify-center gap-6 pt-2">
-      {payload.map((entry) => (
-        <div key={entry.dataKey} className="flex items-center gap-2 text-sm">
-          <span className="h-3 w-3 rounded-sm" style={{ backgroundColor: entry.color }} />
-          <span className="text-text-secondary">{entry.value}</span>
-        </div>
-      ))}
-    </div>
-  );
-};
-
 export default function SearchAnalyticsPage() {
-  const navigate = useNavigate();
   const [period, setPeriod] = useState("30d");
   const [showAllTop, setShowAllTop] = useState(false);
   const [showAllZero, setShowAllZero] = useState(false);
@@ -118,29 +88,22 @@ export default function SearchAnalyticsPage() {
 
   const topQueryColumns: Column<{ query?: string; searches?: number; uniqueUsers?: number; avgResults?: number }>[] = [
     { key: "query", header: "Query", render: (r) => r.query || "—" },
-    { key: "searches", header: "Searches", sortable: true, render: (r) => formatNumber(r.searches) },
-    { key: "uniqueUsers", header: "Unique Users", render: (r) => formatNumber(r.uniqueUsers) },
-    { key: "avgResults", header: "Avg Results", render: (r) => r.avgResults != null ? Number(r.avgResults).toFixed(1) : "—" },
+    { key: "searches", header: "Searches", sortable: true, align: "right", render: (r) => <span className="tabular-nums">{formatNumber(r.searches)}</span> },
+    { key: "uniqueUsers", header: "Unique Users", align: "right", render: (r) => <span className="tabular-nums">{formatNumber(r.uniqueUsers)}</span> },
+    { key: "avgResults", header: "Avg Results", align: "right", render: (r) => <span className="tabular-nums">{r.avgResults != null ? Number(r.avgResults).toFixed(1) : "—"}</span> },
   ];
 
   const zeroResultColumns: Column<{ query?: string; searches?: number }>[] = [
     { key: "query", header: "Query", render: (r) => <span className="text-status-flagged font-medium">{r.query}</span> },
-    { key: "searches", header: "Searches", render: (r) => formatNumber(r.searches) },
+    { key: "searches", header: "Searches", align: "right", render: (r) => <span className="tabular-nums">{formatNumber(r.searches)}</span> },
   ];
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <button onClick={() => navigate(-1)} className="rounded-sm bg-white p-1.5 shadow-sm hover:ring-2 hover:ring-green-300 transition-all shrink-0">
-            <ArrowLeft className="h-4 w-4 text-text-primary" />
-          </button>
-          <div>
-            <h1 className="text-xl font-semibold text-text-primary">Search Analytics</h1>
-            <p className="mt-0.5 text-sm text-text-tertiary">Track how users search and discover tours</p>
-          </div>
-        </div>
+      <PageHeader
+        title="Search Analytics"
+        subtitle="How customers search for tours, what they find, and where demand goes unanswered"
+      >
         <Select value={period} onValueChange={setPeriod}>
           <SelectTrigger className="w-32">
             <SelectValue />
@@ -151,72 +114,88 @@ export default function SearchAnalyticsPage() {
             ))}
           </SelectContent>
         </Select>
-      </div>
+      </PageHeader>
 
-      {/* KPI Cards — Overview page style */}
-      <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <motion.div variants={fadeIn}><KpiCard
+      <PageInsight icon={<Search className="h-4 w-4" />} title="Where demand goes unmet">
+        A zero result search is a customer asking for a tour you don't have. That's missed demand, not just a failed query. Read the Zero Result Queries table as a catalog backlog: every repeated query without a match is a tour title or tag you could add to capture sales you're currently losing. Conversion rates show how well search hands off to the rest of the funnel. A strong search to view with a weak search to book means customers find tours but hesitate before committing.
+      </PageInsight>
+
+      <motion.div
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-2 gap-4 lg:grid-cols-4"
+      >
+        <StatCard
           label="Total Searches"
           value={isLoading ? "..." : formatNumber(totalSearches)}
-          icon={<Search className="h-4 w-4" />}
-          accent="green"
-        /></motion.div>
-        <motion.div variants={fadeIn}><KpiCard
+          icon={<Search className="h-5 w-5" />}
+          accent="emerald"
+          loading={isLoading}
+          subtitle="All search queries submitted"
+        />
+        <StatCard
           label="Unique Searchers"
           value={isLoading ? "..." : formatNumber(overview?.uniqueSearchers)}
-          icon={<Users className="h-4 w-4" />}
+          icon={<Users className="h-5 w-5" />}
           accent="blue"
-        /></motion.div>
-        <motion.div variants={fadeIn}><KpiCard
+          loading={isLoading}
+          subtitle="Distinct users who searched"
+        />
+        <StatCard
           label="Zero-Result Searches"
           value={isLoading ? "..." : formatNumber(overview?.zeroResultSearches)}
-          icon={<FileX className="h-4 w-4" />}
+          icon={<FileX className="h-5 w-5" />}
           accent="amber"
-        /></motion.div>
-        <motion.div variants={fadeIn}><KpiCard
+          loading={isLoading}
+          subtitle="Queries with no matching tour"
+        />
+        <StatCard
           label="Zero-Result Rate"
           value={isLoading ? "..." : zeroRate != null ? `${zeroRate.toFixed(1)}%` : "—"}
-          icon={<Percent className="h-4 w-4" />}
-          accent="amber"
-        /></motion.div>
+          icon={<Percent className="h-5 w-5" />}
+          accent="red"
+          loading={isLoading}
+          subtitle="Share of searches that come up empty"
+        />
       </motion.div>
 
-      {/* Conversion Cards — same style */}
-      <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="grid grid-cols-2 gap-3 md:grid-cols-2">
-        <motion.div variants={fadeIn}><KpiCard
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <StatCard
           label="Search-to-View Rate"
           value={isLoading ? "..." : conversion?.searchToViewRate != null ? `${conversion.searchToViewRate.toFixed(1)}%` : "—"}
-          icon={<Eye className="h-4 w-4" />}
-          accent="green"
-        /></motion.div>
-        <motion.div variants={fadeIn}><KpiCard
+          icon={<Eye className="h-5 w-5" />}
+          accent="emerald"
+          loading={isLoading}
+          subtitle="Users who opened a tour from results"
+        />
+        <StatCard
           label="Search-to-Book Rate"
           value={isLoading ? "..." : conversion?.searchToBookRate != null ? `${conversion.searchToBookRate.toFixed(1)}%` : "—"}
-          icon={<ShoppingCart className="h-4 w-4" />}
+          icon={<ShoppingCart className="h-5 w-5" />}
           accent="blue"
-        /></motion.div>
-      </motion.div>
+          loading={isLoading}
+          subtitle="Users who searched, then booked"
+        />
+      </div>
 
-      {/* Daily Trend Chart */}
-      <Card className="border-l-2 border-l-green-500/60">
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between border-b border-border pb-3">
           <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
-            <TrendingUp className="h-4 w-4 text-green-600" />
+            <TrendingUp className="h-4 w-4 text-primary" />
             Daily Search Trend
           </CardTitle>
-          {!!conversion?.searchToViewRate && (
-            <div className="hidden items-center gap-4 text-right sm:flex">
-              <div>
-                <p className="text-xs text-text-tertiary">Search-to-View</p>
-                <p className="font-semibold text-text-primary">{conversion.searchToViewRate.toFixed(1)}%</p>
-              </div>
-              <div className="h-8 w-px bg-border-muted" />
-              <div>
-                <p className="text-xs text-text-tertiary">Search-to-Book</p>
-                <p className="font-semibold text-text-primary">{conversion?.searchToBookRate?.toFixed(1)}%</p>
-              </div>
+          <div className="hidden items-center gap-4 text-right sm:flex">
+            <div>
+              <p className="text-xs text-text-tertiary">Search-to-View</p>
+              <p className="font-semibold text-text-primary">{conversion?.searchToViewRate?.toFixed(1) ?? "—"}%</p>
             </div>
-          )}
+            <div className="h-8 w-px bg-border" />
+            <div>
+              <p className="text-xs text-text-tertiary">Search-to-Book</p>
+              <p className="font-semibold text-text-primary">{conversion?.searchToBookRate?.toFixed(1) ?? "—"}%</p>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -230,39 +209,36 @@ export default function SearchAnalyticsPage() {
               <ComposedChart data={raw.dailyTrend}>
                 <defs>
                   <linearGradient id="withResultsGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#40966e" stopOpacity={0.15} />
-                    <stop offset="100%" stopColor="#40966e" stopOpacity={0} />
+                    <stop offset="0%" stopColor={chartColors.green} stopOpacity={0.2} />
+                    <stop offset="100%" stopColor={chartColors.green} stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="withoutResultsGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#d92626" stopOpacity={0.15} />
-                    <stop offset="100%" stopColor="#d92626" stopOpacity={0} />
+                    <stop offset="0%" stopColor={chartColors.red} stopOpacity={0.2} />
+                    <stop offset="100%" stopColor={chartColors.red} stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#dee3e8" vertical={false} />
-                <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#8a9ba8" }} tickLine={false} axisLine={{ stroke: "#dee3e8" }} />
-                <YAxis tick={{ fontSize: 11, fill: "#8a9ba8" }} tickLine={false} axisLine={false} />
-                <Tooltip content={<ChartTooltip />} cursor={{ stroke: "#dee3e8", strokeDasharray: "3 3" }} />
-                <Legend content={<ChartLegend />} />
-                <ReferenceLine y={0} stroke="#dee3e8" />
-                <Area type="monotone" dataKey="withResults" fill="url(#withResultsGrad)" stroke="#40966e" strokeWidth={2.5} name="With Results" dot={false} activeDot={{ r: 4, strokeWidth: 0 }} animationDuration={800} />
-                <Area type="monotone" dataKey="withoutResults" fill="url(#withoutResultsGrad)" stroke="#d92626" strokeWidth={2.5} name="Without Results" dot={false} activeDot={{ r: 4, strokeWidth: 0 }} animationDuration={800} />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartAxis.grid} vertical={false} />
+                <XAxis dataKey="date" tick={{ fontSize: 11, fill: chartAxis.tick }} tickLine={false} axisLine={{ stroke: chartAxis.axis }} />
+                <YAxis tick={{ fontSize: 11, fill: chartAxis.tick }} tickLine={false} axisLine={false} />
+                <Tooltip content={<ChartTooltip />} cursor={{ stroke: chartAxis.reference, strokeDasharray: "3 3" }} />
+                <Area type="monotone" dataKey="withResults" fill="url(#withResultsGrad)" stroke={chartColors.green} strokeWidth={2.5} name="With Results" dot={false} activeDot={{ r: 4, strokeWidth: 0 }} animationDuration={800} />
+                <Area type="monotone" dataKey="withoutResults" fill="url(#withoutResultsGrad)" stroke={chartColors.red} strokeWidth={2.5} name="Without Results" dot={false} activeDot={{ r: 4, strokeWidth: 0 }} animationDuration={800} />
               </ComposedChart>
             </ResponsiveContainer>
           )}
         </CardContent>
       </Card>
 
-      {/* Tables Grid */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="border-l-2 border-l-green-500/60">
+        <Card>
           <CardHeader className="border-b border-border pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
-                <TrendingUp className="h-4 w-4 text-green-600" />
+                <TrendingUp className="h-4 w-4 text-primary" />
                 Top Queries
               </CardTitle>
               {!isLoading && !isError && (raw?.topQueries?.length || 0) > 10 && (
-                <Button variant="ghost" size="sm" className="text-xs text-green-600 hover:text-green-700" onClick={() => setShowAllTop(!showAllTop)}>
+                <Button variant="ghost" size="sm" className="text-xs text-primary hover:text-primary" onClick={() => setShowAllTop(!showAllTop)}>
                   {showAllTop ? "Show Less" : `View All (${raw?.topQueries?.length})`}
                 </Button>
               )}
@@ -280,15 +256,16 @@ export default function SearchAnalyticsPage() {
             />
           </CardContent>
         </Card>
-        <Card className="border-l-2 border-l-green-500/60">
+
+        <Card>
           <CardHeader className="border-b border-border pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">
-                <FileX className="h-4 w-4 text-amber-500" />
+                <FileX className="h-4 w-4 text-status-pending" />
                 Zero-Result Queries
               </CardTitle>
               {!isLoading && !isError && (raw?.zeroResultQueries?.length || 0) > 10 && (
-                <Button variant="ghost" size="sm" className="text-xs text-amber-600 hover:text-amber-700" onClick={() => setShowAllZero(!showAllZero)}>
+                <Button variant="ghost" size="sm" className="text-xs text-status-pending hover:text-status-pending" onClick={() => setShowAllZero(!showAllZero)}>
                   {showAllZero ? "Show Less" : `View All (${raw?.zeroResultQueries?.length})`}
                 </Button>
               )}
@@ -308,61 +285,5 @@ export default function SearchAnalyticsPage() {
         </Card>
       </div>
     </div>
-  );
-}
-
-/* ── Matching KPI Card from Overview page ── */
-
-function KpiCard({
-  label,
-  value,
-  icon,
-  accent,
-}: {
-  label: string;
-  value: string;
-  icon: React.ReactNode;
-  accent: "green" | "blue" | "amber";
-}) {
-  const accentMap = {
-    green: {
-      bg: "bg-gradient-to-br from-green-50 to-white",
-      border: "border-green-200/40",
-      iconBg: "bg-green-100",
-      iconColor: "text-green-600",
-    },
-    blue: {
-      bg: "bg-gradient-to-br from-blue-50 to-white",
-      border: "border-blue-200/40",
-      iconBg: "bg-blue-100",
-      iconColor: "text-blue-600",
-    },
-    amber: {
-      bg: "bg-gradient-to-br from-amber-50 to-white",
-      border: "border-amber-200/40",
-      iconBg: "bg-amber-100",
-      iconColor: "text-amber-600",
-    },
-  };
-
-  const a = accentMap[accent];
-
-  return (
-    <motion.div
-      whileHover={{ y: -2 }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ duration: 0.2, ease: "easeOut" }}
-      className={`rounded-sm border ${a.border} ${a.bg} p-3.5 shadow-2 transition-all hover:shadow-md`}
-    >
-      <div className="flex items-start justify-between">
-        <div className="min-w-0">
-          <p className="text-xs text-text-secondary truncate">{label}</p>
-          <p className="mt-1 text-lg font-bold text-text-primary leading-tight">{value}</p>
-        </div>
-        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${a.iconBg} ${a.iconColor}`}>
-          {icon}
-        </div>
-      </div>
-    </motion.div>
   );
 }

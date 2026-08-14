@@ -216,7 +216,7 @@ export function AdminUsersTab() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gradient-to-r from-green-50/50 to-transparent border-b border-border/40">
+              <tr className="bg-surface-muted/40 border-b border-border/40">
                 <th className="px-5 py-3.5 text-left font-semibold text-text-secondary text-xs uppercase tracking-wider">Admin</th>
                 <th className="px-5 py-3.5 text-left font-semibold text-text-secondary text-xs uppercase tracking-wider">Role</th>
                 <th className="px-5 py-3.5 text-left font-semibold text-text-secondary text-xs uppercase tracking-wider">Status</th>
@@ -227,12 +227,12 @@ export function AdminUsersTab() {
             <tbody>
               {filtered.map((admin, idx) => (
                 <tr key={admin.id} className={cn(
-                  "border-b border-border/30 transition-colors hover:bg-green-50/20",
+                  "border-b border-border/30 transition-colors hover:bg-surface-muted/50",
                   idx === filtered.length - 1 && "border-b-0",
                 )}>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600 text-xs font-bold text-white shadow-sm shrink-0">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-text-primary/5 text-xs font-bold text-text-primary shrink-0">
                         {admin.photoURL ? (
                           <OptimizedImage src={admin.photoURL} alt="" width={36} className="h-full w-full rounded-full object-cover" />
                         ) : (
@@ -277,7 +277,7 @@ export function AdminUsersTab() {
                       variant={admin.active ? "default" : "secondary"}
                       className={cn(
                         "text-xs font-medium",
-                        admin.active && "bg-green-100 text-green-700 hover:bg-green-100",
+                        admin.active && "bg-status-active/10 text-status-active hover:bg-status-active/10",
                       )}
                     >
                       <span className={cn("w-1.5 h-1.5 rounded-full mr-1.5", admin.active ? "bg-green-500" : "bg-text-tertiary")} />
@@ -320,7 +320,7 @@ export function AdminUsersTab() {
         <DialogContent className="max-w-lg !bg-white/95 backdrop-blur-xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white">
+              <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
                 <ShieldCheck className="h-3.5 w-3.5" />
               </div>
               Add Admin
@@ -378,10 +378,10 @@ export function AdminUsersTab() {
                     <button
                       key={u.id}
                       type="button"
-                      className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-green-50/50 border-b border-border/30 last:border-b-0 transition-colors"
+                      className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-surface-muted border-b border-border/30 last:border-b-0 transition-colors"
                       onClick={() => setSelectedUser({ id: u.id, name: u.name, email: u.email })}
                     >
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600 text-xs font-bold text-white shadow-sm">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-text-primary/5 text-xs font-bold text-text-primary">
                         {u.name.charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0">
@@ -395,19 +395,19 @@ export function AdminUsersTab() {
             )}
 
             {selectedUser && (
-              <div className="flex items-center justify-between rounded-xl border border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 px-4 py-3 shadow-sm">
+              <div className="flex items-center justify-between rounded-xl border border-border bg-surface-muted/50 px-4 py-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600 text-xs font-bold text-white shadow-sm">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-text-primary/5 text-xs font-bold text-text-primary">
                     {selectedUser.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-green-800 truncate">{selectedUser.name}</p>
-                    <p className="text-xs text-green-600 truncate">{selectedUser.email}</p>
+                    <p className="text-sm font-medium text-text-primary truncate">{selectedUser.name}</p>
+                    <p className="text-xs text-text-secondary truncate">{selectedUser.email}</p>
                   </div>
                 </div>
                 <button
                   type="button"
-                  className="shrink-0 ml-2 flex items-center justify-center w-8 h-8 sm:w-6 sm:h-6 rounded-md bg-green-200/50 text-green-600 hover:text-green-700 hover:bg-green-200 transition-colors"
+                  className="shrink-0 ml-2 flex items-center justify-center w-8 h-8 sm:w-6 sm:h-6 rounded-md bg-surface-muted text-text-secondary hover:text-text-primary hover:bg-surface-muted transition-colors"
                   onClick={() => { setSelectedUser(null); setSearchResults([]); setUserSearch(""); }}
                 >
                   <X className="h-3.5 w-3.5" />
@@ -475,7 +475,7 @@ export function AdminUsersTab() {
 
           {showRevoke && (
             <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-surface-muted/50 px-4 py-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600 text-sm font-bold text-white shadow-sm">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-text-primary/5 text-sm font-bold text-text-primary">
                 {showRevoke.photoURL ? (
                   <OptimizedImage src={showRevoke.photoURL} alt="" width={36} className="h-full w-full rounded-full object-cover" />
                 ) : (

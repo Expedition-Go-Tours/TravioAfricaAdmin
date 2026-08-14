@@ -7,50 +7,22 @@ import {
   Calendar,
   Clock,
   Hash,
-  DollarSign,
   CreditCard,
   Banknote,
   CheckCircle2,
   Users,
-  FileText,
   Percent,
-  Receipt,
+  Mail,
+  Phone,
+  ArrowUpRight,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { usePermission } from "@/hooks/usePermission";
-import { cn, timeAgo } from "@/lib/utils";
+import { cn, timeAgo, getStatusColor } from "@/lib/utils";
 import { BookingTimeline } from "./BookingTimeline";
 import type { Booking } from "@/types/booking";
 import { isPaymentPaid } from "@/types/booking";
 import OptimizedImage from "@/components/shared/OptimizedImage";
-
-const STATUS_BADGE: Record<string, "success" | "warning" | "error" | "info"> = {
-  PENDING: "warning",
-  CONFIRMED: "info",
-  COMPLETED: "success",
-  CANCELLED: "error",
-  NO_SHOW: "error",
-  REFUNDED: "warning",
-};
-
-const PAYMENT_STATUS_BADGE: Record<string, "success" | "warning" | "error" | "info"> = {
-  PENDING: "warning",
-  PROCESSING: "warning",
-  PAID: "success",
-  SUCCEEDED: "success",
-  FAILED: "error",
-  REFUNDED: "info",
-};
-
-const PAYOUT_STATUS_BADGE: Record<string, "success" | "warning" | "error" | "info"> = {
-  PENDING: "warning",
-  APPROVED: "info",
-  PROCESSING: "warning",
-  PAID: "success",
-  FAILED: "error",
-  CANCELLED: "error",
-};
 
 interface BookingDetailPanelProps {
   booking: Booking;
@@ -59,14 +31,37 @@ interface BookingDetailPanelProps {
   onViewCustomer: (customerId: string) => void;
 }
 
+function StatusChip({ status }: { status: string }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+        getStatusColor(status),
+      )}
+    >
+      {status}
+    </span>
+  );
+}
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-2 mb-2">
+      <div className="h-px flex-1 bg-border" />
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-text-tertiary">{children}</span>
+      <div className="h-px flex-1 bg-border" />
+    </div>
+  );
+}
+
 function DetailRow({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between py-1.5">
-      <div className="flex items-center gap-1.5 text-xs text-slate-500">
+      <div className="flex items-center gap-1.5 text-xs text-text-secondary">
         {icon}
         <span>{label}</span>
       </div>
-      <div className="text-xs font-medium text-slate-900 text-right">{children}</div>
+      <div className="text-xs font-medium text-text-primary text-right">{children}</div>
     </div>
   );
 }
@@ -74,15 +69,6 @@ function DetailRow({ icon, label, children }: { icon: React.ReactNode; label: st
 export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onViewCustomer }: BookingDetailPanelProps) {
   const navigate = useNavigate();
   const { can } = usePermission();
-
-  const statusColor: Record<string, string> = {
-    PENDING: "bg-amber-50 border-amber-200 text-amber-700",
-    CONFIRMED: "bg-blue-50 border-blue-200 text-blue-700",
-    COMPLETED: "bg-emerald-50 border-emerald-200 text-emerald-700",
-    CANCELLED: "bg-red-50 border-red-200 text-red-700",
-    NO_SHOW: "bg-red-50 border-red-200 text-red-700",
-    REFUNDED: "bg-orange-50 border-orange-200 text-orange-700",
-  };
 
   const timelineSteps = [
     { label: "Booking Created", date: booking.createdAt, active: true },
@@ -92,6 +78,7 @@ export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onViewC
   ];
 
   const travelerCount = Array.isArray(booking.travelers) ? booking.travelers.length : 0;
+  const commissionRate = Number(booking.commissionRate || 0) * 100;
 
   return createPortal(
     <>
@@ -110,44 +97,32 @@ export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onViewC
         transition={{ type: "spring", damping: 30, stiffness: 300 }}
         className="fixed right-0 top-0 z-50 h-full w-full sm:w-[420px] md:w-[480px] bg-surface-base border-l border-border shadow-[-4px_0_16px_rgba(0,0,0,0.06)] flex flex-col"
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0">
-          <div className="flex items-center gap-2">
-            <Hash className="h-4 w-4 text-slate-400" />
-            <h2 className="text-sm font-semibold text-slate-900">{booking.bookingNumber}</h2>
+        <div className="flex items-start justify-between gap-3 px-5 py-4 border-b border-border shrink-0">
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-text-tertiary">Booking Detail</p>
+            <h2 className="text-base font-semibold text-text-primary truncate mt-0.5">{booking.bookingNumber}</h2>
+            <div className="flex items-center gap-1.5 mt-2">
+              <StatusChip status={booking.status} />
+              <StatusChip status={booking.paymentStatus} />
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-text-tertiary hover:text-text-primary hover:bg-surface-muted transition-colors"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          <div className={cn("px-5 py-3 border-b text-xs font-semibold flex items-center gap-2", statusColor[booking.status] || "bg-slate-50")}>
-            <span className={cn(
-              "inline-block h-1.5 w-1.5 rounded-full",
-              booking.status === "PENDING" ? "bg-amber-500" :
-              booking.status === "CONFIRMED" ? "bg-blue-500" :
-              booking.status === "COMPLETED" ? "bg-emerald-500" :
-              "bg-red-500"
-            )} />
-            {booking.status === "PENDING" ? "Pending Confirmation" :
-             booking.status === "CONFIRMED" ? "Confirmed" :
-             booking.status === "COMPLETED" ? "Completed" :
-             booking.status === "CANCELLED" ? "Cancelled" :
-             booking.status === "NO_SHOW" ? "No Show" :
-             booking.status}
-          </div>
-
           <div className="p-5 space-y-5">
             <div className="flex items-start gap-4">
               <button
                 onClick={() => onViewCustomer(booking.customer.id)}
-                className="shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded-full"
+                className="shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded-full"
                 title="View customer profile"
               >
-                <div className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-indigo-100 text-base font-bold text-indigo-600 ring-2 ring-indigo-100">
+                <div className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-base font-bold text-primary ring-2 ring-primary/10">
                   {booking.customer.photoURL ? (
                     <OptimizedImage src={booking.customer.photoURL} alt="" width={48} className="absolute inset-0 h-full w-full object-cover" />
                   ) : null}
@@ -156,49 +131,47 @@ export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onViewC
                   </span>
                 </div>
               </button>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-base font-semibold text-slate-900 truncate">{booking.customer.name}</h3>
-                  <Badge variant={STATUS_BADGE[booking.status] || "info"} className="text-[10px] px-1.5 py-0">
-                    {booking.status}
-                  </Badge>
-                </div>
+              <div className="flex-1 min-w-0 space-y-1">
+                <h3 className="text-sm font-semibold text-text-primary truncate">{booking.customer.name}</h3>
                 {booking.customer.email && (
-                  <p className="text-xs text-slate-500 mt-0.5">{booking.customer.email}</p>
+                  <p className="flex items-center gap-1.5 text-xs text-text-secondary truncate">
+                    <Mail className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{booking.customer.email}</span>
+                  </p>
                 )}
                 {booking.customer.phone && (
-                  <p className="text-xs text-slate-400 mt-0.5">{booking.customer.phone}</p>
+                  <p className="flex items-center gap-1.5 text-xs text-text-secondary">
+                    <Phone className="h-3 w-3 shrink-0" />
+                    {booking.customer.phone}
+                  </p>
                 )}
               </div>
             </div>
 
             <button
               onClick={() => navigate(`/admin/tours/${booking.tour.id}`)}
-              className="w-full rounded-xl border border-slate-200 p-4 space-y-1 text-left cursor-pointer hover:border-indigo-200 hover:shadow-sm transition-all"
+              className="w-full rounded-xl border border-border bg-surface-base p-4 space-y-1 text-left cursor-pointer hover:border-primary/40 hover:shadow-tinted transition-all"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg shrink-0 overflow-hidden bg-slate-100 border border-slate-200">
+                <div className="w-10 h-10 rounded-lg shrink-0 overflow-hidden bg-surface-muted border border-border">
                   {booking.tour.coverPhoto ? (
                     <OptimizedImage src={booking.tour.coverPhoto} alt="" width={40} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <MapPin className="h-4 w-4 text-slate-300" />
+                      <MapPin className="h-4 w-4 text-text-tertiary" />
                     </div>
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-slate-900 truncate">{booking.tour.title}</p>
-                  <p className="text-xs text-slate-500">by {booking.tour.supplier.name}</p>
+                  <p className="text-sm font-medium text-text-primary truncate">{booking.tour.title}</p>
+                  <p className="text-xs text-text-secondary">by {booking.tour.supplier.name}</p>
                 </div>
+                <ArrowUpRight className="h-4 w-4 text-text-tertiary shrink-0" />
               </div>
             </button>
 
             <div>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="h-px flex-1 bg-slate-100" />
-                <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Booking Details</span>
-                <div className="h-px flex-1 bg-slate-100" />
-              </div>
+              <SectionTitle>Booking Details</SectionTitle>
               <div className="space-y-0.5">
                 <DetailRow icon={<Calendar className="h-3 w-3" />} label="Travel Date">
                   {new Date(booking.selectedDate).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
@@ -226,56 +199,67 @@ export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onViewC
             </div>
 
             <div>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="h-px flex-1 bg-slate-100" />
-                <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Pricing Breakdown</span>
-                <div className="h-px flex-1 bg-slate-100" />
-              </div>
-              <div className="rounded-xl border border-slate-200 p-4 space-y-1">
-                <DetailRow icon={<DollarSign className="h-3 w-3" />} label="Subtotal">
+              <SectionTitle>Pricing</SectionTitle>
+              <div className="rounded-xl border border-border p-4 space-y-0.5">
+                <DetailRow icon={<Banknote className="h-3 w-3" />} label="Subtotal">
                   {booking.currency} {Number(booking.subtotal).toLocaleString()}
                 </DetailRow>
-                <DetailRow icon={<Percent className="h-3 w-3" />} label="Taxes">
-                  {booking.currency} {Number(booking.taxes).toLocaleString()}
-                </DetailRow>
-                <DetailRow icon={<FileText className="h-3 w-3" />} label="Fees">
+                <DetailRow icon={<CreditCard className="h-3 w-3" />} label="Fees">
                   {booking.currency} {Number(booking.fees).toLocaleString()}
                 </DetailRow>
                 {Number(booking.discounts) > 0 && (
-                  <DetailRow icon={<Receipt className="h-3 w-3" />} label="Discounts">
+                  <DetailRow icon={<Percent className="h-3 w-3" />} label="Discounts">
                     -{booking.currency} {Number(booking.discounts).toLocaleString()}
                   </DetailRow>
                 )}
-                <div className="border-t border-slate-200 pt-2 mt-2 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-900">Total</span>
-                  <span className="text-sm font-bold text-slate-900">
+                <div className="border-t border-border pt-2 mt-2 flex items-center justify-between">
+                  <span className="text-xs font-semibold text-text-primary">Total</span>
+                  <span className="text-sm font-bold text-text-primary tabular-nums">
                     {booking.currency} {Number(booking.total).toLocaleString()}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="h-px flex-1 bg-slate-100" />
-                <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Payment</span>
-                <div className="h-px flex-1 bg-slate-100" />
-              </div>
-              <div className="rounded-xl border border-slate-200 p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="h-4 w-4 text-slate-400" />
-                    <span className="text-xs font-medium text-slate-700">Payment Status</span>
+            {commissionRate > 0 && (
+              <div>
+                <SectionTitle>Commission</SectionTitle>
+                <div className="rounded-xl border border-border p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-text-secondary">Commission Rate</span>
+                    <span className="text-xs font-medium text-text-primary tabular-nums">{commissionRate}%</span>
                   </div>
-                  <Badge variant={PAYMENT_STATUS_BADGE[booking.paymentStatus] || "info"} className="text-[10px] px-1.5 py-0">
-                    {booking.paymentStatus}
-                  </Badge>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-text-secondary">Platform Commission</span>
+                    <span className="text-xs font-medium text-text-primary tabular-nums">
+                      {booking.currency} {Number(booking.commissionAmount).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="border-t border-border pt-2 flex items-center justify-between">
+                    <span className="text-xs font-medium text-text-primary">Supplier Payout</span>
+                    <span className="text-xs font-semibold text-text-primary tabular-nums">
+                      {booking.currency} {Number(booking.supplierPayout).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div>
+              <SectionTitle>Payment</SectionTitle>
+              <div className="rounded-xl border border-border p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <CreditCard className="h-4 w-4 text-text-tertiary" />
+                    <span className="text-xs font-medium text-text-secondary">Payment Status</span>
+                  </span>
+                  <StatusChip status={booking.paymentStatus} />
                 </div>
                 {booking.paymentStatus === "PENDING" && can('bookings.confirm-payment') && (
                   <Button
                     onClick={() => onConfirmPayment(booking)}
                     size="sm"
-                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-8 gap-1.5"
+                    className="w-full h-8"
                   >
                     <CheckCircle2 className="h-3.5 w-3.5" />
                     Confirm Payment
@@ -286,27 +270,21 @@ export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onViewC
 
             {booking.payouts && booking.payouts.length > 0 && (
               <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="h-px flex-1 bg-slate-100" />
-                  <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Payout</span>
-                  <div className="h-px flex-1 bg-slate-100" />
-                </div>
-                <div className="rounded-xl border border-slate-200 p-4 space-y-2">
+                <SectionTitle>Payout</SectionTitle>
+                <div className="rounded-xl border border-border p-4 space-y-2">
                   {booking.payouts.map((payout) => (
                     <div key={payout.id} className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0">
-                        <Banknote className="h-4 w-4 text-slate-400 shrink-0" />
-                        <span className="text-xs font-medium text-slate-700">
+                        <Banknote className="h-4 w-4 text-text-tertiary shrink-0" />
+                        <span className="text-xs font-medium text-text-primary">
                           {payout.currency} {Number(payout.amount).toLocaleString()}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <Badge variant={PAYOUT_STATUS_BADGE[payout.status] || "info"} className="text-[10px] px-1.5 py-0">
-                          {payout.status}
-                        </Badge>
+                        <StatusChip status={payout.status} />
                         <button
                           onClick={() => navigate(`/admin/payouts?tab=list&payoutId=${payout.id}&payoutStatus=${payout.status}`)}
-                          className="text-[10px] font-medium text-indigo-600 hover:text-indigo-800 hover:underline whitespace-nowrap"
+                          className="text-[10px] font-medium text-primary hover:text-primary/80 hover:underline whitespace-nowrap"
                         >
                           View Payout
                         </button>
@@ -319,37 +297,25 @@ export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onViewC
 
             {booking.specialRequests && (
               <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="h-px flex-1 bg-slate-100" />
-                  <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Special Requests</span>
-                  <div className="h-px flex-1 bg-slate-100" />
-                </div>
-                <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3">
-                  <p className="text-xs text-slate-600">{booking.specialRequests}</p>
+                <SectionTitle>Special Requests</SectionTitle>
+                <div className="rounded-xl border border-border bg-surface-muted/50 p-3">
+                  <p className="text-xs text-text-secondary">{booking.specialRequests}</p>
                 </div>
               </div>
             )}
 
             {booking.cancellationReason && (
               <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="h-px flex-1 bg-slate-100" />
-                  <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Cancellation Reason</span>
-                  <div className="h-px flex-1 bg-slate-100" />
-                </div>
-                <div className="rounded-xl border border-red-200 bg-red-50 p-3">
-                  <p className="text-xs text-red-700">{booking.cancellationReason}</p>
+                <SectionTitle>Cancellation Reason</SectionTitle>
+                <div className="rounded-xl border border-status-rejected/30 bg-status-rejected/10 p-3">
+                  <p className="text-xs text-status-rejected">{booking.cancellationReason}</p>
                 </div>
               </div>
             )}
 
             <div>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="h-px flex-1 bg-slate-100" />
-                <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Timeline</span>
-                <div className="h-px flex-1 bg-slate-100" />
-              </div>
-              <div className="rounded-xl border border-slate-200 p-4">
+              <SectionTitle>Timeline</SectionTitle>
+              <div className="rounded-xl border border-border p-4">
                 <BookingTimeline steps={timelineSteps} />
               </div>
             </div>

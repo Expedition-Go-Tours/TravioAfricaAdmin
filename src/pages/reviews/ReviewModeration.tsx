@@ -18,11 +18,13 @@ import {
   Clock,
   AlertTriangle,
   MessageSquareText,
-  ShieldCheck,
   MapPin,
   Store,
   RefreshCw,
   Inbox,
+  BadgeCheck,
+  CheckCheck,
+  ThumbsUp,
 } from "lucide-react";
 import {
   Dialog,
@@ -42,7 +44,7 @@ import { usePermission } from "@/hooks/usePermission";
 import { useSocketInvalidate } from "@/hooks/useSocketEvent";
 import { AnimatedNumber } from "@/components/shared/AnimatedNumber";
 import api from "@/lib/axios";
-import { cn, timeAgo } from "@/lib/utils";
+import { cn, timeAgo, getStatusColor } from "@/lib/utils";
 import { CustomerProfilePanel } from "./components/CustomerProfilePanel";
 import OptimizedImage from "@/components/shared/OptimizedImage";
 
@@ -79,22 +81,79 @@ interface TourGroup {
 
 const STATUS_PILLS = ["All", "Pending", "Approved", "Rejected", "Flagged"];
 
-const STATUS_BADGE: Record<string, "success" | "warning" | "error" | "info"> = {
-  APPROVED: "success",
-  PENDING: "warning",
-  REJECTED: "error",
-  FLAGGED: "info",
-};
-
 const staggerList = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.06 } },
+  visible: { transition: { staggerChildren: 0.05 } },
 };
 
 const fadeSlide = {
   hidden: { opacity: 0, y: 12 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.25, 0.1, 0.25, 1] as const } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.28, ease: [0.25, 0.1, 0.25, 1] as const } },
 };
+
+type StatAccent = "pending" | "flagged" | "active";
+
+const STAT_ACCENT: Record<StatAccent, { bar: string; chip: string; glow: string; icon: string }> = {
+  pending: {
+    bar: "from-status-pending to-status-pending/15",
+    chip: "bg-status-pending/10 text-status-pending ring-status-pending/20",
+    glow: "hover:shadow-tinted-lg",
+    icon: "text-status-pending",
+  },
+  flagged: {
+    bar: "from-status-flagged to-status-flagged/15",
+    chip: "bg-status-flagged/10 text-status-flagged ring-status-flagged/20",
+    glow: "hover:shadow-2",
+    icon: "text-status-flagged",
+  },
+  active: {
+    bar: "from-status-active to-status-active/15",
+    chip: "bg-status-active/10 text-status-active ring-status-active/20",
+    glow: "hover:shadow-tinted",
+    icon: "text-status-active",
+  },
+};
+
+function QueueStat({ label, value, icon: Icon, accent, loading }: { label: string; value: number; icon: typeof Clock; accent: StatAccent; loading?: boolean }) {
+  const m = STAT_ACCENT[accent];
+  return (
+    <motion.div
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      className={cn(
+        "relative overflow-hidden rounded-lg border border-border/80 bg-surface-base p-4 shadow-soft transition-all duration-200",
+        m.glow,
+      )}
+    >
+      <div className={cn("pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r", m.bar)} />
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-text-tertiary">{label}</p>
+          <p className="mt-1.5 text-2xl font-bold tracking-tight text-text-primary tabular-nums leading-tight">
+            {loading ? <Skeleton className="inline-block h-6 w-10 align-middle" /> : <AnimatedNumber value={value} />}
+          </p>
+        </div>
+        <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset", m.chip)}>
+          <Icon className={cn("h-4 w-4", m.icon)} />
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function StatusChip({ status }: { status: string }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+        getStatusColor(status),
+      )}
+    >
+      {status}
+    </span>
+  );
+}
 
 export default function ReviewModerationPage() {
   const navigate = useNavigate();
@@ -359,6 +418,12 @@ export default function ReviewModerationPage() {
     </div>
   );
 
+  const iconBtn = (extra?: string) =>
+    cn(
+      "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors",
+      extra,
+    );
+
   const renderReviewCard = (review: Review) => {
     const status = review.status || "PENDING";
     const isPending = status === "PENDING";
@@ -368,52 +433,63 @@ export default function ReviewModerationPage() {
         key={review.id}
         variants={fadeSlide}
         layout
-        className="bg-white rounded-xl border border-border p-5"
+        className={cn(
+          "group rounded-xl border bg-surface-base p-5 shadow-soft transition-all duration-200 hover:shadow-soft-lg",
+          isPending ? "border-status-pending/25" : "border-border/80",
+        )}
       >
-          <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-4">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <button
               onClick={() => setSelectedCustomerId(review.customer?.id || null)}
-              className="shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded-full"
+              className="shrink-0 rounded-full ring-2 ring-border transition-all hover:ring-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               title="View customer profile"
             >
               {renderAvatar(review.customer?.photoURL, review.customer?.name)}
             </button>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="text-sm font-semibold text-text-primary break-words block">
+                <span className="truncate text-sm font-semibold text-text-primary">
                   {review.customer?.name || "Anonymous"}
                 </span>
-                {review.verified && <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-emerald-500" />}
+                {review.verified && <BadgeCheck className="h-4 w-4 shrink-0 text-status-active" />}
               </div>
-              <span className="text-xs text-text-tertiary">{timeAgo(review.createdAt)}</span>
+              <div className="mt-0.5 flex items-center gap-1.5 text-xs text-text-tertiary">
+                <span>{timeAgo(review.createdAt)}</span>
+                {review.tour?.supplier?.name && (
+                  <>
+                    <span>·</span>
+                    <span className="truncate">{review.tour.supplier.name}</span>
+                  </>
+                )}
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-2 sm:shrink-0">
-            {renderStars(review.rating || 0)}
-            <span className="text-xs text-text-tertiary whitespace-nowrap">({review.rating || 0}/5)</span>
-            <Badge variant={STATUS_BADGE[status] || "warning"} className="shrink-0">
-              {status}
-            </Badge>
+          <div className="flex shrink-0 flex-col items-end gap-1.5">
+            <div className="flex items-center gap-1.5">
+              {renderStars(review.rating || 0)}
+              <span className="text-sm font-bold text-text-primary tabular-nums">{review.rating || 0}</span>
+            </div>
+            <StatusChip status={status} />
           </div>
         </div>
 
         {review.title && (
-          <p className="text-sm font-semibold text-text-primary mt-4">{review.title}</p>
+          <p className="mt-4 text-sm font-semibold text-text-primary">{review.title}</p>
         )}
         {review.comment && (
-          <p className="text-sm text-text-secondary leading-relaxed mt-1.5">{review.comment}</p>
+          <p className="mt-1.5 text-sm leading-relaxed text-text-secondary">{review.comment}</p>
         )}
 
         {review.photos && review.photos.length > 0 && (
-          <div className="flex gap-2 mt-4 flex-wrap">
+          <div className="mt-4 flex flex-wrap gap-2.5">
             {review.photos.map((photo, i) => (
               <motion.img
                 key={i}
                 src={photo}
                 alt=""
                 whileHover={{ scale: 1.04 }}
-                className="w-20 h-20 rounded-lg object-cover border border-border bg-surface-muted cursor-pointer"
+                className="h-20 w-20 cursor-pointer rounded-lg border border-border bg-surface-muted object-cover"
                 loading="lazy"
                 onClick={() => setLightbox({ images: review.photos!, index: i })}
               />
@@ -422,22 +498,22 @@ export default function ReviewModerationPage() {
         )}
 
         {review.supplierResponse && (
-          <div className="mt-4 bg-surface-muted rounded-lg p-4 border border-border">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-medium text-text-secondary">
-                <MessageSquareText className="h-3 w-3 inline-block mr-1 -mt-0.5" />
+          <div className="mt-4 rounded-r-lg border-l-2 border-l-status-active bg-surface-muted/60 p-4">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[11px] font-medium uppercase tracking-wide text-text-secondary">
+                <MessageSquareText className="mr-1 inline h-3 w-3 -mt-0.5" />
                 Response from {review.tour?.supplier?.name || "Supplier"}
                 {review.supplierResponseAt && (
-                  <span className="font-normal text-text-tertiary"> · {timeAgo(review.supplierResponseAt)}</span>
+                  <span className="ml-1 font-normal normal-case text-text-tertiary">· {timeAgo(review.supplierResponseAt)}</span>
                 )}
               </span>
               {can("reviews.moderate") && (
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                   <motion.button
                     type="button"
-                    whileHover={{ scale: 1.1 }}
+                    whileHover={{ scale: 1.08 }}
                     whileTap={{ scale: 0.95 }}
-                    className="flex h-7 w-7 items-center justify-center rounded-md text-text-tertiary hover:text-indigo-600 hover:bg-indigo-50"
+                    className={iconBtn("text-text-tertiary hover:bg-surface-base hover:text-primary")}
                     title="Edit response"
                     onClick={() => {
                       setEditResponseReview(review);
@@ -448,9 +524,9 @@ export default function ReviewModerationPage() {
                   </motion.button>
                   <motion.button
                     type="button"
-                    whileHover={{ scale: 1.1 }}
+                    whileHover={{ scale: 1.08 }}
                     whileTap={{ scale: 0.95 }}
-                    className="flex h-7 w-7 items-center justify-center rounded-md text-text-tertiary hover:text-red-600 hover:bg-red-50"
+                    className={iconBtn("text-text-tertiary hover:bg-status-rejected/10 hover:text-status-rejected")}
                     title="Delete response"
                     onClick={() => setDeleteResponseReview(review)}
                   >
@@ -459,84 +535,98 @@ export default function ReviewModerationPage() {
                 </div>
               )}
             </div>
-            <p className="text-sm text-text-primary leading-relaxed">{review.supplierResponse}</p>
+            <p className="mt-1.5 text-sm leading-relaxed text-text-primary">{review.supplierResponse}</p>
           </div>
         )}
 
-        <div className="flex items-center gap-2 pt-4 mt-4 border-t border-border">
-          {isPending ? (
-            <>
-              {can("reviews.moderate") && (
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="inline-flex items-center justify-center h-8 px-4 text-xs font-semibold rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
-                  onClick={() => openModerate("approve", review)}
-                >
-                  <Check className="h-3.5 w-3.5 mr-1.5" />
-                  Approve
-                </motion.button>
-              )}
-              {can("reviews.moderate") && (
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="inline-flex items-center justify-center h-8 px-4 text-xs font-semibold rounded-lg border border-border text-text-secondary bg-white hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors"
-                  onClick={() => openModerate("reject", review)}
-                >
-                  <X className="h-3.5 w-3.5 mr-1.5" />
-                  Reject
-                </motion.button>
-              )}
-              {can("reviews.moderate") && (
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg text-amber-600 hover:bg-amber-50 transition-colors"
-                  title="Flag"
-                  onClick={() => openModerate("flag", review)}
-                >
-                  <Flag className="h-4 w-4" />
-                </motion.button>
-              )}
-              {can("reviews.moderate") && (
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg text-indigo-600 hover:bg-indigo-50 transition-colors"
-                  title="Edit review"
-                  onClick={() => openEdit(review)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </motion.button>
-              )}
-            </>
-          ) : (
-            <>
-              {can("reviews.moderate") && (
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg text-indigo-600 hover:bg-indigo-50 transition-colors"
-                  title="Edit review"
-                  onClick={() => openEdit(review)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </motion.button>
-              )}
-              {can("reviews.moderate") && (
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="inline-flex items-center justify-center h-8 px-3 text-xs font-medium rounded-lg text-red-600 hover:bg-red-50 transition-colors gap-1.5"
-                  onClick={() => setDeleteReview(review)}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  Delete
-                </motion.button>
-              )}
-            </>
-          )}
+        <div className="mt-5 flex items-center justify-between gap-3 border-t border-border/70 pt-4">
+          <div className="flex items-center gap-2 text-xs text-text-tertiary">
+            {(review.helpfulCount ?? 0) > 0 && (
+              <span className="flex items-center gap-1">
+                <ThumbsUp className="h-3 w-3" />
+                {review.helpfulCount}
+              </span>
+            )}
+            {(review.reportCount ?? 0) > 0 && (
+              <span className="flex items-center gap-1">
+                <Flag className="h-3 w-3 text-status-flagged" />
+                {review.reportCount}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {isPending ? (
+              <>
+                {can("reviews.moderate") && (
+                  <Button size="sm" onClick={() => openModerate("approve", review)}>
+                    <Check />
+                    Approve
+                  </Button>
+                )}
+                {can("reviews.moderate") && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-status-rejected hover:border-status-rejected/30 hover:bg-status-rejected/10 hover:text-status-rejected"
+                    onClick={() => openModerate("reject", review)}
+                  >
+                    <X />
+                    Reject
+                  </Button>
+                )}
+                {can("reviews.moderate") && (
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={iconBtn("text-status-pending hover:bg-status-pending/10")}
+                    title="Flag"
+                    onClick={() => openModerate("flag", review)}
+                  >
+                    <Flag className="h-4 w-4" />
+                  </motion.button>
+                )}
+                {can("reviews.moderate") && (
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={iconBtn("text-text-tertiary hover:bg-primary/10 hover:text-primary")}
+                    title="Edit review"
+                    onClick={() => openEdit(review)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </motion.button>
+                )}
+              </>
+            ) : (
+              <>
+                {can("reviews.moderate") && (
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={iconBtn("text-text-tertiary hover:bg-primary/10 hover:text-primary")}
+                    title="Edit review"
+                    onClick={() => openEdit(review)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </motion.button>
+                )}
+                {can("reviews.moderate") && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-status-rejected hover:bg-status-rejected/10 hover:text-status-rejected"
+                    onClick={() => setDeleteReview(review)}
+                  >
+                    <Trash2 />
+                    Delete
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </motion.div>
     );
@@ -562,8 +652,9 @@ export default function ReviewModerationPage() {
               <ArrowLeft className="h-4 w-4 text-text-secondary" />
             </motion.button>
             <div className="min-w-0">
-              <h1 className="text-lg font-semibold text-text-primary truncate">Review Moderation</h1>
-              <p className="text-sm text-text-secondary truncate">Moderate customer reviews across all tours</p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-primary">Moderation Queue</p>
+              <h1 className="text-xl font-bold tracking-tight text-text-primary truncate">Review Moderation</h1>
+              <p className="text-sm text-text-secondary truncate">Review, approve, and manage customer feedback across all tours</p>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -572,14 +663,14 @@ export default function ReviewModerationPage() {
               whileTap={{ scale: 0.98 }}
               onClick={() => refetch()}
               disabled={isRefetching}
-              className="inline-flex items-center justify-center h-9 px-3 text-xs font-medium rounded-xl border border-border bg-surface-base text-text-secondary hover:bg-surface-muted transition-colors disabled:opacity-50 gap-1.5"
+              className="inline-flex items-center justify-center h-9 px-3 text-xs font-medium rounded-lg border border-border bg-surface-base text-text-secondary hover:bg-surface-muted transition-colors disabled:opacity-50 gap-1.5"
             >
               <RefreshCw className={cn("h-3.5 w-3.5", isRefetching && "animate-spin")} />
               <span className="hidden sm:inline">{isRefetching ? "Refreshing..." : "Refresh"}</span>
             </motion.button>
             <Badge variant="warning" className="px-2.5 py-1 text-xs gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-500 inline-block" />
-              {pendingCount}
+              <span className="h-1.5 w-1.5 rounded-full bg-status-pending inline-block" />
+              {pendingCount} pending
             </Badge>
           </div>
         </div>
@@ -591,30 +682,9 @@ export default function ReviewModerationPage() {
         transition={{ duration: 0.3, delay: 0.05 }}
         className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4"
       >
-        {[
-          { label: "Pending", value: pendingCount, bg: "bg-amber-50", text: "text-amber-600", Icon: Clock },
-          { label: "Flagged", value: flaggedCount, bg: "bg-red-50", text: "text-red-500", Icon: AlertTriangle },
-          { label: "Moderated Today", value: moderatedTodayCount, bg: "bg-indigo-50", text: "text-indigo-500", Icon: RefreshCw },
-        ].map((stat) => (
-          <motion.div
-            key={stat.label}
-            whileHover={{ y: -2 }}
-            transition={{ duration: 0.2 }}
-            className="rounded-xl border border-border bg-surface-base p-4 md:p-5 transition-shadow hover:shadow-soft"
-          >
-            <div className="flex items-center gap-3">
-              <div className={cn("flex h-10 w-10 items-center justify-center rounded-lg", stat.bg)}>
-                <stat.Icon className={cn("h-5 w-5", stat.text)} />
-              </div>
-              <div>
-                <p className="text-xs font-medium text-text-secondary">{stat.label}</p>
-                <div className="text-xl font-bold text-text-primary">
-                  {isLoading ? <Skeleton className="inline-block w-10 h-6 align-middle" /> : <AnimatedNumber value={stat.value} />}
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        ))}
+        <QueueStat label="Pending" value={pendingCount} icon={Clock} accent="pending" loading={isLoading} />
+        <QueueStat label="Flagged" value={flaggedCount} icon={Flag} accent="flagged" loading={isLoading} />
+        <QueueStat label="Moderated Today" value={moderatedTodayCount} icon={CheckCheck} accent="active" loading={isLoading} />
       </motion.div>
 
       <motion.div
@@ -626,10 +696,10 @@ export default function ReviewModerationPage() {
         <div className="relative w-full sm:flex-1 sm:max-w-xs">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" />
           <Input
-            placeholder="Search reviews..."
+            placeholder="Search reviews, customers, tours..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 h-10 w-full"
+            className="pl-9 h-10 w-full rounded-lg"
           />
           {searchQuery && (
             <motion.button
@@ -642,21 +712,21 @@ export default function ReviewModerationPage() {
             </motion.button>
           )}
         </div>
-        <div className="flex gap-1 bg-surface-muted p-0.5 rounded-xl border border-border overflow-x-auto scrollbar-none w-full sm:w-auto">
+        <div className="flex gap-1 bg-surface-muted p-0.5 rounded-lg border border-border overflow-x-auto scrollbar-none w-full sm:w-auto">
           {STATUS_PILLS.map((pill) => (
             <motion.button
               key={pill}
               layout
               onClick={() => { setStatusFilter(pill); setPage(1); }}
               className={cn(
-                "relative px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors",
-                statusFilter === pill ? "text-indigo-700" : "text-text-secondary hover:text-text-primary",
+                "relative px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-colors",
+                statusFilter === pill ? "text-primary" : "text-text-secondary hover:text-text-primary",
               )}
             >
               {statusFilter === pill && (
                 <motion.span
                   layoutId="activePill"
-                  className="absolute inset-0 bg-surface-base rounded-lg border border-border shadow-sm"
+                  className="absolute inset-0 bg-surface-base rounded-md border border-border shadow-sm"
                   transition={{ type: "spring", stiffness: 380, damping: 30 }}
                 />
               )}
@@ -678,8 +748,13 @@ export default function ReviewModerationPage() {
             <div className="space-y-2">
               {Array.from({ length: 5 }).map((_, i) => (
                 <div key={i} className="border border-border rounded-xl p-4 bg-surface-base">
-                  <Skeleton className="h-4 w-36 mb-2" />
-                  <Skeleton className="h-3 w-24" />
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-11 w-11 rounded-lg" />
+                    <div className="space-y-2 flex-1">
+                      <Skeleton className="h-4 w-36" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -707,8 +782,8 @@ export default function ReviewModerationPage() {
             exit={{ opacity: 0 }}
             className="flex flex-col items-center justify-center py-20"
           >
-            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-destructive/10 mb-4">
-              <AlertTriangle className="h-7 w-7 text-destructive" />
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-status-rejected/10 mb-4">
+              <AlertTriangle className="h-7 w-7 text-status-rejected" />
             </div>
             <p className="text-sm font-medium text-text-primary mb-1">Failed to load reviews</p>
             <p className="text-xs text-text-tertiary mb-5">Could not fetch reviews from the server.</p>
@@ -724,14 +799,21 @@ export default function ReviewModerationPage() {
             exit={{ opacity: 0 }}
             className="flex flex-col items-center justify-center py-20"
           >
-            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-surface-muted mb-4">
-              <Inbox className="h-7 w-7 text-text-tertiary" />
+            <div className={cn(
+              "flex h-14 w-14 items-center justify-center rounded-xl mb-4",
+              query ? "bg-surface-muted" : "bg-status-active/10",
+            )}>
+              {query ? (
+                <Search className="h-7 w-7 text-text-tertiary" />
+              ) : (
+                <CheckCheck className="h-7 w-7 text-status-active" />
+              )}
             </div>
             <p className="text-sm font-medium text-text-primary mb-1">
               {query ? "No reviews match your search" : "All caught up!"}
             </p>
             <p className="text-xs text-text-tertiary">
-              {query ? "Try adjusting your search terms." : "No reviews to moderate right now."}
+              {query ? "Try adjusting your search terms." : "There are no reviews waiting for moderation."}
             </p>
           </motion.div>
         ) : (
@@ -753,37 +835,43 @@ export default function ReviewModerationPage() {
                     layout
                     onClick={() => setSelectedTourId(group.tourId)}
                     className={cn(
-                      "rounded-xl border p-4 cursor-pointer transition-all",
+                      "relative cursor-pointer rounded-xl border p-3.5 transition-all duration-200",
                       isSelected
-                        ? "border-primary/30 bg-primary/5 shadow-sm"
-                        : "border-border bg-surface-base hover:border-border-muted hover:bg-surface-muted/30",
+                        ? "border-primary/30 bg-primary/5 shadow-soft"
+                        : "border-border bg-surface-base hover:border-border-muted hover:bg-surface-muted/40 hover:shadow-soft",
                     )}
                   >
+                    <span
+                      className={cn(
+                        "absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-primary transition-opacity duration-200",
+                        isSelected ? "opacity-100" : "opacity-0",
+                      )}
+                    />
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-lg shrink-0 overflow-hidden bg-surface-muted border border-border relative">
+                      <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg border border-border bg-surface-muted">
                         {group.coverPhoto ? (
-                          <OptimizedImage src={group.coverPhoto} alt="" width={40} className="absolute inset-0 w-full h-full object-cover" />
+                          <OptimizedImage src={group.coverPhoto} alt="" width={44} className="absolute inset-0 w-full h-full object-cover" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-xs font-bold text-text-tertiary">
+                          <div className="w-full h-full flex items-center justify-center text-sm font-bold text-text-tertiary">
                             {group.tourTitle.charAt(0)}
                           </div>
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-sm font-semibold text-text-primary truncate">{group.tourTitle}</span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-1.5">
+                          <span className="truncate text-sm font-semibold text-text-primary">{group.tourTitle}</span>
                           {group.pendingReviewCount > 0 && (
-                            <span className="shrink-0 inline-flex items-center justify-center h-4 min-w-[18px] px-1 rounded-full bg-status-pending/10 text-[10px] font-bold text-status-pending">
+                            <span className="shrink-0 inline-flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-full bg-status-pending/15 text-[10px] font-bold text-status-pending">
                               {group.pendingReviewCount}
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-1.5 text-xs text-text-tertiary mt-1">
-                          {group.supplierName && <span className="truncate">{group.supplierName}</span>}
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-text-tertiary mt-1">
-                          {renderStars(group.avgRating)}
-                          <span>{group.avgRating.toFixed(1)}</span>
+                        {group.supplierName && (
+                          <p className="mt-0.5 truncate text-xs text-text-tertiary">{group.supplierName}</p>
+                        )}
+                        <div className="mt-1 flex items-center gap-1.5 text-xs text-text-tertiary">
+                          <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                          <span className="font-semibold text-text-primary tabular-nums">{group.avgRating.toFixed(1)}</span>
                           <span>· {group.totalReviews}</span>
                         </div>
                       </div>
@@ -796,28 +884,40 @@ export default function ReviewModerationPage() {
             <div className="min-h-0 flex flex-col overflow-hidden">
               {selectedTour ? (
                 <>
-                  <div className="flex items-center justify-between flex-shrink-0 pb-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <MapPin className="h-4 w-4 text-primary shrink-0" />
-                      <div className="min-w-0">
-                        <h2 className="text-base font-semibold text-text-primary truncate">{selectedTour.tourTitle}</h2>
-                        <div className="flex items-center gap-2 text-xs text-text-secondary flex-wrap">
-                          {selectedTour.supplierName && (
-                            <span className="flex items-center gap-1">
-                              <Store className="h-3 w-3" />
-                              {selectedTour.supplierName}
-                            </span>
-                          )}
-                          <span>{renderStars(selectedTour.avgRating)} {selectedTour.avgRating.toFixed(1)}</span>
-                          <span>· {selectedTour.totalReviews} review{selectedTour.totalReviews !== 1 ? "s" : ""}</span>
-                          {selectedTour.pendingReviewCount > 0 && (
-                            <Badge variant="warning" className="text-[10px] px-1.5 py-0">
-                              {selectedTour.pendingReviewCount} pending
-                            </Badge>
-                          )}
+                  <div className="mb-5 flex items-center gap-4 rounded-xl border border-border/80 bg-surface-base p-4 shadow-soft">
+                    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-border bg-surface-muted">
+                      {selectedTour.coverPhoto ? (
+                        <OptimizedImage src={selectedTour.coverPhoto} alt="" width={56} className="absolute inset-0 w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-lg font-bold text-text-tertiary">
+                          {selectedTour.tourTitle.charAt(0)}
                         </div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 shrink-0 text-primary" />
+                        <h2 className="truncate text-base font-semibold text-text-primary">{selectedTour.tourTitle}</h2>
+                      </div>
+                      <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-secondary">
+                        {selectedTour.supplierName && (
+                          <span className="flex items-center gap-1">
+                            <Store className="h-3 w-3" />
+                            {selectedTour.supplierName}
+                          </span>
+                        )}
+                        <span className="flex items-center gap-1">
+                          {renderStars(selectedTour.avgRating)}
+                          <span className="font-semibold text-text-primary tabular-nums">{selectedTour.avgRating.toFixed(1)}</span>
+                        </span>
+                        <span>· {selectedTour.totalReviews} review{selectedTour.totalReviews !== 1 ? "s" : ""}</span>
                       </div>
                     </div>
+                    {selectedTour.pendingReviewCount > 0 && (
+                      <Badge variant="warning" className="shrink-0 text-[10px] px-2 py-1">
+                        {selectedTour.pendingReviewCount} pending
+                      </Badge>
+                    )}
                   </div>
 
                   <motion.div
@@ -835,7 +935,7 @@ export default function ReviewModerationPage() {
                     <Inbox className="h-7 w-7 text-text-tertiary" />
                   </div>
                   <p className="text-sm font-medium text-text-primary mb-1">No reviews to display</p>
-                  <p className="text-xs text-text-tertiary">Select a tour from the left panel to view its reviews.</p>
+                  <p className="text-xs text-text-tertiary">Select a tour from the queue to review its feedback.</p>
                 </div>
               )}
             </div>
@@ -858,7 +958,7 @@ export default function ReviewModerationPage() {
               whileTap={{ scale: 0.98 }}
               disabled={pagination.currentPage <= 1}
               onClick={() => setPage((p) => p - 1)}
-              className="inline-flex flex-1 sm:flex-none items-center justify-center h-9 px-3 text-xs font-medium rounded-xl border border-border bg-surface-base text-text-secondary hover:bg-surface-muted transition-colors disabled:opacity-40 disabled:pointer-events-none gap-1"
+              className="inline-flex flex-1 sm:flex-none items-center justify-center h-9 px-3 text-xs font-medium rounded-lg border border-border bg-surface-base text-text-secondary hover:bg-surface-muted transition-colors disabled:opacity-40 disabled:pointer-events-none gap-1"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
               Previous
@@ -868,7 +968,7 @@ export default function ReviewModerationPage() {
               whileTap={{ scale: 0.98 }}
               disabled={pagination.currentPage >= pagination.totalPages}
               onClick={() => setPage((p) => p + 1)}
-              className="inline-flex flex-1 sm:flex-none items-center justify-center h-9 px-3 text-xs font-medium rounded-xl border border-border bg-surface-base text-text-secondary hover:bg-surface-muted transition-colors disabled:opacity-40 disabled:pointer-events-none gap-1"
+              className="inline-flex flex-1 sm:flex-none items-center justify-center h-9 px-3 text-xs font-medium rounded-lg border border-border bg-surface-base text-text-secondary hover:bg-surface-muted transition-colors disabled:opacity-40 disabled:pointer-events-none gap-1"
             >
               Next
               <ChevronRight className="h-3.5 w-3.5" />
@@ -974,7 +1074,7 @@ export default function ReviewModerationPage() {
             </DialogHeader>
             <div className="space-y-3 py-2">
               <Label htmlFor="reason">
-                Reason <span className="text-red-500">*</span>
+                Reason <span className="text-status-rejected">*</span>
               </Label>
               <Textarea
                 id="reason"
@@ -984,7 +1084,7 @@ export default function ReviewModerationPage() {
                 rows={3}
               />
               {reason.length > 0 && reason.length < 10 && (
-                <p className="text-xs text-red-500">Minimum 10 characters required</p>
+                <p className="text-xs text-status-rejected">Minimum 10 characters required</p>
               )}
               <p className="text-xs text-text-tertiary">{reason.length}/10 minimum</p>
             </div>
@@ -1012,33 +1112,114 @@ export default function ReviewModerationPage() {
 
       {actionReview && actionType === "approve" && (
         <Dialog open onOpenChange={(open) => { if (!open) closeModerate(); }}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Approve Review</DialogTitle>
-              <DialogDescription>
-                This review will become visible to all customers on the tour page.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="rounded-lg border border-border bg-surface-muted/50 p-4 space-y-1.5">
-              <div className="flex items-center gap-2">
-                {renderStars(actionReview.rating || 0)}
-                <span className="text-sm font-medium text-text-primary ml-1">{actionReview.customer?.name || "Anonymous"}</span>
+          <DialogContent className="max-w-xl overflow-hidden p-0">
+            <div className="h-1.5 w-full bg-gradient-to-r from-status-active to-status-active/40" />
+            <div className="p-6">
+              <DialogHeader className="text-left">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-status-active/10 ring-1 ring-status-active/20">
+                    <BadgeCheck className="h-5 w-5 text-status-active" />
+                  </div>
+                  <div>
+                    <DialogTitle className="text-lg">Approve Review</DialogTitle>
+                    <DialogDescription>
+                      This review will be published and become visible to all customers on the tour page.
+                    </DialogDescription>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              <div className="mt-5 space-y-3">
+                <div className="flex items-center gap-2.5 rounded-xl border border-border bg-surface-muted/40 p-3">
+                  {actionReview.tour?.coverPhoto ? (
+                    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-border">
+                      <OptimizedImage
+                        src={actionReview.tour.coverPhoto}
+                        alt=""
+                        width={40}
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-surface-base text-sm font-bold text-text-tertiary">
+                      {(actionReview.tour?.title || "T").charAt(0)}
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-text-primary">
+                      {actionReview.tour?.title || "Unknown tour"}
+                    </p>
+                    {actionReview.tour?.supplier?.name && (
+                      <p className="mt-0.5 flex items-center gap-1 text-xs text-text-tertiary">
+                        <Store className="h-3 w-3" />
+                        {actionReview.tour.supplier.name}
+                      </p>
+                    )}
+                  </div>
+                  <Badge className="shrink-0 bg-status-pending/10 px-2 py-0.5 text-[10px] font-semibold text-status-pending ring-1 ring-status-pending/20">
+                    PENDING
+                  </Badge>
+                </div>
+
+                <div className="rounded-xl border border-border bg-surface-base p-4">
+                  <div className="flex items-start gap-3">
+                    {renderAvatar(actionReview.customer?.photoURL, actionReview.customer?.name)}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="text-sm font-semibold text-text-primary">
+                          {actionReview.customer?.name || "Anonymous"}
+                        </span>
+                        {actionReview.verified && (
+                          <BadgeCheck className="h-4 w-4 shrink-0 text-status-active" />
+                        )}
+                        <span className="text-xs text-text-tertiary">· {timeAgo(actionReview.createdAt)}</span>
+                      </div>
+                      <div className="mt-1 flex items-center gap-1.5">
+                        {renderStars(actionReview.rating || 0)}
+                        <span className="text-sm font-bold text-text-primary tabular-nums">{actionReview.rating || 0}</span>
+                        <span className="text-xs text-text-tertiary">/ 5</span>
+                      </div>
+                    </div>
+                  </div>
+                  {actionReview.title && (
+                    <p className="mt-3 text-sm font-semibold text-text-primary">{actionReview.title}</p>
+                  )}
+                  {actionReview.comment && (
+                    <p className="mt-1.5 whitespace-pre-line text-sm leading-relaxed text-text-secondary">
+                      {actionReview.comment}
+                    </p>
+                  )}
+                  {actionReview.photos && actionReview.photos.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {actionReview.photos.map((photo, i) => (
+                        <motion.img
+                          key={i}
+                          src={photo}
+                          alt=""
+                          whileHover={{ scale: 1.04 }}
+                          className="h-16 w-16 cursor-pointer rounded-lg border border-border bg-surface-muted object-cover"
+                          loading="lazy"
+                          onClick={() => setLightbox({ images: actionReview.photos!, index: i })}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-              {actionReview.title && <p className="text-sm font-medium text-text-primary">{actionReview.title}</p>}
-              {actionReview.comment && <p className="text-sm text-text-secondary line-clamp-3">{actionReview.comment}</p>}
+
+              <DialogFooter className="mt-5">
+                <Button variant="outline" onClick={closeModerate} disabled={moderateMutation.isPending}>
+                  Cancel
+                </Button>
+                <Button onClick={handleAction} disabled={moderateMutation.isPending} className="min-w-[140px]">
+                  {moderateMutation.isPending ? (
+                    <><Loader2 className="h-4 w-4 animate-spin mr-1" />Approving...</>
+                  ) : (
+                    <>Approve Review</>
+                  )}
+                </Button>
+              </DialogFooter>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={closeModerate} disabled={moderateMutation.isPending}>
-                Cancel
-              </Button>
-              <Button onClick={handleAction} disabled={moderateMutation.isPending}>
-                {moderateMutation.isPending ? (
-                  <><Loader2 className="h-4 w-4 animate-spin mr-1" />Approving...</>
-                ) : (
-                  "Approve Review"
-                )}
-              </Button>
-            </DialogFooter>
           </DialogContent>
         </Dialog>
       )}
@@ -1055,7 +1236,7 @@ export default function ReviewModerationPage() {
               </DialogDescription>
             </DialogHeader>
 
-            <div className="rounded-xl border border-border bg-gradient-to-b from-surface-muted to-surface-base p-4 space-y-3">
+            <div className="rounded-xl border border-border bg-surface-muted/40 p-4 space-y-3">
               <div className="flex items-center gap-2 pb-1">
                 <div className="h-px flex-1 bg-surface-muted" />
                 <span className="text-[11px] font-medium text-text-tertiary uppercase tracking-wider">Original Review</span>
@@ -1076,7 +1257,7 @@ export default function ReviewModerationPage() {
                 <p className="text-sm font-medium text-text-primary">{editReview.title}</p>
               )}
               {editReview.comment && (
-                <div className="rounded-lg bg-white border border-border p-3">
+                <div className="rounded-lg bg-surface-base border border-border p-3">
                   <p className="text-sm text-text-secondary leading-relaxed">{editReview.comment}</p>
                 </div>
               )}
@@ -1115,8 +1296,8 @@ export default function ReviewModerationPage() {
         <Dialog open onOpenChange={(open) => { if (!open) setDeleteReview(null); }}>
           <DialogContent className="max-w-lg space-y-4">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-red-600">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-50">
+              <DialogTitle className="flex items-center gap-2 text-status-rejected">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-status-rejected/10">
                   <Trash2 className="h-4 w-4" />
                 </div>
                 Delete Review
@@ -1126,7 +1307,7 @@ export default function ReviewModerationPage() {
               </DialogDescription>
             </DialogHeader>
 
-            <div className="rounded-xl border border-border bg-gradient-to-b from-surface-muted to-surface-base p-4 space-y-3">
+            <div className="rounded-xl border border-border bg-surface-muted/40 p-4 space-y-3">
               <div className="flex items-center gap-2 pb-1">
                 <div className="h-px flex-1 bg-surface-muted" />
                 <span className="text-[11px] font-medium text-text-tertiary uppercase tracking-wider">Review to Delete</span>
@@ -1147,7 +1328,7 @@ export default function ReviewModerationPage() {
                 <p className="text-sm font-medium text-text-primary">{deleteReview.title}</p>
               )}
               {deleteReview.comment && (
-                <div className="rounded-lg bg-white border border-border p-3">
+                <div className="rounded-lg bg-surface-base border border-border p-3">
                   <p className="text-sm text-text-secondary leading-relaxed">{deleteReview.comment}</p>
                 </div>
               )}
@@ -1157,19 +1338,19 @@ export default function ReviewModerationPage() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-red-200 bg-red-50 p-4 space-y-3">
+            <div className="rounded-xl border border-status-rejected/20 bg-status-rejected/5 p-4 space-y-3">
               <div className="flex items-center gap-2">
-                <div className="h-px flex-1 bg-red-200/60" />
-                <span className="text-[11px] font-semibold text-red-600 uppercase tracking-wider">Warning</span>
-                <div className="h-px flex-1 bg-red-200/60" />
+                <div className="h-px flex-1 bg-status-rejected/15" />
+                <span className="text-[11px] font-semibold text-status-rejected uppercase tracking-wider">Warning</span>
+                <div className="h-px flex-1 bg-status-rejected/15" />
               </div>
               <div className="flex items-start gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-100">
-                  <AlertTriangle className="h-4 w-4 text-red-500" />
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-status-rejected/10">
+                  <AlertTriangle className="h-4 w-4 text-status-rejected" />
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm font-semibold text-red-900">This action cannot be undone</p>
-                  <p className="text-sm text-red-700 leading-relaxed">
+                  <p className="text-sm font-semibold text-text-primary">This action cannot be undone</p>
+                  <p className="text-sm text-text-secondary leading-relaxed">
                     Deleting this review will permanently remove the review, all associated photos, the supplier response, and moderation history. This cannot be reversed.
                   </p>
                 </div>
@@ -1214,13 +1395,13 @@ export default function ReviewModerationPage() {
         <Dialog open onOpenChange={(open) => { if (!open) setDeleteResponseReview(null); }}>
           <DialogContent className="max-w-sm">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-red-600">
+              <DialogTitle className="flex items-center gap-2 text-status-rejected">
                 <Trash2 className="h-5 w-5" /> Delete Response
               </DialogTitle>
               <DialogDescription>This will permanently remove the supplier's response from this review.</DialogDescription>
             </DialogHeader>
-            <div className="rounded-lg border border-red-200/60 bg-red-50/30 p-3">
-              <p className="text-sm text-red-700 line-clamp-3">{deleteResponseReview.supplierResponse}</p>
+            <div className="rounded-lg border border-status-rejected/20 bg-status-rejected/5 p-3">
+              <p className="text-sm text-status-rejected line-clamp-3">{deleteResponseReview.supplierResponse}</p>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDeleteResponseReview(null)} disabled={deleteResponseMutation.isPending}>Cancel</Button>

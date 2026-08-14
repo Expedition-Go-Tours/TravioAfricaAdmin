@@ -90,7 +90,7 @@ export function CategoryDialog({ open, onOpenChange, category, categories, onSav
               id="cat-parent"
               value={parentId}
               onChange={(e) => setParentId(e.target.value)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:border-text-secondary/50 focus-visible:ring-2 focus-visible:ring-text-secondary/20"
             >
               <option value="">None (top-level)</option>
               {categories
