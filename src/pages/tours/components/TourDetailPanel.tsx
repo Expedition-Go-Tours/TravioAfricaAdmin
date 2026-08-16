@@ -36,6 +36,7 @@ import { PhotoGallery } from './PhotoGallery';
 import { DiffViewer } from './DiffViewer';
 import type { ReviewQueueTour, TourDraftReview } from '@/services/tourService';
 import OptimizedImage from "@/components/shared/OptimizedImage";
+import { PickupZoneMap } from "@/components/shared/PickupZoneMap";
 
 interface TourDetailPanelProps {
   tour: ReviewQueueTour | null;
@@ -740,13 +741,25 @@ export function TourDetailPanel({
                       </div>
                     )}
                     {content.pickupAreas && (
-                      <div className="flex gap-4">
+                      <div className="flex flex-col gap-1.5">
                         <dt className="w-36 shrink-0 text-sm font-medium text-muted-foreground">Pickup areas</dt>
                         <dd className="text-sm text-foreground">
                           {Array.isArray(content.pickupAreas)
-                            ? (content.pickupAreas as string[]).join(', ')
+                            ? content.pickupAreas
+                                .map((a) => {
+                                  if (typeof a === "string") return a
+                                  const o = a as { name?: string; address?: string; time?: string; polygon?: unknown; exclusions?: unknown[] }
+                                  return [o.name, o.address].filter(Boolean).join(", ") || "—"
+                                })
+                                .join("; ")
                             : String(content.pickupAreas)}
                         </dd>
+                        {Array.isArray(content.pickupAreas) && (
+                          <PickupZoneMap
+                            areas={content.pickupAreas as { name?: string; address?: string; time?: string; polygon?: [number, number][]; exclusions?: [number, number][][] }[]}
+                            height={220}
+                          />
+                        )}
                       </div>
                     )}
                     {content.pickupDescription && (

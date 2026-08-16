@@ -42,7 +42,7 @@ export default function RevenueTrendPage() {
     queryFn: () => api.get("/admin/analytics/revenue-trend").then((r) => r.data),
   });
 
-  const months = data?.data?.months || [];
+  const months = useMemo(() => data?.data?.months || [], [data?.data?.months]);
 
   const totals = useMemo(() => {
     return METRICS.reduce(

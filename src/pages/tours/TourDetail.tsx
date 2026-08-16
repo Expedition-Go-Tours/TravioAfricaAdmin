@@ -16,6 +16,7 @@ import {
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { SectionError } from "@/components/shared/SectionError";
 import OptimizedImage from "@/components/shared/OptimizedImage";
+import { PickupZoneMap } from "@/components/shared/PickupZoneMap";
 import api from "@/lib/axios";
 import { cn, formatCurrency, formatNumber, formatDate, formatTime } from "@/lib/utils";
 import { usePermission } from "@/hooks/usePermission";
@@ -111,7 +112,7 @@ interface TourDetail {
   meetingMode?: string;
   meetingPoint?: { name?: string; address?: string } | null;
   meetingPointPicture?: string;
-  pickupAreas?: { name?: string; address?: string }[];
+  pickupAreas?: { name?: string; address?: string; time?: string; polygon?: [number, number][]; exclusions?: [number, number][][] }[];
   pickupLocations?: { name?: string; address?: string }[];
   dropoffOption?: string;
   dropoffLocation?: { name?: string; address?: string } | null;
@@ -275,7 +276,7 @@ function normalizeTour(raw: Record<string, unknown>): TourDetail {
     meetingMode: typeof productContent.meetingMode === "string" ? productContent.meetingMode : undefined,
     meetingPoint: (meetingPoint.name || meetingPoint.address) ? { name: meetingPoint.name as string, address: meetingPoint.address as string } : null,
     meetingPointPicture: typeof productContent.meetingPointPicture === "string" ? productContent.meetingPointPicture : undefined,
-    pickupAreas: asArray(productContent.pickupAreas).map((a) => asObject(a) as { name?: string; address?: string }),
+    pickupAreas: asArray(productContent.pickupAreas).map((a) => asObject(a) as { name?: string; address?: string; time?: string; polygon?: [number, number][]; exclusions?: [number, number][][] }),
     pickupLocations: asArray(productContent.pickupLocations).map((a) => asObject(a) as { name?: string; address?: string }),
     dropoffOption: typeof productContent.dropoffOption === "string" ? productContent.dropoffOption : undefined,
     dropoffLocation: (dropoffLocation.name || dropoffLocation.address) ? { name: dropoffLocation.name as string, address: dropoffLocation.address as string } : null,
@@ -725,10 +726,31 @@ export default function TourDetailPage() {
                     <div>
                       <span className="font-medium text-slate-700">Pickup:</span>
                       <ul className="mt-1 space-y-1">
-                        {[...(tour.pickupAreas ?? []), ...(tour.pickupLocations ?? [])].map((p, i) => (
-                          <li key={i} className="text-slate-500">{[p.name, p.address].filter(Boolean).join(", ") || "—"}</li>
-                        ))}
+                        {[...(tour.pickupAreas ?? []), ...(tour.pickupLocations ?? [])].map((p0, i) => {
+                          const p = p0 as { name?: string; address?: string; time?: string; polygon?: [number, number][]; exclusions?: [number, number][][] }
+                          const hasZone = Array.isArray(p.polygon) && p.polygon.length >= 3
+                          const exclusionCount = Array.isArray(p.exclusions) ? p.exclusions.length : 0
+                          return (
+                            <li key={i} className="text-slate-500">
+                              <span>{[p.name, p.address].filter(Boolean).join(", ") || "—"}</span>
+                              {p.time && <span className="ml-2 text-[11px] text-slate-400">pickup {p.time}</span>}
+                              {hasZone && (
+                                <span className="ml-2 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">zone</span>
+                              )}
+                              {exclusionCount > 0 && (
+                                <span className="ml-1.5 rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-medium text-rose-600">
+                                  {exclusionCount} no-pickup
+                                </span>
+                              )}
+                            </li>
+                          )
+                        })}
                       </ul>
+                      {(tour.pickupAreas ?? []).some((a) => Array.isArray(a.polygon) && a.polygon.length >= 3) && (
+                        <div className="mt-3">
+                          <PickupZoneMap areas={tour.pickupAreas ?? []} height={240} />
+                        </div>
+                      )}
                     </div>
                   )}
                   {tour.dropoffOption && tour.dropoffOption !== "none" && (
