@@ -61,6 +61,9 @@ interface Review {
   moderatedBy?: string;
   moderatedAt?: string;
   flagReason?: string;
+  flagComment?: string;
+  flaggedBy?: string;
+  flaggedAt?: string;
   supplierResponse?: string;
   supplierResponseAt?: string;
   verified?: boolean;
@@ -539,6 +542,24 @@ export default function ReviewModerationPage() {
           </div>
         )}
 
+        {review.status === "FLAGGED" && review.flagReason && (
+          <div className="mt-4 rounded-r-lg border-l-2 border-l-status-flagged bg-status-flagged/5 p-4">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[11px] font-medium uppercase tracking-wide text-status-flagged">
+                <Flag className="mr-1 inline h-3 w-3 -mt-0.5" />
+                Flagged by supplier
+                {review.flaggedAt && (
+                  <span className="ml-1 font-normal normal-case text-text-tertiary">· {timeAgo(review.flaggedAt)}</span>
+                )}
+              </span>
+            </div>
+            <p className="mt-1.5 text-sm font-medium text-text-primary">{review.flagReason}</p>
+            {review.flagComment && (
+              <p className="mt-1 text-sm leading-relaxed text-text-secondary">"{review.flagComment}"</p>
+            )}
+          </div>
+        )}
+
         <div className="mt-5 flex items-center justify-between gap-3 border-t border-border/70 pt-4">
           <div className="flex items-center gap-2 text-xs text-text-tertiary">
             {(review.helpfulCount ?? 0) > 0 && (
@@ -612,6 +633,16 @@ export default function ReviewModerationPage() {
                   >
                     <Pencil className="h-4 w-4" />
                   </motion.button>
+                )}
+                {can("reviews.moderate") && review.status === "FLAGGED" && (
+                  <Button
+                    size="sm"
+                    variant="default"
+                    onClick={() => openModerate("approve", review)}
+                  >
+                    <Check />
+                    Keep review
+                  </Button>
                 )}
                 {can("reviews.moderate") && (
                   <Button
@@ -1121,9 +1152,13 @@ export default function ReviewModerationPage() {
                     <BadgeCheck className="h-5 w-5 text-status-active" />
                   </div>
                   <div>
-                    <DialogTitle className="text-lg">Approve Review</DialogTitle>
+                    <DialogTitle className="text-lg">
+                      {actionReview.status === "FLAGGED" ? "Keep Review" : "Approve Review"}
+                    </DialogTitle>
                     <DialogDescription>
-                      This review will be published and become visible to all customers on the tour page.
+                      {actionReview.status === "FLAGGED"
+                        ? "Dismiss the flag and restore this review to the tour page."
+                        : "This review will be published and become visible to all customers on the tour page."}
                     </DialogDescription>
                   </div>
                 </div>
@@ -1157,7 +1192,7 @@ export default function ReviewModerationPage() {
                     )}
                   </div>
                   <Badge className="shrink-0 bg-status-pending/10 px-2 py-0.5 text-[10px] font-semibold text-status-pending ring-1 ring-status-pending/20">
-                    PENDING
+                    {actionReview.status || "PENDING"}
                   </Badge>
                 </div>
 
