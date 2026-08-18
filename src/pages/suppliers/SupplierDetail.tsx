@@ -10,6 +10,7 @@ import {
   Mail,
   Calendar,
   Shield,
+  ShieldCheck,
   CheckCircle,
   XCircle,
   AlertTriangle,
@@ -44,7 +45,7 @@ import { SafeImage } from "@/components/shared/SafeImage";
 import { StatCard } from "@/components/shared/StatCard";
 import { ChartTooltip } from "@/components/shared/ChartTooltip";
 import { chartColors, chartAxis } from "@/components/shared/chartTheme";
-import OptimizedImage from "@/components/shared/OptimizedImage";
+import SupplierVerificationPanel from "@/pages/suppliers/SupplierVerificationPanel";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { usePermission } from "@/hooks/usePermission";
@@ -427,7 +428,7 @@ export default function SupplierDetailPage() {
           <TabsTrigger value="business"><Building2 className="mr-1.5 h-3.5 w-3.5" /> Business</TabsTrigger>
           <TabsTrigger value="operating"><Globe className="mr-1.5 h-3.5 w-3.5" /> Operating</TabsTrigger>
           <TabsTrigger value="representative"><Shield className="mr-1.5 h-3.5 w-3.5" /> Rep</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="documents"><ShieldCheck className="mr-1.5 h-3.5 w-3.5" /> Verification</TabsTrigger>
           <TabsTrigger value="payout">Payout</TabsTrigger>
           <TabsTrigger value="compliance">Compliance</TabsTrigger>
           <TabsTrigger value="tours"><List className="mr-1.5 h-3.5 w-3.5" /> Tours <span className="ml-1 rounded-full bg-surface-muted px-1.5 py-0.5 text-[10px] font-semibold text-text-secondary">{toursData?.pagination?.totalCount ?? "…"}</span></TabsTrigger>
@@ -578,52 +579,9 @@ export default function SupplierDetailPage() {
         </TabsContent>
 
         <TabsContent value="documents">
-          <Card>
-            <CardHeader className="border-b border-border pb-3"><CardTitle className="flex items-center gap-2 text-sm font-semibold text-text-primary">Business Documents</CardTitle></CardHeader>
-            <CardContent className="p-5">
-              <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-                {[
-                  { label: "Registration", url: supplier.businessDocuments?.registrationDocumentUrl || supplier.documents?.registrationDocument },
-                  { label: "Tax Document", url: supplier.businessDocuments?.taxDocumentUrl || supplier.documents?.taxDocument },
-                  { label: "Proof of Address", url: supplier.businessDocuments?.proofOfAddressUrl || supplier.documents?.proofOfAddress },
-                  { label: "ID Document", url: supplier.representativeInfo?.idDocumentUrl || supplier.documents?.idDocument },
-                ].map((doc) => (
-                  <div key={doc.label} className="overflow-hidden rounded-lg border border-border bg-surface-base">
-                    <div className="flex items-center gap-2 border-b border-border bg-surface-muted/40 px-4 py-2.5">
-                      <FileIcon className="h-3.5 w-3.5 text-text-tertiary" />
-                      <p className="text-xs font-medium text-text-primary">{doc.label}</p>
-                    </div>
-                    <div className="p-3">
-                      {doc.url ? (
-                        <DocumentPreview url={doc.url} label={doc.label} />
-                      ) : (
-                        <div className="flex h-44 items-center justify-center rounded-md bg-surface-muted text-xs text-text-tertiary">Not provided</div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {!!supplier.businessDocuments?.licenses?.length && (
-                <div className="mt-5 border-t border-border pt-5">
-                  <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-text-secondary">Licenses ({supplier.businessDocuments.licenses.length})</p>
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-                    {supplier.businessDocuments.licenses.map((l, i) => (
-                      <div key={i} className="overflow-hidden rounded-lg border border-border bg-surface-base">
-                        <div className="flex items-center gap-2 border-b border-border bg-surface-muted/40 px-4 py-2.5">
-                          <FileIcon className="h-3.5 w-3.5 text-text-tertiary" />
-                          <p className="text-xs font-medium text-text-primary">License {i + 1}</p>
-                        </div>
-                        <div className="p-3">
-                          <DocumentPreview url={l} label={`License ${i + 1}`} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <SupplierVerificationPanel supplierId={profileId} />
         </TabsContent>
+
 
         <TabsContent value="payout">
           <div className="space-y-4">
@@ -1354,33 +1312,5 @@ function Field({ label, value }: { label: string; value?: string | null }) {
       <p className="text-[11px] uppercase tracking-wider text-text-tertiary">{label}</p>
       <p className="mt-0.5 text-sm font-medium text-text-primary">{value || "—"}</p>
     </div>
-  );
-}
-
-function FileIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-      <polyline points="14 2 14 8 20 8" />
-    </svg>
-  );
-}
-
-function DocumentPreview({ url, label }: { url: string; label: string }) {
-  const isImage = /\.(jpg|jpeg|png|gif|webp|svg|bmp)(\?.*)?$/i.test(url.split("?")[0]);
-  if (isImage) {
-    return (
-      <a href={url} target="_blank" rel="noopener noreferrer" className="group relative block">
-        <OptimizedImage src={url} alt={label} width={800} className="h-44 w-full rounded-lg border border-border object-cover shadow-sm transition-shadow group-hover:shadow-md" />
-        <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/0 text-xs font-medium text-white transition-colors group-hover:bg-black/40">
-          <span className="opacity-0 group-hover:opacity-100">View →</span>
-        </div>
-      </a>
-    );
-  }
-  return (
-    <a href={url} target="_blank" rel="noopener noreferrer" className="flex h-44 items-center justify-center rounded-lg border border-border bg-surface-muted text-xs font-medium text-text-primary transition-colors hover:bg-primary/5 hover:text-primary">
-      View {label} →
-    </a>
   );
 }

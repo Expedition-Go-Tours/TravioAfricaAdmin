@@ -109,6 +109,27 @@ export function getStatusColor(status: string): string {
     DRAFT: "bg-status-suspended/10 text-status-suspended border-status-suspended/30",
     ARCHIVED: "bg-status-suspended/10 text-status-suspended border-status-suspended/30",
     PAUSED: "bg-status-flagged/10 text-status-flagged border-status-flagged/30",
+    EXPIRED: "bg-status-suspended/10 text-status-suspended border-status-suspended/30",
+    VERIFIED: "bg-status-active/10 text-status-active border-status-active/30",
+    REPLACEMENT_REQUESTED: "bg-status-pending/10 text-status-pending border-status-pending/30",
   };
   return map[status] || "bg-gray-100 text-gray-600 border-gray-300";
+}
+
+/** Human label for a supplier type enum value. */
+export function supplierTypeLabel(type?: string | null): string {
+  const map: Record<string, string> = {
+    TOUR_GUIDE: "Tour Guide",
+    TOUR_COMPANY: "Tour Company",
+    ACCOMMODATION_PROVIDER: "Accommodation Provider",
+    TRANSPORTATION_PROVIDER: "Transportation Provider",
+    VEHICLE_OPERATOR: "Vehicle / Shuttle Operator",
+    OTHER_SERVICE_PROVIDER: "Other Service Provider",
+  };
+  return (type && map[type]) || type || "—";
+}
+
+/** Human label for a document type enum value. */
+export function documentTypeLabel(type?: string | null): string {
+  return (type || "Other").replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 }

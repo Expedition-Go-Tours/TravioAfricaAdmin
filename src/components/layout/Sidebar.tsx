@@ -79,6 +79,7 @@ function getNavGroups(can: (key: string) => boolean): { group: string; items: Na
   const managementItems: NavItem[] = [
     ...(can('bookings.view') ? [{ label: "Bookings", path: "/admin/bookings", icon: <ShoppingCart className="h-4 w-4" />, badgeKey: "bookings" as const }] : []),
     ...(can('suppliers.view') ? [{ label: "Suppliers", path: "/admin/suppliers", icon: <UserPlus className="h-4 w-4" /> }] : []),
+    ...(can('suppliers.view') ? [{ label: "Quality Control", path: "/admin/quality-control", icon: <ClipboardCheck className="h-4 w-4" /> }] : []),
     ...(can('tours.view') ? [{ label: "Expedition Go", path: "/admin/expedition", icon: <Globe className="h-4 w-4" /> }] : []),
     ...(can('reviews.view') ? [{ label: "Reviews", path: "/admin/reviews", icon: <Star className="h-4 w-4" />, badgeKey: "reviews" as const }] : []),
     ...(can('tours.approve') ? [{ label: "Tour Moderation", path: "/admin/tour-moderation", icon: <ClipboardCheck className="h-4 w-4" />, badgeKey: "tours" as const }] : []),

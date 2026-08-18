@@ -19,7 +19,7 @@ import { PageInsight } from "@/components/shared/PageInsight";
 import { StatCard } from "@/components/shared/StatCard";
 import { usePermission } from "@/hooks/usePermission";
 import { useSocketInvalidate } from "@/hooks/useSocketEvent";
-import { cn, formatCurrency, formatNumber, formatDate } from "@/lib/utils";
+import { cn, formatCurrency, formatNumber, formatDate, supplierTypeLabel } from "@/lib/utils";
 import api from "@/lib/axios";
 import OptimizedImage from "@/components/shared/OptimizedImage";
 
@@ -31,13 +31,14 @@ interface Supplier {
     country?: string; city?: string; state?: string; address?: string | { line1?: string; city?: string; state?: string };
   };
   status?: string;
+  supplierType?: string;
   totalBookings?: number;
   totalEarnings?: string | number;
   averageRating?: string | number;
   createdAt?: string;
 }
 
-type StatusKey = "ALL" | "PENDING" | "UNDER_REVIEW" | "APPROVED" | "ACTIVE" | "SUSPENDED" | "REJECTED";
+type StatusKey = "ALL" | "PENDING" | "UNDER_REVIEW" | "APPROVED" | "ACTIVE" | "SUSPENDED" | "REJECTED" | "EXPIRED";
 
 const TABS: { key: StatusKey; label: string; match: (s: string) => boolean }[] = [
   { key: "ALL", label: "All", match: () => true },
@@ -47,6 +48,17 @@ const TABS: { key: StatusKey; label: string; match: (s: string) => boolean }[] =
   { key: "ACTIVE", label: "Active", match: (s) => s === "ACTIVE" },
   { key: "SUSPENDED", label: "Suspended", match: (s) => s === "SUSPENDED" },
   { key: "REJECTED", label: "Rejected", match: (s) => s === "REJECTED" },
+  { key: "EXPIRED", label: "Expired", match: (s) => s === "EXPIRED" },
+];
+
+const TYPE_FILTERS = [
+  { value: "", label: "All types" },
+  { value: "TOUR_GUIDE", label: "Tour Guides" },
+  { value: "TOUR_COMPANY", label: "Tour Companies" },
+  { value: "TRANSPORTATION_PROVIDER", label: "Transportation" },
+  { value: "VEHICLE_OPERATOR", label: "Vehicle Operators" },
+  { value: "ACCOMMODATION_PROVIDER", label: "Accommodation" },
+  { value: "OTHER_SERVICE_PROVIDER", label: "Other" },
 ];
 
 const PAGE_SIZE = 12;
@@ -66,6 +78,7 @@ export default function SuppliersPage() {
   const { can } = usePermission();
   const [activeTab, setActiveTab] = useState<StatusKey>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
   const [page, setPage] = useState(1);
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
@@ -100,6 +113,7 @@ export default function SuppliersPage() {
     const query = searchQuery.toLowerCase().trim();
     return rawApplications.filter((s) => {
       if (!tab.match(s.status || "")) return false;
+      if (typeFilter && s.supplierType !== typeFilter) return false;
       if (!query) return true;
       return [
         s.user?.name, s.user?.email,
@@ -108,7 +122,7 @@ export default function SuppliersPage() {
         typeof s.businessInfo?.address === "object" ? s.businessInfo.address?.city : undefined,
       ].some((f) => f?.toLowerCase().includes(query));
     });
-  }, [rawApplications, activeTab, searchQuery]);
+  }, [rawApplications, activeTab, searchQuery, typeFilter]);
 
   const sorted = useMemo(() => {
     if (!sortKey) return filtered;
@@ -196,6 +210,15 @@ export default function SuppliersPage() {
             <span className="truncate">{businessLocation(r) || "—"}</span>
           </div>
         </div>
+      ),
+    },
+    {
+      key: "type",
+      header: "Type",
+      render: (r) => (
+        <span className="inline-flex items-center rounded-md bg-surface-muted px-2 py-1 text-xs font-medium text-text-secondary">
+          {supplierTypeLabel(r.supplierType)}
+        </span>
       ),
     },
     {
@@ -337,6 +360,24 @@ export default function SuppliersPage() {
             <div className="ml-auto text-xs text-text-tertiary">
               {formatNumber(filtered.length)} of {formatNumber(rawApplications.length)} suppliers
             </div>
+          </div>
+
+          <div className="flex items-center gap-2 overflow-x-auto border-b border-border px-5 py-2.5 scrollbar-thin">
+            <span className="shrink-0 text-xs font-medium uppercase tracking-wider text-text-tertiary">Type</span>
+            {TYPE_FILTERS.map((f) => (
+              <button
+                key={f.value}
+                onClick={() => { setTypeFilter(f.value); setPage(1); }}
+                className={cn(
+                  "shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                  typeFilter === f.value
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border text-text-secondary hover:border-primary/40 hover:text-text-primary",
+                )}
+              >
+                {f.label}
+              </button>
+            ))}
           </div>
 
           <div className="flex items-center gap-1 overflow-x-auto border-b border-border px-5 py-3 scrollbar-thin">

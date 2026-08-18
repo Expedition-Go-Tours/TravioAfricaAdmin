@@ -25,6 +25,7 @@ import TourDetailPage from "@/pages/tours/TourDetail";
 import TourModerationPage from "@/pages/tours/TourModeration";
 import SupplierApplicationsPage from "@/pages/suppliers/SupplierApplications";
 import SupplierDetailPage from "@/pages/suppliers/SupplierDetail";
+import SupplierQcDashboardPage from "@/pages/suppliers/SupplierQcDashboard";
 import { ArrowLeft } from "lucide-react";
 import { PayoutsPaymentsTab } from "@/pages/finance/components/PayoutsPaymentsTab";
 import { PayoutsListTab } from "@/pages/finance/components/PayoutsListTab";
@@ -145,6 +146,7 @@ const router = createBrowserRouter([
       { path: "suppliers", element: <PermissionRoute permission="suppliers.view"><SupplierApplicationsPage /></PermissionRoute> },
       { path: "suppliers/:id", element: <PermissionRoute permission="suppliers.view"><SupplierDetailPage /></PermissionRoute> },
       { path: "suppliers/active", element: <Navigate to="/admin/suppliers" replace /> },
+      { path: "quality-control", element: <PermissionRoute permission="suppliers.view"><SupplierQcDashboardPage /></PermissionRoute> },
       { path: "payouts", element: <PermissionRoute permission="payouts.view"><PayoutsTabPage /></PermissionRoute> },
       { path: "payout-methods", element: <PermissionRoute permission="payout-methods.view"><Navigate to="/admin/payouts?tab=methods" replace /></PermissionRoute> },
       { path: "bookings", element: <PermissionRoute permission="bookings.view"><BookingsPage /></PermissionRoute> },
