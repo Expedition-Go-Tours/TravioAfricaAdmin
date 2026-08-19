@@ -10,6 +10,7 @@ export interface PayoutMethodData {
   accountNumber?: string;
   sortCode?: string;
   branchCode?: string;
+  branchName?: string;
   swiftCode?: string;
   iban?: string;
   routingNumber?: string;
@@ -97,6 +98,7 @@ export function PayoutMethodCard({ method, onVerifyToggle, verifying, className 
           {isBank && <Field label="Account Number" value={method.accountNumber} />}
           {isBank && <Field label="Sort Code" value={method.sortCode} />}
           {isBank && <Field label="Branch Code" value={method.branchCode} />}
+          {isBank && <Field label="Branch Name" value={method.branchName} />}
           {isBank && <Field label="SWIFT / BIC" value={method.swiftCode} />}
           {isBank && <Field label="IBAN" value={method.iban} />}
           {isBank && <Field label="Routing Number" value={method.routingNumber} />}

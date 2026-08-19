@@ -10,23 +10,44 @@ interface FlatItem {
   label: string;
   path: string;
   group: string;
+  keywords: string[];
 }
 
-function flatten(groups: { group: string; items: { label: string; path?: string; children?: { label: string; path: string }[] }[] }[]): FlatItem[] {
+function flatten(groups: { group: string; items: { label: string; path?: string; keywords?: string[]; children?: { label: string; path: string }[] }[] }[]): FlatItem[] {
   const out: FlatItem[] = [];
   for (const group of groups) {
     for (const item of group.items) {
       if (item.children) {
         for (const child of item.children) {
-          out.push({ label: `${item.label} — ${child.label}`, path: child.path, group: group.group });
+          out.push({ label: `${item.label} — ${child.label}`, path: child.path, group: group.group, keywords: [...(item.keywords || []), item.label, child.label] });
         }
       } else if (item.path) {
-        out.push({ label: item.label, path: item.path, group: group.group });
+        out.push({ label: item.label, path: item.path, group: group.group, keywords: [...(item.keywords || []), item.label] });
       }
     }
   }
   return out;
 }
+
+function getInPageItems(can: (key: string) => boolean): FlatItem[] {
+  const items: FlatItem[] = [];
+  if (can('payouts.view') || can('payout-methods.view')) {
+    if (can('payouts.view')) {
+      items.push(
+        { label: "Payouts — Payments", path: "/admin/payouts?tab=payments", group: "Finance", keywords: ["payments", "pending", "approval", "release", "payout"] },
+        { label: "Payouts — All Payouts", path: "/admin/payouts?tab=payouts", group: "Finance", keywords: ["payouts", "list", "history", "records"] },
+      );
+    }
+    if (can('payout-methods.view')) {
+      items.push(
+        { label: "Payouts — Supplier Methods", path: "/admin/payouts?tab=methods", group: "Finance", keywords: ["bank", "paypal", "methods", "supplier", "verification"] },
+      );
+    }
+  }
+  return items;
+}
+
+const SEARCHABLE_TEXT = (item: FlatItem) => [item.label, ...item.keywords].join(" ").toLowerCase();
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
@@ -38,14 +59,14 @@ export function CommandPalette() {
 
   const adminItems: FlatItem[] = isSuperAdmin
     ? [
-        { label: "Activity Log", path: "/admin/activity-log", group: "Administration" },
-        { label: "Settings", path: "/admin/settings", group: "Administration" },
+        { label: "Activity Log", path: "/admin/activity-log", group: "Administration", keywords: ["activity", "audit", "log", "history"] },
+        { label: "Settings", path: "/admin/settings", group: "Administration", keywords: ["settings", "config", "preferences"] },
       ]
     : [];
 
   const items = useMemo(() => {
     const groups = [...getNavGroups(can), { group: "Administration", items: adminItems }];
-    return flatten(groups);
+    return [...flatten(groups), ...getInPageItems(can)];
   }, [can, adminItems]);
 
   const validPaths = useMemo(() => new Set(items.map((i) => i.path)), [items]);
@@ -53,7 +74,7 @@ export function CommandPalette() {
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return items;
-    return items.filter((i) => i.label.toLowerCase().includes(q));
+    return items.filter((i) => SEARCHABLE_TEXT(i).includes(q));
   }, [items, query]);
 
   useEffect(() => {
