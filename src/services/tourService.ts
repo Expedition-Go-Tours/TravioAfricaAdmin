@@ -106,3 +106,22 @@ export const reviewTourDraft = (id: string, body: { action: "approve" | "flag"; 
     }
     return r.data;
   });
+
+export interface AdminTourSearchResult {
+  id: string;
+  title: string;
+  slug: string;
+  coverPhoto: string | null;
+  status: string;
+  category: string | null;
+  city: string | null;
+  country: string | null;
+  supplierId: string | null;
+  supplierName: string | null;
+}
+
+/** Search tours across all statuses (title, supplier, category, city, country, reference code). */
+export const searchAdminTours = (q: string) =>
+  api
+    .get("/admin/search/tours", { params: { q } })
+    .then((r) => (r.data?.data?.tours || []) as AdminTourSearchResult[]);
