@@ -1016,7 +1016,7 @@ export function TourDetailPanel({
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                   {tour.averageRating && (
                     <div className="flex flex-col items-center rounded-xl border border-border/40 p-3">
-                      <Star className="h-5 w-5 text-yellow-500" />
+                      <Star className="h-5 w-5 text-warning" />
                       <span className="mt-1 text-lg font-bold text-foreground">{tour.averageRating as number}</span>
                       <span className="text-[11px] text-muted-foreground">Rating</span>
                     </div>
@@ -1226,7 +1226,7 @@ export function TourDetailPanel({
 
       {/* ── Sticky Action Bar (only for pending reviews) ── */}
       {(tour.status === 'PENDING_APPROVAL' || tour.draftStatus === 'PENDING_APPROVAL') && (
-        <div className="shrink-0 border-t border-border/40 bg-white/95 backdrop-blur-sm">
+        <div className="shrink-0 border-t border-border/40 bg-surface-base/95 backdrop-blur-sm">
           <div className="flex items-center gap-3 p-4">
             <Button
               onClick={onApprove}

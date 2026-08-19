@@ -79,7 +79,7 @@ export default function LoginPage() {
   return (
     <GoogleOAuthProvider clientId={googleClientId}>
       <OneTapHandler onSuccess={handleSuccess} />
-      <div className="relative flex min-h-[100dvh] items-center justify-center bg-gradient-to-br from-green-50 via-white to-green-50/60 p-4 overflow-hidden">
+      <div className="relative flex min-h-[100dvh] items-center justify-center bg-gradient-to-br from-green-100 via-green-50/50 to-green-950/15 p-4 overflow-hidden">
       <div className="noise-overlay" />
       <motion.div
         initial={{ opacity: 0, y: 20, scale: 0.98 }}
@@ -90,7 +90,7 @@ export default function LoginPage() {
         <div className="double-bezel">
           <div className="double-bezel-inner p-8">
             <div className="mb-8 flex flex-col items-center text-center">
-              <h1 className="text-xl font-semibold text-text-primary">Welcome back</h1>
+              <h1 className="font-display text-xl font-semibold tracking-tight text-text-primary">Welcome back</h1>
               <p className="mt-1 text-sm text-text-secondary">Sign in to your admin account</p>
             </div>
 

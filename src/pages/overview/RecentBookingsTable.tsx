@@ -25,10 +25,12 @@ export function RecentBookingsTable({ bookings = [], loading }: RecentBookingsTa
   const navigate = useNavigate();
 
   return (
-    <div className="h-full rounded-lg border border-border/80 bg-surface-base p-5 shadow-soft">
+    <div className="h-full rounded-2xl border border-border/60 bg-surface-base shadow-soft p-5">
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <CalendarCheck className="h-4 w-4 text-text-tertiary" />
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+            <CalendarCheck className="h-4 w-4" />
+          </span>
           <h3 className="text-[15px] font-semibold text-text-primary">Recent Bookings</h3>
         </div>
         <button
@@ -52,7 +54,7 @@ export function RecentBookingsTable({ bookings = [], loading }: RecentBookingsTa
           {bookings.slice(0, 5).map((booking) => (
             <div
               key={booking.id}
-              className="flex items-center gap-3 rounded-lg p-3 transition-colors hover:bg-surface-muted/50 cursor-pointer"
+              className="flex items-center gap-3 rounded-lg p-3 transition-colors hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 cursor-pointer"
               onClick={() => navigate(`/admin/bookings?bookingId=${booking.id}`, { state: { bookingId: booking.id } })}
             >
               {booking.customer?.photoURL ? (

@@ -326,13 +326,13 @@ function SectionCard({ title, children, className }: { title?: string; children:
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-30px" }}
       transition={{ duration: 0.35, ease: "easeOut" }}
-      className={cn("bg-white rounded-xl border border-slate-100 shadow-sm shadow-slate-900/5 overflow-hidden hover:shadow-md hover:shadow-slate-900/5 hover:border-slate-200 transition-all duration-200", className)}
+      className={cn("bg-surface-base rounded-xl border border-border/60 shadow-sm shadow-black/5 overflow-hidden hover:shadow-md hover:shadow-black/5 hover:border-border transition-all duration-200", className)}
     >
       {title && (
-        <div className="px-5 py-4 border-b border-slate-100">
+        <div className="px-5 py-4 border-b border-border/60">
           <div className="flex items-center gap-3">
             <div className="w-0.5 h-4 bg-linear-to-b from-emerald-500 to-emerald-300 rounded-full shrink-0" />
-            <h2 className="text-sm font-semibold text-slate-800 tracking-tight flex-1">{title}</h2>
+            <h2 className="text-sm font-semibold text-text-primary tracking-tight flex-1">{title}</h2>
           </div>
         </div>
       )}
@@ -344,12 +344,12 @@ function SectionCard({ title, children, className }: { title?: string; children:
 function DetailRow({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value?: string | null }) {
   if (value == null || value === "") return null;
   return (
-    <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-0.5 py-2 first:pt-0 last:pb-0 border-b border-slate-100 last:border-0">
+    <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-0.5 py-2 first:pt-0 last:pb-0 border-b border-border/60 last:border-0">
       <div className="flex items-center gap-1.5">
-        <Icon size={11} className="text-slate-400 shrink-0" />
-        <span className="text-[11px] text-slate-400 uppercase tracking-wider">{label}</span>
+        <Icon size={11} className="text-text-tertiary shrink-0" />
+        <span className="text-[11px] text-text-tertiary uppercase tracking-wider">{label}</span>
       </div>
-      <span className="text-sm font-medium text-slate-800 break-words leading-snug min-w-0">{value}</span>
+      <span className="text-sm font-medium text-text-primary break-words leading-snug min-w-0">{value}</span>
     </div>
   );
 }
@@ -362,11 +362,11 @@ function StatCard({ label, value, icon, accent }: { label: string; value: string
   };
   const a = map[accent || "emerald"];
   return (
-    <div className="flex items-center gap-3 bg-white rounded-xl border border-slate-100 px-4 py-3.5 shadow-sm shadow-slate-900/5 hover:shadow-md hover:border-slate-200 transition-all duration-200">
-      <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center ring-1 ring-slate-200/50", a)}>{icon}</div>
+    <div className="flex items-center gap-3 bg-surface-base rounded-xl border border-border/60 px-4 py-3.5 shadow-sm shadow-black/5 hover:shadow-md hover:border-border transition-all duration-200">
+      <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center ring-1 ring-border/50", a)}>{icon}</div>
       <div className="min-w-0">
-        <p className="text-base font-bold text-slate-800 leading-none tabular-nums truncate">{value}</p>
-        <p className="text-xs text-slate-400 font-medium leading-tight mt-1">{label}</p>
+        <p className="text-base font-bold text-text-primary leading-none tabular-nums truncate">{value}</p>
+        <p className="text-xs text-text-tertiary font-medium leading-tight mt-1">{label}</p>
       </div>
     </div>
   );
@@ -470,7 +470,7 @@ export default function TourDetailPage() {
   }
 
   if (isError) return <SectionError message="Failed to load tour details" onRetry={() => refetch()} />;
-  if (!tour) return <div className="py-12 text-center text-sm text-slate-500">Tour not found</div>;
+  if (!tour) return <div className="py-12 text-center text-sm text-text-tertiary">Tour not found</div>;
 
   const displayPhotos = allPhotos;
 
@@ -486,18 +486,18 @@ export default function TourDetailPage() {
   const isMultiDay = dayKeys.length > 1 || locations.some((l) => (l.day ?? 1) > 1);
 
   return (
-    <div className="min-h-screen bg-slate-50/80">
+    <div className="min-h-screen bg-surface-muted/80">
       {/* Sticky header */}
-      <div className="bg-white shadow-sm shadow-slate-900/5 border-b border-slate-200">
+      <div className="bg-surface-base shadow-sm shadow-black/5 border-b border-border">
         <div className="max-w-5xl mx-auto px-4 md:px-6">
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-2 min-w-0">
-              <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 h-8 px-2.5 text-xs font-medium text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-all shrink-0">
+              <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 h-8 px-2.5 text-xs font-medium text-text-tertiary hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-all shrink-0">
                 <ArrowLeft size={14} />
                 <span className="hidden sm:inline">Tours</span>
               </button>
-              <span className="text-xs text-slate-300 shrink-0">/</span>
-              <h1 className="text-sm font-semibold text-slate-800 truncate">{tour.title}</h1>
+              <span className="text-xs text-border shrink-0">/</span>
+              <h1 className="text-sm font-semibold text-text-primary truncate">{tour.title}</h1>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <StatusBadge status={tour.status || "UNKNOWN"} />
@@ -536,14 +536,14 @@ export default function TourDetailPage() {
             transition={{ duration: 0.4, ease: "easeOut" }}
             className="relative mb-8"
           >
-            <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-1 rounded-xl overflow-hidden shadow-sm shadow-slate-900/5">
+            <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-1 rounded-xl overflow-hidden shadow-sm shadow-black/5">
               {displayPhotos.slice(0, 5).map((photo, i) => {
                 const hasMore = displayPhotos.length > 5 && i === 4;
                 return (
                   <button
                     key={i}
                     onClick={() => setLightboxIndex(i)}
-                    className={cn("relative overflow-hidden bg-slate-100 group cursor-pointer", i === 0 ? "md:col-span-2 md:row-span-2 min-h-[260px] md:min-h-[440px]" : "min-h-[130px] md:min-h-[219px]")}
+                    className={cn("relative overflow-hidden bg-surface-muted group cursor-pointer", i === 0 ? "md:col-span-2 md:row-span-2 min-h-[260px] md:min-h-[440px]" : "min-h-[130px] md:min-h-[219px]")}
                   >
                     <OptimizedImage src={photo} width={i === 0 ? 2400 : 600} alt={`Photo ${i + 1}`} className="absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-105" />
                     {i === 0 && (
@@ -583,7 +583,7 @@ export default function TourDetailPage() {
           <div className="lg:col-span-8 space-y-5">
             {tour.description && (
               <SectionCard title="Description">
-                <p className="text-sm text-slate-600 leading-relaxed">{tour.description}</p>
+                <p className="text-sm text-text-secondary leading-relaxed">{tour.description}</p>
               </SectionCard>
             )}
 
@@ -591,7 +591,7 @@ export default function TourDetailPage() {
               <SectionCard title="Highlights">
                 <ul className="space-y-2.5">
                   {tour.highlights.map((h, i) => (
-                    <li key={i} className="flex items-start gap-2.5 text-sm text-slate-600">
+                    <li key={i} className="flex items-start gap-2.5 text-sm text-text-secondary">
                       <div className="w-4 h-4 rounded-full bg-emerald-50 flex items-center justify-center shrink-0 mt-0.5">
                         <Check size={10} className="text-emerald-500" />
                       </div>
@@ -615,35 +615,35 @@ export default function TourDetailPage() {
                           <div className="flex flex-wrap items-center gap-2 mb-3">
                             <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">Day {dayNum}</span>
                             {logistics?.accommodation && (
-                              <span className="flex items-center gap-1 text-xs text-slate-500"><Bed size={12} className="text-slate-400" /> {ACCOMMODATION_LABELS[logistics.accommodation] || logistics.accommodation}</span>
+                              <span className="flex items-center gap-1 text-xs text-text-tertiary"><Bed size={12} className="text-text-tertiary" /> {ACCOMMODATION_LABELS[logistics.accommodation] || logistics.accommodation}</span>
                             )}
                             {logistics?.meals && logistics.meals.length > 0 && (
-                              <span className="flex items-center gap-1 text-xs text-slate-500"><UtensilsCrossed size={12} className="text-slate-400" /> {logistics.meals.map((m) => `${m.type}${m.format ? ` (${m.format})` : ""}`).join(", ")}</span>
+                              <span className="flex items-center gap-1 text-xs text-text-tertiary"><UtensilsCrossed size={12} className="text-text-tertiary" /> {logistics.meals.map((m) => `${m.type}${m.format ? ` (${m.format})` : ""}`).join(", ")}</span>
                             )}
-                            {logistics?.drinksIncluded && <span className="text-xs text-slate-400">· Drinks included</span>}
+                            {logistics?.drinksIncluded && <span className="text-xs text-text-tertiary">· Drinks included</span>}
                           </div>
                         )}
                         <div className="space-y-2.5">
                           {stops.map((loc, i) => (
                             <div key={i} className="flex items-start gap-3">
-                              <span className="shrink-0 w-6 h-6 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold flex items-center justify-center mt-0.5">{i + 1}</span>
+                              <span className="shrink-0 w-6 h-6 rounded-full bg-surface-muted text-text-secondary text-xs font-semibold flex items-center justify-center mt-0.5">{i + 1}</span>
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center justify-between gap-2">
-                                  <p className="text-sm font-semibold text-slate-800">{stopTitle(loc)}</p>
-                                  {formatStopDuration(loc) && <span className="text-xs text-slate-400 shrink-0">{formatStopDuration(loc)}</span>}
+                                  <p className="text-sm font-semibold text-text-primary">{stopTitle(loc)}</p>
+                                  {formatStopDuration(loc) && <span className="text-xs text-text-tertiary shrink-0">{formatStopDuration(loc)}</span>}
                                 </div>
                                 {(loc.city || loc.country) && (
-                                  <p className="text-xs text-slate-400 mt-0.5">{[loc.city, loc.country].filter(Boolean).join(", ")}</p>
+                                  <p className="text-xs text-text-tertiary mt-0.5">{[loc.city, loc.country].filter(Boolean).join(", ")}</p>
                                 )}
                                 {loc.admissionIncluded && (
-                                  <p className="text-[11px] text-slate-400 mt-0.5">{ADMISSION_LABELS[loc.admissionIncluded]}</p>
+                                  <p className="text-[11px] text-text-tertiary mt-0.5">{ADMISSION_LABELS[loc.admissionIncluded]}</p>
                                 )}
-                                {loc.description && <p className="text-xs text-slate-500 mt-1 leading-relaxed">{loc.description}</p>}
+                                {loc.description && <p className="text-xs text-text-tertiary mt-1 leading-relaxed">{loc.description}</p>}
                               </div>
                             </div>
                           ))}
                           {isMultiDay && (
-                            <div className="flex items-center gap-1.5 text-[11px] text-slate-400 pl-9">
+                            <div className="flex items-center gap-1.5 text-[11px] text-text-tertiary pl-9">
                               <MoonStar size={12} className="text-amber-500" />
                               Overnight in {stopTitle(stops[stops.length - 1])}
                             </div>
@@ -659,13 +659,13 @@ export default function TourDetailPage() {
             {/* Included / Excluded */}
             {(tour.included && tour.included.length > 0) || (tour.excluded && tour.excluded.length > 0) || tour.foodProvided || (tour.meals && tour.meals.length > 0) || tour.drinksIncluded || (tour.dietaryOptions && tour.dietaryOptions.length > 0) ? (
               <SectionCard title="What's Included">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 divide-y sm:divide-y-0 sm:divide-x divide-border/60">
                   {tour.included && tour.included.length > 0 && (
                     <div className="pb-4 sm:pb-0 sm:pr-6">
-                      <h3 className="text-xs font-medium text-slate-500 mb-3">Included</h3>
+                      <h3 className="text-xs font-medium text-text-tertiary mb-3">Included</h3>
                       <ul className="space-y-2.5">
                         {tour.included.map((item, i) => (
-                          <li key={i} className="flex items-start gap-2.5 text-sm text-slate-600">
+                          <li key={i} className="flex items-start gap-2.5 text-sm text-text-secondary">
                             <div className="w-4 h-4 rounded-full bg-emerald-50 flex items-center justify-center shrink-0 mt-0.5"><Check size={10} className="text-emerald-500" /></div>
                             <span>{item}</span>
                           </li>
@@ -675,10 +675,10 @@ export default function TourDetailPage() {
                   )}
                   {tour.excluded && tour.excluded.length > 0 && (
                     <div className="pt-4 sm:pt-0 sm:pl-6">
-                      <h3 className="text-xs font-medium text-slate-500 mb-3">Excluded</h3>
+                      <h3 className="text-xs font-medium text-text-tertiary mb-3">Excluded</h3>
                       <ul className="space-y-2.5">
                         {tour.excluded.map((item, i) => (
-                          <li key={i} className="flex items-start gap-2.5 text-sm text-slate-600">
+                          <li key={i} className="flex items-start gap-2.5 text-sm text-text-secondary">
                             <div className="w-4 h-4 rounded-full bg-red-50 flex items-center justify-center shrink-0 mt-0.5"><X size={10} className="text-red-400" /></div>
                             <span>{item}</span>
                           </li>
@@ -688,10 +688,10 @@ export default function TourDetailPage() {
                   )}
                 </div>
                 {(tour.foodProvided || (tour.meals && tour.meals.length > 0) || tour.drinksIncluded || (tour.dietaryOptions && tour.dietaryOptions.length > 0)) && (
-                  <div className="mt-4 pt-4 border-t border-slate-100 space-y-2">
-                    {tour.foodProvided && <p className="text-sm text-slate-600"><span className="font-medium">Meals:</span> {tour.meals?.map((m) => `${m.type} (${m.format})`).join(", ") || "Provided"}</p>}
-                    {tour.drinksIncluded && <p className="text-sm text-slate-600"><span className="font-medium">Drinks:</span> Included</p>}
-                    {tour.dietaryOptions && tour.dietaryOptions.length > 0 && <p className="text-sm text-slate-600"><span className="font-medium">Dietary options:</span> {tour.dietaryOptions.join(", ")}</p>}
+                  <div className="mt-4 pt-4 border-t border-border/60 space-y-2">
+                    {tour.foodProvided && <p className="text-sm text-text-secondary"><span className="font-medium">Meals:</span> {tour.meals?.map((m) => `${m.type} (${m.format})`).join(", ") || "Provided"}</p>}
+                    {tour.drinksIncluded && <p className="text-sm text-text-secondary"><span className="font-medium">Drinks:</span> Included</p>}
+                    {tour.dietaryOptions && tour.dietaryOptions.length > 0 && <p className="text-sm text-text-secondary"><span className="font-medium">Dietary options:</span> {tour.dietaryOptions.join(", ")}</p>}
                   </div>
                 )}
               </SectionCard>
@@ -701,7 +701,7 @@ export default function TourDetailPage() {
               <SectionCard title="What to Bring">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {tour.whatToBring.map((item, i) => (
-                    <div key={i} className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg bg-slate-50 text-sm text-slate-600">
+                    <div key={i} className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg bg-surface-muted text-sm text-text-secondary">
                       <Check size={12} className="text-emerald-500 shrink-0" />
                       <span>{item}</span>
                     </div>
@@ -712,28 +712,28 @@ export default function TourDetailPage() {
 
             {tour.knowBeforeYouGo && (
               <SectionCard title="What to Know">
-                <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{tour.knowBeforeYouGo}</p>
+                <p className="text-sm text-text-secondary leading-relaxed whitespace-pre-line">{tour.knowBeforeYouGo}</p>
               </SectionCard>
             )}
 
             {tour.meetingMode && tour.meetingMode !== "none" && (
               <SectionCard title="Meeting & Pickup">
-                <div className="space-y-3 text-sm text-slate-600">
+                <div className="space-y-3 text-sm text-text-secondary">
                   {tour.meetingMode === "meeting_point" && tour.meetingPoint && (
-                    <p><span className="font-medium text-slate-700">Meeting point:</span> {[tour.meetingPoint.name, tour.meetingPoint.address].filter(Boolean).join(", ")}</p>
+                    <p><span className="font-medium text-text-primary">Meeting point:</span> {[tour.meetingPoint.name, tour.meetingPoint.address].filter(Boolean).join(", ")}</p>
                   )}
                   {tour.meetingMode === "pickup" && ((tour.pickupAreas ?? []).length > 0 || (tour.pickupLocations ?? []).length > 0) && (
                     <div>
-                      <span className="font-medium text-slate-700">Pickup:</span>
+                      <span className="font-medium text-text-primary">Pickup:</span>
                       <ul className="mt-1 space-y-1">
                         {[...(tour.pickupAreas ?? []), ...(tour.pickupLocations ?? [])].map((p0, i) => {
                           const p = p0 as { name?: string; address?: string; time?: string; polygon?: [number, number][]; exclusions?: [number, number][][] }
                           const hasZone = Array.isArray(p.polygon) && p.polygon.length >= 3
                           const exclusionCount = Array.isArray(p.exclusions) ? p.exclusions.length : 0
                           return (
-                            <li key={i} className="text-slate-500">
+                            <li key={i} className="text-text-tertiary">
                               <span>{[p.name, p.address].filter(Boolean).join(", ") || "—"}</span>
-                              {p.time && <span className="ml-2 text-[11px] text-slate-400">pickup {p.time}</span>}
+                              {p.time && <span className="ml-2 text-[11px] text-text-tertiary">pickup {p.time}</span>}
                               {hasZone && (
                                 <span className="ml-2 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">zone</span>
                               )}
@@ -755,7 +755,7 @@ export default function TourDetailPage() {
                   )}
                   {tour.dropoffOption && tour.dropoffOption !== "none" && (
                     <p>
-                      <span className="font-medium text-slate-700">Drop-off:</span>{" "}
+                      <span className="font-medium text-text-primary">Drop-off:</span>{" "}
                       {tour.dropoffOption === "same_location" ? "Same as meeting point" : tour.dropoffLocation ? [tour.dropoffLocation.name, tour.dropoffLocation.address].filter(Boolean).join(", ") : "Different location"}
                     </p>
                   )}
@@ -780,14 +780,14 @@ export default function TourDetailPage() {
                   {tour.supplier.photoURL ? (
                     <OptimizedImage src={tour.supplier.photoURL} alt="" width={40} className="h-10 w-10 shrink-0 rounded-full object-cover" />
                   ) : (
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-600">{tour.supplier.name?.charAt(0)?.toUpperCase() || "?"}</div>
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-muted text-sm font-semibold text-text-secondary">{tour.supplier.name?.charAt(0)?.toUpperCase() || "?"}</div>
                   )}
                   <div className="min-w-0">
-                    <p className={cn("text-sm font-medium text-slate-900", tour.supplier.id && "hover:text-emerald-700")}>{tour.supplier.name || "Unknown"}</p>
-                    {tour.supplier.email && <p className="text-xs text-slate-400 truncate">{tour.supplier.email}</p>}
+                    <p className={cn("text-sm font-medium text-text-primary", tour.supplier.id && "hover:text-emerald-700")}>{tour.supplier.name || "Unknown"}</p>
+                    {tour.supplier.email && <p className="text-xs text-text-tertiary truncate">{tour.supplier.email}</p>}
                   </div>
                   {tour.supplier.id && (
-                    <ChevronRight size={14} className="ml-auto shrink-0 text-slate-300 group-hover:text-emerald-600 transition-colors" />
+                    <ChevronRight size={14} className="ml-auto shrink-0 text-border group-hover:text-emerald-600 transition-colors" />
                   )}
                 </button>
               </SectionCard>
@@ -796,31 +796,31 @@ export default function TourDetailPage() {
             {/* Pricing */}
             <SectionCard title="Pricing">
               <div className="space-y-3">
-                {tour.currency && <span className="text-xs font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">{tour.currency}</span>}
+                {tour.currency && <span className="text-xs font-medium text-text-tertiary bg-surface-muted px-2 py-0.5 rounded-md">{tour.currency}</span>}
                 {normalizedPrices.length > 0 ? (
                   <>
                     <div className="flex flex-wrap items-center gap-1.5 pb-1">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-600">{tour.pricingModel === "perGroup" ? "Per group" : "Per person"}</span>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-surface-muted text-text-secondary">{tour.pricingModel === "perGroup" ? "Per group" : "Per person"}</span>
                       {tour.pricingApproach === "sameForEveryone" && <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-50 text-emerald-600">Same for everyone</span>}
                       {tour.pricingApproach === "dependsOnAge" && <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-amber-50 text-amber-600">Depends on age</span>}
                     </div>
-                    <div className="divide-y divide-slate-50">
+                    <div className="divide-y divide-border/40">
                       {normalizedPrices.map((price, i) => (
                         <div key={i}>
                           <div className="flex items-center justify-between py-2">
                             <div className="flex items-center gap-2 min-w-0">
-                              <span className="text-sm text-slate-700 font-medium">{price.label}</span>
-                              {(price.minAge != null || price.maxAge != null) && <span className="text-xs text-slate-400">({price.minAge}–{price.maxAge})</span>}
+                              <span className="text-sm text-text-primary font-medium">{price.label}</span>
+                              {(price.minAge != null || price.maxAge != null) && <span className="text-xs text-text-tertiary">({price.minAge}–{price.maxAge})</span>}
                             </div>
-                            <span className="text-sm font-bold text-slate-800 tabular-nums shrink-0 ml-3">{formatCurrency(price.price, tour.currency)}</span>
+                            <span className="text-sm font-bold text-text-primary tabular-nums shrink-0 ml-3">{formatCurrency(price.price, tour.currency)}</span>
                           </div>
                           {price.tiers && price.tiers.length > 0 && (
-                            <div className="ml-3 mb-2 pb-2 border-b border-slate-50 last:border-b-0">
+                            <div className="ml-3 mb-2 pb-2 border-b border-border/40 last:border-b-0">
                               <div className="space-y-1">
                                 {price.tiers.map((tier, ti) => (
-                                  <div key={ti} className="flex items-center justify-between text-xs pl-3 py-1 rounded bg-slate-50/50 px-2">
-                                    <span className="text-slate-500">{tier.from ?? "1"}–{tier.to ?? "∞"} people</span>
-                                    <span className="font-semibold text-slate-700 tabular-nums">{formatCurrency(tier.pricePerPerson ?? 0, tour.currency)} each</span>
+                                  <div key={ti} className="flex items-center justify-between text-xs pl-3 py-1 rounded bg-surface-muted/50 px-2">
+                                    <span className="text-text-tertiary">{tier.from ?? "1"}–{tier.to ?? "∞"} people</span>
+                                    <span className="font-semibold text-text-primary tabular-nums">{formatCurrency(tier.pricePerPerson ?? 0, tour.currency)} each</span>
                                   </div>
                                 ))}
                               </div>
@@ -830,16 +830,16 @@ export default function TourDetailPage() {
                       ))}
                     </div>
                     {tour.validPeriod && (
-                      <div className="pt-3 mt-2 border-t border-slate-100">
+                      <div className="pt-3 mt-2 border-t border-border/60">
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-slate-400">Valid period</span>
-                          <span className="font-medium text-slate-500">{tour.validPeriod.start ? formatDate(tour.validPeriod.start) : ""}{tour.validPeriod.end ? ` – ${formatDate(tour.validPeriod.end)}` : ""}</span>
+                          <span className="text-text-tertiary">Valid period</span>
+                          <span className="font-medium text-text-tertiary">{tour.validPeriod.start ? formatDate(tour.validPeriod.start) : ""}{tour.validPeriod.end ? ` – ${formatDate(tour.validPeriod.end)}` : ""}</span>
                         </div>
                       </div>
                     )}
                   </>
                 ) : (
-                  <p className="text-sm text-slate-400">No pricing configured</p>
+                  <p className="text-sm text-text-tertiary">No pricing configured</p>
                 )}
               </div>
             </SectionCard>
@@ -849,35 +849,35 @@ export default function TourDetailPage() {
               <SectionCard title="Schedule">
                 <div className="space-y-4">
                   {tour.scheduleType && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-600">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-surface-muted text-text-secondary">
                       {tour.scheduleType === "operatingHours" ? "Operating Hours" : "Fixed Time Slot"}
                     </span>
                   )}
                   {tour.operatingDays && tour.operatingDays.length > 0 && (
                     <div>
-                      <p className="text-xs text-slate-400 mb-2">Operating Days</p>
+                      <p className="text-xs text-text-tertiary mb-2">Operating Days</p>
                       <div className="flex flex-wrap gap-1.5">
                         {tour.operatingDays.map((day) => (
-                          <span key={day} className="text-xs px-2.5 py-1 rounded-md bg-slate-50 text-slate-500 font-medium border border-slate-100 capitalize">{day.slice(0, 3)}</span>
+                          <span key={day} className="text-xs px-2.5 py-1 rounded-md bg-surface-muted text-text-tertiary font-medium border border-border/60 capitalize">{day.slice(0, 3)}</span>
                         ))}
                       </div>
                     </div>
                   )}
                   {tour.timeSlots && tour.timeSlots.length > 0 && (
                     <div>
-                      <p className="text-xs text-slate-400 mb-2">Time Slots</p>
+                      <p className="text-xs text-text-tertiary mb-2">Time Slots</p>
                       <div className="flex flex-wrap gap-1.5">
                         {tour.timeSlots.map((slot, i) => {
                           const start = typeof slot === "string" ? slot : slot.startTime;
                           const end = typeof slot === "string" ? undefined : slot.endTime;
-                          return <span key={i} className="text-xs px-2.5 py-1 rounded-md bg-slate-50 text-slate-500 font-medium border border-slate-100">{formatTime(start)}{end ? ` – ${formatTime(end)}` : ""}</span>;
+                          return <span key={i} className="text-xs px-2.5 py-1 rounded-md bg-surface-muted text-text-tertiary font-medium border border-border/60">{formatTime(start)}{end ? ` – ${formatTime(end)}` : ""}</span>;
                         })}
                       </div>
                     </div>
                   )}
                   {tour.capacityPerSlot != null && (
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
-                      <Users size={13} /> Max per booking: <strong className="text-slate-700">{tour.capacityPerSlot}</strong>
+                    <div className="flex items-center gap-2 text-xs text-text-tertiary">
+                      <Users size={13} /> Max per booking: <strong className="text-text-primary">{tour.capacityPerSlot}</strong>
                     </div>
                   )}
                 </div>
@@ -903,13 +903,13 @@ export default function TourDetailPage() {
                   {tour.options.map((opt, i) => {
                     const vLabel = validityLabel(opt);
                     return (
-                      <div key={opt.id || i} className="rounded-lg border border-slate-100 p-4 space-y-2 bg-slate-50/40">
+                      <div key={opt.id || i} className="rounded-lg border border-border/60 p-4 space-y-2 bg-surface-muted/40">
                         <div className="flex items-center justify-between gap-2">
-                          <p className="text-sm font-semibold text-slate-800">{opt.title || `Option ${i + 1}`}</p>
-                          {opt.refCode && opt.refCode !== "default" && <span className="text-[11px] text-slate-400 shrink-0">Ref: {opt.refCode}</span>}
+                          <p className="text-sm font-semibold text-text-primary">{opt.title || `Option ${i + 1}`}</p>
+                          {opt.refCode && opt.refCode !== "default" && <span className="text-[11px] text-text-tertiary shrink-0">Ref: {opt.refCode}</span>}
                         </div>
-                        {vLabel && <p className="text-xs text-slate-500 flex items-center gap-1.5"><Ticket size={12} className="text-slate-400 shrink-0" /> {vLabel}</p>}
-                        {opt.description && <p className="text-xs text-slate-500 leading-relaxed">{opt.description}</p>}
+                        {vLabel && <p className="text-xs text-text-tertiary flex items-center gap-1.5"><Ticket size={12} className="text-text-tertiary shrink-0" /> {vLabel}</p>}
+                        {opt.description && <p className="text-xs text-text-tertiary leading-relaxed">{opt.description}</p>}
                         <div className="flex flex-wrap gap-1.5">
                           {opt.isPrivate && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-violet-50 text-violet-600 border border-violet-200/50"><Lock size={10} /> Private</span>}
                           {opt.skipTheLine && opt.skipTheLine !== "none" && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-amber-50 text-amber-600 border border-amber-200/50"><Flag size={10} /> Skip the line</span>}
@@ -929,25 +929,25 @@ export default function TourDetailPage() {
               <SectionCard title="Booking Rules">
                 <div className="space-y-3 text-sm">
                   {tour.ticketType && (
-                    <div className="flex items-center gap-2.5 text-slate-600">
-                      <Ticket size={14} className="text-slate-400 shrink-0" /> <span>Ticket type: <strong className="text-slate-700">{tour.ticketType}</strong></span>
+                    <div className="flex items-center gap-2.5 text-text-secondary">
+                      <Ticket size={14} className="text-text-tertiary shrink-0" /> <span>Ticket type: <strong className="text-text-primary">{tour.ticketType}</strong></span>
                     </div>
                   )}
                   {tour.instantBooking !== undefined && (
-                    <div className="flex items-center gap-2.5 text-slate-600">
-                      {tour.instantBooking ? <Check size={14} className="text-emerald-500 shrink-0" /> : <Clock size={14} className="text-slate-400 shrink-0" />}
+                    <div className="flex items-center gap-2.5 text-text-secondary">
+                      {tour.instantBooking ? <Check size={14} className="text-emerald-500 shrink-0" /> : <Clock size={14} className="text-text-tertiary shrink-0" />}
                       <span>{tour.instantBooking ? "Instant booking" : "Request booking"}</span>
                     </div>
                   )}
                   {tour.instantConfirmation !== undefined && (
-                    <div className="flex items-center gap-2.5 text-slate-600">
-                      {tour.instantConfirmation ? <Check size={14} className="text-emerald-500 shrink-0" /> : <Clock size={14} className="text-slate-400 shrink-0" />}
+                    <div className="flex items-center gap-2.5 text-text-secondary">
+                      {tour.instantConfirmation ? <Check size={14} className="text-emerald-500 shrink-0" /> : <Clock size={14} className="text-text-tertiary shrink-0" />}
                       <span>{tour.instantConfirmation ? "Instant confirmation" : "Manual confirmation"}</span>
                     </div>
                   )}
                   {tour.cancellationPolicy?.label && (
-                    <div className="flex items-center gap-2.5 text-slate-600">
-                      <Shield size={14} className="text-slate-400 shrink-0" /> <span>{tour.cancellationPolicy.label}</span>
+                    <div className="flex items-center gap-2.5 text-text-secondary">
+                      <Shield size={14} className="text-text-tertiary shrink-0" /> <span>{tour.cancellationPolicy.label}</span>
                     </div>
                   )}
                 </div>

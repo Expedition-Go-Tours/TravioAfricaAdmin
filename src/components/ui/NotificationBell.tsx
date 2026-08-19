@@ -39,21 +39,21 @@ const notificationRouteMap: Record<string, (data?: Record<string, unknown>) => {
 };
 
 const typeConfig: Record<string, { icon: React.ReactNode; color: string }> = {
-  BOOKING_CONFIRMED: { icon: <ShoppingBag className="h-3.5 w-3.5" />, color: "text-green-600" },
-  BOOKING_CANCELLED: { icon: <XCircle className="h-3.5 w-3.5" />, color: "text-red-500" },
-  PAYMENT_RECEIVED: { icon: <CreditCard className="h-3.5 w-3.5" />, color: "text-green-600" },
-  PAYOUT_PROCESSED: { icon: <Banknote className="h-3.5 w-3.5" />, color: "text-green-600" },
-  PAYOUT_APPROVED: { icon: <Banknote className="h-3.5 w-3.5" />, color: "text-amber-600" },
-  PAYOUT_NEEDS_APPROVAL: { icon: <Banknote className="h-3.5 w-3.5" />, color: "text-amber-600" },
-  REVIEW_RECEIVED: { icon: <Star className="h-3.5 w-3.5" />, color: "text-amber-600" },
-  SUPPLIER_APPROVED: { icon: <UserCheck className="h-3.5 w-3.5" />, color: "text-green-600" },
-  SUPPLIER_REJECTED: { icon: <UserX className="h-3.5 w-3.5" />, color: "text-red-500" },
-  NEW_SUPPLIER_APPLICATION: { icon: <UserCheck className="h-3.5 w-3.5" />, color: "text-amber-600" },
-  SUPPLIER_STATUS_CHANGE: { icon: <UserCheck className="h-3.5 w-3.5" />, color: "text-blue-600" },
-  REVIEW_NEEDS_MODERATION: { icon: <MessageSquare className="h-3.5 w-3.5" />, color: "text-amber-600" },
-  TOUR_SUBMITTED_FOR_REVIEW: { icon: <ClipboardCheck className="h-3.5 w-3.5" />, color: "text-amber-600" },
-  SYSTEM_ALERT: { icon: <AlertTriangle className="h-3.5 w-3.5" />, color: "text-red-500" },
-  NEW_MESSAGE: { icon: <MessageSquare className="h-3.5 w-3.5" />, color: "text-green-600" },
+  BOOKING_CONFIRMED: { icon: <ShoppingBag className="h-3.5 w-3.5" />, color: "text-green-600 dark:text-green-400" },
+  BOOKING_CANCELLED: { icon: <XCircle className="h-3.5 w-3.5" />, color: "text-red-500 dark:text-red-400" },
+  PAYMENT_RECEIVED: { icon: <CreditCard className="h-3.5 w-3.5" />, color: "text-green-600 dark:text-green-400" },
+  PAYOUT_PROCESSED: { icon: <Banknote className="h-3.5 w-3.5" />, color: "text-green-600 dark:text-green-400" },
+  PAYOUT_APPROVED: { icon: <Banknote className="h-3.5 w-3.5" />, color: "text-amber-600 dark:text-amber-400" },
+  PAYOUT_NEEDS_APPROVAL: { icon: <Banknote className="h-3.5 w-3.5" />, color: "text-amber-600 dark:text-amber-400" },
+  REVIEW_RECEIVED: { icon: <Star className="h-3.5 w-3.5" />, color: "text-amber-600 dark:text-amber-400" },
+  SUPPLIER_APPROVED: { icon: <UserCheck className="h-3.5 w-3.5" />, color: "text-green-600 dark:text-green-400" },
+  SUPPLIER_REJECTED: { icon: <UserX className="h-3.5 w-3.5" />, color: "text-red-500 dark:text-red-400" },
+  NEW_SUPPLIER_APPLICATION: { icon: <UserCheck className="h-3.5 w-3.5" />, color: "text-amber-600 dark:text-amber-400" },
+  SUPPLIER_STATUS_CHANGE: { icon: <UserCheck className="h-3.5 w-3.5" />, color: "text-blue-600 dark:text-blue-400" },
+  REVIEW_NEEDS_MODERATION: { icon: <MessageSquare className="h-3.5 w-3.5" />, color: "text-amber-600 dark:text-amber-400" },
+  TOUR_SUBMITTED_FOR_REVIEW: { icon: <ClipboardCheck className="h-3.5 w-3.5" />, color: "text-amber-600 dark:text-amber-400" },
+  SYSTEM_ALERT: { icon: <AlertTriangle className="h-3.5 w-3.5" />, color: "text-red-500 dark:text-red-400" },
+  NEW_MESSAGE: { icon: <MessageSquare className="h-3.5 w-3.5" />, color: "text-green-600 dark:text-green-400" },
 };
 
 function getTypeConfig(type: string) {
@@ -143,12 +143,12 @@ export function NotificationBell() {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
-            className="fixed right-0 top-0 z-10 flex h-full w-full max-w-sm flex-col bg-white shadow-2xl"
+            className="fixed right-0 top-0 z-10 flex h-full w-full max-w-sm flex-col bg-surface-base shadow-2xl"
           >
             {/* Header */}
             <div className="flex h-[72px] shrink-0 items-center justify-between border-b border-border px-5">
               <div className="flex items-center gap-2.5">
-                <Bell className="h-5 w-5 text-green-600" />
+                <Bell className="h-5 w-5 text-green-600 dark:text-green-400" />
                 <span className="text-base font-semibold text-text-primary">Notifications</span>
                 {unreadCount > 0 && (
                   <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[11px] font-bold text-white">
@@ -161,7 +161,7 @@ export function NotificationBell() {
                   <button
                     onClick={() => markAllRead.mutate()}
                     disabled={markAllRead.isPending}
-                    className="flex items-center gap-1 rounded-sm px-2 py-1 text-xs text-green-600 hover:bg-green-50 transition-colors disabled:opacity-50"
+                    className="flex items-center gap-1 rounded-sm px-2 py-1 text-xs text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-950/30 transition-colors disabled:opacity-50"
                   >
                     {markAllRead.isPending ? (
                       <Loader2 className="h-3 w-3 animate-spin" />
@@ -173,7 +173,7 @@ export function NotificationBell() {
                 )}
                 <button
                   onClick={() => setOpen(false)}
-                  className="rounded-sm p-1.5 text-text-tertiary hover:bg-green-50 transition-colors"
+                  className="rounded-sm p-1.5 text-text-tertiary hover:bg-green-50 dark:hover:bg-green-950/30 transition-colors"
                   aria-label="Close notifications"
                 >
                   <X className="h-4 w-4" />
@@ -185,7 +185,7 @@ export function NotificationBell() {
             <div className="flex-1 overflow-y-auto">
               {isLoading ? (
                 <div className="flex items-center justify-center py-16">
-                  <Loader2 className="h-6 w-6 animate-spin text-green-600" />
+                  <Loader2 className="h-6 w-6 animate-spin text-green-600 dark:text-green-400" />
                 </div>
               ) : !notifications.length ? (
                 <div className="flex flex-col items-center justify-center py-16 text-text-tertiary">
@@ -208,11 +208,11 @@ export function NotificationBell() {
                           }
                         }}
                         className={cn(
-                          "flex w-full gap-3 px-5 py-3.5 text-left transition-colors hover:bg-green-50/40",
-                          !n.read && "bg-green-50/20",
+                          "flex w-full gap-3 px-5 py-3.5 text-left transition-colors hover:bg-green-50/40 dark:hover:bg-green-950/20",
+                          !n.read && "bg-green-50/20 dark:bg-green-950/15",
                         )}
                       >
-                        <span className={cn("mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-100", cfg.color)}>
+                        <span className={cn("mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30", cfg.color)}>
                           {cfg.icon}
                         </span>
                         <div className="min-w-0 flex-1">

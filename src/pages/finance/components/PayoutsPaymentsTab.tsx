@@ -241,25 +241,25 @@ export function PayoutsPaymentsTab({ onSwitchToList }: { onSwitchToList: (status
       {/* Monthly table */}
       {!isLoading && !isError && monthly.length > 0 && (
         <Card>
-          <CardHeader className="border-b border-border pb-3">
+          <CardHeader className="border-b border-border/60 pb-3">
             <p className="flex items-center gap-2 text-sm font-semibold text-text-primary">
-              <Calendar className="h-4 w-4 text-status-active" />
+              <Calendar className="h-4 w-4 text-primary" />
               Monthly Breakdown
             </p>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm border-collapse">
                 <thead>
-                  <tr className="border-b border-border-muted bg-surface-muted/40">
-                    <th className="px-5 py-2.5 text-left text-xs font-semibold tracking-wider text-text-tertiary">Month</th>
-                    <th className="px-5 py-2.5 text-right text-xs font-semibold tracking-wider text-text-tertiary">Payouts</th>
-                    <th className="px-5 py-2.5 text-right text-xs font-semibold tracking-wider text-text-tertiary">Total Paid</th>
-                    <th className="px-5 py-2.5 text-right text-xs font-semibold tracking-wider text-text-tertiary">Commission</th>
-                    <th className="px-5 py-2.5 text-right text-xs font-semibold tracking-wider text-text-tertiary">Comm. %</th>
+                  <tr className="border-b border-border bg-surface-muted/60">
+                    <th className="px-5 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-text-tertiary">Month</th>
+                    <th className="px-5 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-text-tertiary">Payouts</th>
+                    <th className="px-5 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-text-tertiary">Total Paid</th>
+                    <th className="px-5 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-text-tertiary">Commission</th>
+                    <th className="px-5 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-text-tertiary">Comm. %</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border-muted">
+                <tbody className="divide-y divide-border/60">
                   {monthly.map((m) => {
                     const total = m.totalAmount ?? 0;
                     const pct = total > 0 ? ((m.commission ?? 0) / total) * 100 : 0;
@@ -275,12 +275,12 @@ export function PayoutsPaymentsTab({ onSwitchToList }: { onSwitchToList: (status
                   })}
                 </tbody>
                 <tfoot>
-                  <tr className="border-t-2 border-border bg-surface-muted/30">
-                    <td className="px-5 py-3 text-sm font-bold text-text-primary">Total</td>
+                  <tr className="border-t-2 border-primary/20 bg-primary/5">
+                    <td className="px-5 py-3 text-sm font-bold text-primary">Total</td>
                     <td className="px-5 py-3 text-right text-sm font-bold text-text-primary tabular-nums">{formatNumber(monthly.reduce((s, m) => s + (m.count ?? 0), 0))}</td>
                     <td className="px-5 py-3 text-right text-sm font-bold text-text-primary tabular-nums">{formatCurrency(totals.amount)}</td>
                     <td className="px-5 py-3 text-right text-sm font-bold text-text-primary tabular-nums">{formatCurrency(totals.commission)}</td>
-                    <td className="px-5 py-3 text-right text-sm font-bold text-text-primary tabular-nums">{avgCommissionPct ? `${avgCommissionPct}%` : "—"}</td>
+                    <td className="px-5 py-3 text-right text-sm font-bold text-primary tabular-nums">{avgCommissionPct ? `${avgCommissionPct}%` : "—"}</td>
                   </tr>
                 </tfoot>
               </table>

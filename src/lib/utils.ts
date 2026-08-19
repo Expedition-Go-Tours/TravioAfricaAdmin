@@ -113,7 +113,7 @@ export function getStatusColor(status: string): string {
     VERIFIED: "bg-status-active/10 text-status-active border-status-active/30",
     REPLACEMENT_REQUESTED: "bg-status-pending/10 text-status-pending border-status-pending/30",
   };
-  return map[status] || "bg-gray-100 text-gray-600 border-gray-300";
+  return map[status] || "bg-surface-muted text-text-secondary border-border/60";
 }
 
 /** Human label for a supplier type enum value. */

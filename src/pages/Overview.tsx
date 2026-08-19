@@ -16,6 +16,9 @@ import {
   Banknote,
   LayoutDashboard,
   Settings,
+  ShoppingCart,
+  Calendar,
+  UserCheck,
 } from "lucide-react";
 import {
   Tooltip,
@@ -60,12 +63,12 @@ interface OverviewData {
 }
 
 const bookingColors: Record<string, string> = {
-  CONFIRMED: "#40966e",
-  PENDING: "#d97706",
-  CANCELLED: "#d92626",
-  REFUNDED: "#d45a0a",
-  COMPLETED: "#3b82f6",
-  NO_SHOW: "#8a9ba8",
+  CONFIRMED: "hsl(var(--status-active))",
+  PENDING: "hsl(var(--status-pending))",
+  CANCELLED: "hsl(var(--status-rejected))",
+  REFUNDED: "hsl(var(--status-flagged))",
+  COMPLETED: "hsl(var(--status-approved))",
+  NO_SHOW: "hsl(var(--status-suspended))",
 };
 
 export default function OverviewPage() {
@@ -354,9 +357,11 @@ export default function OverviewPage() {
                 value={overviewLoading ? 0 : Number(overview?.bookings?.today) || 0}
                 trend={calcTrend(overview?.bookings?.today, overview?.bookings?.yesterday)}
                 sparklineData={bookingsSparkline}
-                sparklineColor="#10b981"
+                sparklineColor="hsl(var(--status-active))"
                 loading={overviewLoading}
                 onClick={() => setShowTodayBookings(true)}
+                accent="emerald"
+                icon={<ShoppingCart className="h-4 w-4" />}
               />
             )}
             {can('dashboard.revenue') && (
@@ -368,9 +373,11 @@ export default function OverviewPage() {
                   overview?.revenue?.yesterday?.revenue ? Number(overview.revenue.yesterday.revenue) : undefined
                 )}
                 sparklineData={revenueSparkline}
-                sparklineColor="#3b82f6"
+                sparklineColor="hsl(var(--status-approved))"
                 loading={overviewLoading}
                 format="currency"
+                accent="blue"
+                icon={<Banknote className="h-4 w-4" />}
               />
             )}
             {can('users.view') && (
@@ -379,9 +386,11 @@ export default function OverviewPage() {
                 value={overviewLoading ? 0 : Number(overview?.activeUsers) || 0}
                 trend={calcTrend(overview?.activeUsers, overview?.activeUsersPrevious)}
                 sparklineData={usersSparkline}
-                sparklineColor="#8b5cf6"
+                sparklineColor="hsl(var(--chart-5))"
                 loading={overviewLoading}
                 onClick={() => setShowActiveUsers(true)}
+                accent="violet"
+                icon={<UserCheck className="h-4 w-4" />}
               />
             )}
           </motion.div>
@@ -428,9 +437,11 @@ export default function OverviewPage() {
           {can('tours.view') && (
             <motion.div variants={fadeInUp}>
               <Card>
-                <CardHeader className="border-b border-border/60 pb-3.5">
+                <CardHeader className="border-b border-primary/10 pb-3.5">
                   <CardTitle className="flex items-center gap-2.5 text-[13px] font-semibold tracking-tight text-text-primary">
-                    <Map className="h-4 w-4 text-primary" />
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300">
+                      <Map className="h-4 w-4" />
+                    </span>
                     Top Tours
                   </CardTitle>
                 </CardHeader>
@@ -444,49 +455,41 @@ export default function OverviewPage() {
                   ) : !overview?.topTours?.length ? (
                     <SectionEmpty message="No top tours data" />
                   ) : (
-                    <div className="min-w-[600px]">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b border-border bg-surface-muted/40">
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary" colSpan={2}>Tour</th>
-                            <th className="px-4 py-3 text-center text-xs font-semibold text-text-secondary">Bookings</th>
-                            <th className="px-4 py-3 text-center text-xs font-semibold text-text-secondary">Revenue</th>
-                             <th className={cn("px-4 py-3 text-center text-xs font-semibold text-text-secondary", styles.hideMobile)}>Rating</th>
-                             <th className={cn("px-4 py-3 text-center text-xs font-semibold text-text-secondary", styles.hideMobile)}>Reviews</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {overview.topTours.map((tour, idx) => (
-                            <tr
-                              key={tour.id || idx}
-                              className="border-b border-border last:border-b-0 cursor-pointer hover:bg-surface-muted/20 transition-colors"
-                              onClick={() => navigate("/admin/tours")}
-                              tabIndex={0}
-                              onKeyDown={(e) => { if (e.key === "Enter") navigate("/admin/tours"); }}
-                            >
-                              <td colSpan={2} className="px-4 py-3">
-                                <div className="flex items-center gap-3">
-                                  <span className="w-5 text-center text-xs font-medium text-text-tertiary shrink-0">{idx + 1}</span>
-                                  {tour.coverPhoto ? (
-                                    <OptimizedImage src={tour.coverPhoto} alt="" width={32} className="h-8 w-8 rounded-md object-cover shrink-0" />
-                                  ) : (
-                                    <div className="h-8 w-8 rounded-md bg-surface-muted flex items-center justify-center shrink-0">
-                                      <MapPin className="h-4 w-4 text-text-tertiary" />
-                                    </div>
-                                  )}
-                                  <span className="font-medium text-text-primary truncate">{tour.title}</span>
-                                </div>
-                              </td>
-                              <td className="px-4 py-3 text-center text-text-primary">{formatNumber(tour.bookingCount)}</td>
-                              <td className="px-4 py-3 text-center text-text-primary">{formatCurrency(tour.revenue)}</td>
-                              <td className={cn("px-4 py-3 text-center", styles.hideMobile)}>
-                                {tour.averageRating != null ? Number(tour.averageRating).toFixed(1) : "—"}
-                              </td>
-                              <td className={cn("px-4 py-3 text-center text-text-primary", styles.hideMobile)}>{formatNumber(tour.reviewCount)}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                    <div className="divide-y divide-primary/10">
+                      {overview.topTours.map((tour, idx) => (
+                        <div
+                          key={tour.id || idx}
+                          className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 transition-colors"
+                          onClick={() => navigate("/admin/tours")}
+                          tabIndex={0}
+                          onKeyDown={(e) => { if (e.key === "Enter") navigate("/admin/tours"); }}
+                        >
+                          <span className={cn(
+                            "w-5 h-5 flex items-center justify-center rounded-full text-[10px] font-bold shrink-0",
+                            idx === 0 ? "bg-emerald-600 text-white" : idx === 1 ? "bg-blue-500 text-white" : idx === 2 ? "bg-violet-500 text-white" : "text-text-tertiary"
+                          )}>
+                            {idx + 1}
+                          </span>
+                          {tour.coverPhoto ? (
+                            <OptimizedImage src={tour.coverPhoto} alt="" width={32} className="h-8 w-8 rounded-md object-cover shrink-0" />
+                          ) : (
+                            <div className="h-8 w-8 rounded-md bg-surface-muted flex items-center justify-center shrink-0">
+                              <MapPin className="h-4 w-4 text-text-tertiary" />
+                            </div>
+                          )}
+                          <span className="font-medium text-text-primary truncate flex-1 min-w-0">{tour.title}</span>
+                          <div className="flex items-center gap-4 text-xs tabular-nums shrink-0">
+                            <span className="text-text-secondary text-right w-16">{formatNumber(tour.bookingCount)} <span className="text-text-tertiary">bk</span></span>
+                            <span className="text-text-primary font-semibold text-right w-20">{formatCurrency(tour.revenue)}</span>
+                            {tour.averageRating != null && (
+                              <span className={cn("text-right w-10", styles.hideMobile)}>
+                                <span className="text-status-pending font-semibold">{Number(tour.averageRating).toFixed(1)}</span>
+                              </span>
+                            )}
+                            <span className={cn("text-text-tertiary text-right w-14", styles.hideMobile)}>{formatNumber(tour.reviewCount)} <span className="text-text-tertiary">rv</span></span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </CardContent>
@@ -499,9 +502,11 @@ export default function OverviewPage() {
             <motion.div variants={fadeInUp} className={styles.contentGrid2}>
               {can('dashboard.bookings') && (
                 <Card>
-                  <CardHeader className="border-b border-border/60 pb-3.5">
+                  <CardHeader className="border-b border-primary/10 pb-3.5">
                     <CardTitle className="flex items-center gap-2.5 text-[13px] font-semibold tracking-tight text-text-primary">
-                      <Activity className="h-4 w-4 text-primary" />
+                      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                        <Activity className="h-4 w-4" />
+                      </span>
                       Booking Status
                     </CardTitle>
                   </CardHeader>
@@ -527,7 +532,7 @@ export default function OverviewPage() {
                               stroke="none"
                             >
                               {(overview.bookingStatusDistribution || []).map((entry, i) => (
-                                <Cell key={entry.status || `unknown-${i}`} fill={bookingColors[entry.status || ""] || "#8a9ba8"} />
+                                <Cell key={entry.status || `unknown-${i}`} fill={bookingColors[entry.status || ""] || "hsl(var(--status-suspended))"} />
                               ))}
                             </Pie>
                             <Tooltip />
@@ -536,7 +541,7 @@ export default function OverviewPage() {
                         <div className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-1.5">
                           {(overview.bookingStatusDistribution || []).map((d, i) => (
                             <span key={d.status || `legend-${i}`} className="inline-flex items-center gap-1.5 text-xs text-text-secondary">
-                              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: bookingColors[d.status || ""] || "#8a9ba8" }} />
+                              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: bookingColors[d.status || ""] || "hsl(var(--status-suspended))" }} />
                               {d.status || "Unknown"}
                             </span>
                           ))}
@@ -549,9 +554,11 @@ export default function OverviewPage() {
 
               {can('payouts.view') && (
                 <Card>
-                  <CardHeader className="border-b border-border/60 pb-3.5">
+                  <CardHeader className="border-b border-primary/10 pb-3.5">
                     <CardTitle className="flex items-center gap-2.5 text-[13px] font-semibold tracking-tight text-text-primary">
-                      <Banknote className="h-4 w-4 text-primary" />
+                      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300">
+                        <Banknote className="h-4 w-4" />
+                      </span>
                       Payout Summary
                     </CardTitle>
                   </CardHeader>
@@ -561,16 +568,22 @@ export default function OverviewPage() {
                     ) : (
                       <>
                         <div className="flex items-center justify-between py-2.5 border-b border-border/60">
-                          <span className="text-sm text-text-secondary">Pending</span>
-                          <span className="text-sm font-semibold text-text-primary">{formatNumber(payoutSummary.pending?.count)}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="h-2 w-2 rounded-full bg-amber-400" />
+                            <span className="text-sm text-text-secondary">Pending</span>
+                          </div>
+                          <span className="text-sm font-semibold text-amber-600 dark:text-amber-400">{formatNumber(payoutSummary.pending?.count)}</span>
                         </div>
                         <div className="flex items-center justify-between py-2.5 border-b border-border/60">
-                          <span className="text-sm text-text-secondary">Paid This Month</span>
-                          <span className="text-sm font-semibold text-text-primary">{formatNumber(payoutSummary.paidThisMonth?.count)}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                            <span className="text-sm text-text-secondary">Paid This Month</span>
+                          </div>
+                          <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">{formatNumber(payoutSummary.paidThisMonth?.count)}</span>
                         </div>
                         <div className="text-xs text-text-tertiary space-y-1.5 pt-1">
-                          <div className="flex justify-between"><span>Pending total</span><span className="font-medium text-text-primary">{formatCurrency(payoutSummary.pending?.totalAmount)}</span></div>
-                          <div className="flex justify-between"><span>Paid total</span><span className="font-medium text-text-primary">{formatCurrency(payoutSummary.paidThisMonth?.totalAmount)}</span></div>
+                          <div className="flex justify-between"><span>Pending total</span><span className="font-medium text-amber-600 dark:text-amber-400">{formatCurrency(payoutSummary.pending?.totalAmount)}</span></div>
+                          <div className="flex justify-between"><span>Paid total</span><span className="font-medium text-emerald-600 dark:text-emerald-400">{formatCurrency(payoutSummary.paidThisMonth?.totalAmount)}</span></div>
                         </div>
                         <Button variant="outline" size="sm" className="w-full h-10 rounded-xl group" onClick={() => navigate("/admin/payouts")}>
                           View All Payouts
@@ -780,7 +793,33 @@ function WelcomeDashboard() {
   );
 }
 
-/* KPI Card with Sparkline - Clean card style matching reference design */
+/* KPI Card with Sparkline - Subtle tinted cards with per-metric identity */
+const KPI_ACCENTS = {
+  emerald: {
+    bg: "bg-gradient-to-br from-emerald-50/70 to-surface-base dark:from-emerald-950/20 dark:to-surface-base",
+    border: "border-emerald-200/60 dark:border-emerald-800/20",
+    hoverBorder: "hover:border-emerald-300 dark:hover:border-emerald-700/30",
+    iconBg: "bg-emerald-100 dark:bg-emerald-900/30",
+    iconText: "text-emerald-700 dark:text-emerald-300",
+  },
+  blue: {
+    bg: "bg-gradient-to-br from-blue-50/70 to-surface-base dark:from-blue-950/20 dark:to-surface-base",
+    border: "border-blue-200/60 dark:border-blue-800/20",
+    hoverBorder: "hover:border-blue-300 dark:hover:border-blue-700/30",
+    iconBg: "bg-blue-100 dark:bg-blue-900/30",
+    iconText: "text-blue-700 dark:text-blue-300",
+  },
+  violet: {
+    bg: "bg-gradient-to-br from-violet-50/70 to-surface-base dark:from-violet-950/20 dark:to-surface-base",
+    border: "border-violet-200/60 dark:border-violet-800/20",
+    hoverBorder: "hover:border-violet-300 dark:hover:border-violet-700/30",
+    iconBg: "bg-violet-100 dark:bg-violet-900/30",
+    iconText: "text-violet-700 dark:text-violet-300",
+  },
+} as const;
+
+type KpiAccent = keyof typeof KPI_ACCENTS;
+
 function KPICardWithSparkline({
   label,
   value,
@@ -790,6 +829,8 @@ function KPICardWithSparkline({
   loading,
   format,
   onClick,
+  accent = "emerald",
+  icon,
 }: {
   label: string;
   value: number;
@@ -799,14 +840,19 @@ function KPICardWithSparkline({
   loading: boolean;
   format?: "currency" | "number";
   onClick?: () => void;
+  accent?: KpiAccent;
+  icon?: React.ReactNode;
 }) {
   const displayValue = format === "currency" ? formatCurrency(value) : formatNumber(value);
+  const a = KPI_ACCENTS[accent];
 
   return (
     <div
       className={cn(
-        "rounded-lg border border-border/80 bg-surface-base shadow-soft transition-all duration-200", styles.kpiCard,
-        onClick ? "cursor-pointer hover:shadow-soft-lg hover:-translate-y-0.5" : "",
+        "relative rounded-xl border shadow-sm transition-all duration-200 overflow-hidden",
+        a.bg, a.border,
+        styles.kpiCard,
+        onClick ? cn("cursor-pointer hover:shadow-md hover:-translate-y-0.5", a.hoverBorder) : "",
       )}
       onClick={onClick}
       role={onClick ? "button" : undefined}
@@ -815,7 +861,10 @@ function KPICardWithSparkline({
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <p className="text-[13px] font-medium text-text-secondary">{label}</p>
+          <div className="flex items-center gap-2">
+            {icon && <span className={cn("flex h-7 w-7 items-center justify-center rounded-lg", a.iconBg, a.iconText)}>{icon}</span>}
+            <p className="text-[13px] font-medium text-text-secondary">{label}</p>
+          </div>
           {loading ? (
             <Skeleton className="h-8 w-28 mt-2" />
           ) : (

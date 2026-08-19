@@ -129,10 +129,10 @@ export default function ExpeditionSupplierList({ onSelectSupplier }: SupplierLis
           className="grid grid-cols-2 gap-4 lg:grid-cols-4"
         >
           {[
-            { label: "Suppliers", value: stats.total, icon: Building2, color: "bg-gradient-to-br from-blue-50 to-blue-100" },
-            { label: "On Expedition", value: stats.onExp, icon: Globe, color: "bg-gradient-to-br from-emerald-50 to-emerald-100" },
-            { label: "Active on EG", value: stats.active, icon: CheckCircle, color: "bg-gradient-to-br from-green-50 to-green-100" },
-            { label: "Direct Booking", value: stats.direct, icon: ExternalLink, color: "bg-gradient-to-br from-amber-50 to-amber-100" },
+            { label: "Suppliers", value: stats.total, icon: Building2, color: "bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/40 dark:to-blue-900/40" },
+            { label: "On Expedition", value: stats.onExp, icon: Globe, color: "bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/40 dark:to-emerald-900/40" },
+            { label: "Active on EG", value: stats.active, icon: CheckCircle, color: "bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/40 dark:to-green-900/40" },
+            { label: "Direct Booking", value: stats.direct, icon: ExternalLink, color: "bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/40 dark:to-amber-900/40" },
           ].map((k) => (
             <motion.div
               key={k.label}
@@ -231,7 +231,7 @@ export default function ExpeditionSupplierList({ onSelectSupplier }: SupplierLis
                       alt={supplier.name}
                       className="h-12 w-12 rounded-full object-cover ring-2 ring-border"
                       fallback={
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-sm font-bold text-white ring-2 ring-emerald-100">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-sm font-bold text-white ring-2 ring-emerald-100 dark:ring-emerald-800">
                           {supplier.name.charAt(0).toUpperCase()}
                         </div>
                       }

@@ -12,13 +12,13 @@ export function RevenueTrendChart({ data, loading }: RevenueTrendChartProps) {
   const chartData = data || [];
 
   return (
-    <div className="rounded-2xl bg-white border-0 shadow-sm p-5">
+    <div className="rounded-2xl bg-surface-base border border-border/60 shadow-soft p-5">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-gray-500" />
-          <h3 className="text-[15px] font-semibold text-gray-900">Revenue Trend</h3>
+          <TrendingUp className="h-4 w-4 text-text-secondary" />
+          <h3 className="text-[15px] font-semibold text-text-primary">Revenue Trend</h3>
         </div>
-        <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg font-medium">24 months</span>
+        <span className="text-xs text-text-secondary bg-surface-muted px-3 py-1.5 rounded-lg font-medium">24 months</span>
       </div>
       
       {loading ? (
@@ -28,20 +28,20 @@ export function RevenueTrendChart({ data, loading }: RevenueTrendChartProps) {
           <AreaChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
             <defs>
               <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>
-                <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                <stop offset="5%" stopColor="hsl(var(--status-active))" stopOpacity={0.2}/>
+                <stop offset="95%" stopColor="hsl(var(--status-active))" stopOpacity={0}/>
               </linearGradient>
               <linearGradient id="colorCommission" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#6366f1" stopOpacity={0.2}/>
-                <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                <stop offset="5%" stopColor="hsl(var(--chart-5))" stopOpacity={0.2}/>
+                <stop offset="95%" stopColor="hsl(var(--chart-5))" stopOpacity={0}/>
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis 
               dataKey="month" 
               axisLine={false} 
               tickLine={false} 
-              tick={{ fontSize: 11, fill: "#9ca3af" }}
+              tick={{ fontSize: 11, fill: "hsl(var(--text-tertiary))" }}
               tickFormatter={(value) => {
                 const date = new Date(value);
                 return date.toLocaleDateString('en-US', { month: 'short' });
@@ -50,12 +50,12 @@ export function RevenueTrendChart({ data, loading }: RevenueTrendChartProps) {
             <YAxis 
               axisLine={false} 
               tickLine={false} 
-              tick={{ fontSize: 11, fill: "#9ca3af" }}
+              tick={{ fontSize: 11, fill: "hsl(var(--text-tertiary))" }}
               tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "#fff",
+                backgroundColor: "hsl(var(--surface-base))",
                 border: "none",
                 borderRadius: "12px",
                 fontSize: "12px",
@@ -66,7 +66,7 @@ export function RevenueTrendChart({ data, loading }: RevenueTrendChartProps) {
             <Area 
               type="monotone" 
               dataKey="revenue" 
-              stroke="#10b981" 
+              stroke="hsl(var(--status-active))" 
               strokeWidth={2.5}
               fillOpacity={1} 
               fill="url(#colorRevenue)" 
@@ -75,7 +75,7 @@ export function RevenueTrendChart({ data, loading }: RevenueTrendChartProps) {
             <Area 
               type="monotone" 
               dataKey="commission" 
-              stroke="#6366f1" 
+              stroke="hsl(var(--chart-5))" 
               strokeWidth={2.5}
               fillOpacity={1} 
               fill="url(#colorCommission)" 
@@ -87,11 +87,11 @@ export function RevenueTrendChart({ data, loading }: RevenueTrendChartProps) {
       
       {!loading && chartData.length > 0 && (
         <div className="mt-4 flex justify-center gap-6">
-          <span className="inline-flex items-center gap-2 text-xs text-gray-600">
-            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+          <span className="inline-flex items-center gap-2 text-xs text-text-secondary">
+            <span className="h-2.5 w-2.5 rounded-full bg-status-active" />
             Revenue
           </span>
-          <span className="inline-flex items-center gap-2 text-xs text-gray-600">
+          <span className="inline-flex items-center gap-2 text-xs text-text-secondary">
             <span className="h-2.5 w-2.5 rounded-full bg-indigo-500" />
             Commission
           </span>

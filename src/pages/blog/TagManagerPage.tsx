@@ -37,10 +37,10 @@ export default function TagManagerPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Tags</h1>
-          <p className="mt-1 text-sm text-gray-500">Manage article tags</p>
+          <h1 className="text-2xl font-semibold text-text-primary">Tags</h1>
+          <p className="mt-1 text-sm text-text-secondary">Manage article tags</p>
         </div>
-        <Button onClick={() => { setEditingTag(null); setDialogOpen(true); }} className="bg-[#5645d4] hover:bg-[#4534b3]">
+        <Button onClick={() => { setEditingTag(null); setDialogOpen(true); }} className="bg-status-processing hover:bg-status-processing/90">
           <Plus className="mr-2 h-4 w-4" /> New Tag
         </Button>
       </div>
@@ -48,31 +48,31 @@ export default function TagManagerPage() {
       {isLoading ? (
         <div className="flex flex-wrap gap-2">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-8 w-20 rounded-full bg-gray-100 animate-pulse" />
+            <div key={i} className="h-8 w-20 rounded-full bg-surface-muted animate-pulse" />
           ))}
         </div>
       ) : tags?.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="rounded-full bg-gray-100 p-4 mb-4">
-            <Tags className="h-8 w-8 text-gray-400" />
+          <div className="rounded-full bg-surface-muted p-4 mb-4">
+            <Tags className="h-8 w-8 text-text-tertiary" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900">No tags yet</h3>
-          <p className="mt-1 text-sm text-gray-500">Create your first tag to label articles.</p>
+          <h3 className="text-lg font-medium text-text-primary">No tags yet</h3>
+          <p className="mt-1 text-sm text-text-secondary">Create your first tag to label articles.</p>
         </div>
       ) : (
         <div className="flex flex-wrap gap-2">
           {tags?.map((tag: ArticleTag) => (
-            <div key={tag.id} className="group inline-flex items-center gap-2 rounded-full border bg-white px-3 py-1.5 text-sm hover:border-gray-300 transition-colors">
+            <div key={tag.id} className="group inline-flex items-center gap-2 rounded-full border bg-surface-base px-3 py-1.5 text-sm hover:border-text-secondary/40 transition-colors">
               <span>{tag.name}</span>
-              <span className="text-xs text-gray-400">({tag._count?.articles || 0})</span>
+              <span className="text-xs text-text-tertiary">({tag._count?.articles || 0})</span>
               <button
-                className="ml-1 text-gray-300 hover:text-[#5645d4] transition-colors"
+                className="ml-1 text-text-tertiary hover:text-status-processing transition-colors"
                 onClick={() => { setEditingTag(tag); setDialogOpen(true); }}
               >
                 <Edit className="h-3.5 w-3.5" />
               </button>
               <button
-                className="text-gray-300 hover:text-red-500 transition-colors"
+                className="text-text-tertiary hover:text-status-rejected transition-colors"
                 onClick={() => setDeleteConfirm(tag.id)}
               >
                 <Trash2 className="h-3.5 w-3.5" />

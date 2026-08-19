@@ -29,30 +29,30 @@ export function ConfirmPaymentDialog({ booking, isPending, onConfirm, onClose }:
         </DialogHeader>
 
         <div className="space-y-4 py-2">
-          <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-2">
+          <div className="rounded-xl border border-border bg-surface-muted/50 p-4 space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-500">Booking</span>
-              <span className="font-medium text-slate-900">#{booking.bookingNumber}</span>
+              <span className="text-text-secondary">Booking</span>
+              <span className="font-medium text-text-primary">#{booking.bookingNumber}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-500">Customer</span>
-              <span className="font-medium text-slate-900">{booking.customer.name}</span>
+              <span className="text-text-secondary">Customer</span>
+              <span className="font-medium text-text-primary">{booking.customer.name}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-500">Tour</span>
-              <span className="font-medium text-slate-900 truncate ml-4">{booking.tour.title}</span>
+              <span className="text-text-secondary">Tour</span>
+              <span className="font-medium text-text-primary truncate ml-4">{booking.tour.title}</span>
             </div>
-            <div className="border-t border-slate-200 pt-2 flex items-center justify-between">
-              <span className="text-sm font-semibold text-slate-900">Total</span>
-              <span className="text-base font-bold text-slate-900">
+            <div className="border-t border-border pt-2 flex items-center justify-between">
+              <span className="text-sm font-semibold text-text-primary">Total</span>
+              <span className="text-base font-bold text-text-primary">
                 {booking.currency} {Number(booking.total).toLocaleString()}
               </span>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="reference" className="text-xs text-slate-500">
-              Payment Reference <span className="text-slate-300">(optional)</span>
+            <Label htmlFor="reference" className="text-xs text-text-secondary">
+              Payment Reference <span className="text-text-tertiary">(optional)</span>
             </Label>
             <Input
               id="reference"

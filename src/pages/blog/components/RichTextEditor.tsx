@@ -62,7 +62,7 @@ function ToolbarButton({
       title={label}
       className={`flex h-8 w-8 items-center justify-center rounded-md text-sm transition-colors ${
         active
-          ? "bg-purple-100 text-purple-700"
+          ? "bg-accent text-accent-foreground"
           : "text-muted-foreground hover:bg-accent hover:text-foreground"
       }`}
     >
@@ -201,7 +201,7 @@ export function RichTextEditor({ value, onChange, placeholder, disabled, expand 
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setLinkDialogOpen(false)}>Cancel</Button>
-            <Button onClick={applyLink} className="bg-purple-700 hover:bg-purple-800">{linkUrl ? "Apply" : "Remove"}</Button>
+            <Button onClick={applyLink} className="bg-primary hover:bg-primary/90">{linkUrl ? "Apply" : "Remove"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

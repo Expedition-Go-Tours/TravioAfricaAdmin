@@ -23,7 +23,7 @@ const accent = (type: "suppliers" | "customers") => ({
   text700: type === "suppliers" ? "text-green-700" : "text-blue-700",
   text400: type === "suppliers" ? "text-green-400" : "text-blue-400",
   ring: type === "suppliers" ? "focus-visible:ring-green-400" : "focus-visible:ring-blue-400",
-  gradient: type === "suppliers" ? "from-green-400 to-green-600" : "from-blue-400 to-blue-600",
+  gradient: type === "suppliers" ? "bg-green-500" : "bg-status-approved",
   badge: type === "suppliers" ? "bg-green-600" : "bg-blue-600",
 });
 
@@ -66,7 +66,7 @@ export function ConversationList({
         <div className={cn("relative flex rounded-lg p-0.5", a.bg50slash)}>
           <div
             className={cn(
-              "absolute inset-y-0.5 z-0 rounded-md bg-white shadow-sm ring-1 ring-black/5 transition-all duration-200 ease-out",
+              "absolute inset-y-0.5 z-0 rounded-md bg-surface-base shadow-sm ring-1 ring-black/5 transition-all duration-200 ease-out",
               tab === "all" ? "left-0.5 right-1/2" : "left-1/2 right-0.5"
             )}
           />

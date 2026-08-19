@@ -156,14 +156,14 @@ function getActionMeta(action: string) {
       return {
         label: meta.label,
         icon: ACTION_ICONS[meta.icon] ?? History,
-        color: ACTION_COLORS[prefix] ?? "bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300",
+        color: ACTION_COLORS[prefix] ?? "bg-surface-muted text-text-secondary",
       };
     }
   }
   return {
     label: action.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
     icon: History,
-    color: "bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300",
+    color: "bg-surface-muted text-text-secondary",
   };
 }
 
@@ -482,75 +482,59 @@ export default function ActivityLogPage() {
       ) : (
         <>
           <div className="rounded-lg border bg-card shadow-sm overflow-hidden min-w-0">
-            <div className="w-full overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-muted/50 border-b">
-                    <th className="text-left font-semibold uppercase tracking-wider text-muted-foreground px-4 py-3">Time</th>
-                    <th className="text-left font-semibold uppercase tracking-wider text-muted-foreground px-4 py-3">Actor</th>
-                    <th className="text-left font-semibold uppercase tracking-wider text-muted-foreground px-4 py-3">Role</th>
-                    <th className="text-left font-semibold uppercase tracking-wider text-muted-foreground px-4 py-3">Action</th>
-                    <th className="text-left font-semibold uppercase tracking-wider text-muted-foreground px-4 py-3">Endpoint</th>
-                    <th className="text-left font-semibold uppercase tracking-wider text-muted-foreground px-4 py-3">Details</th>
-                    <th className="text-left font-semibold uppercase tracking-wider text-muted-foreground px-4 py-3">IP</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {logs.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="text-center text-muted-foreground py-12">No activity found</td>
-                    </tr>
-                  ) : (
-                    logs.map((entry) => {
-                      const meta = getActionMeta(entry.action);
-                      const Icon = meta.icon;
-                      const actorName = entry.userName || entry.userEmail || "System";
-                      const isError = entry.action.startsWith("api.error");
-                      const statusCode = entry.metadata?.statusCode as number | undefined;
-                      const detail = isError
-                        ? `HTTP ${statusCode ?? "?"}${typeof entry.metadata?.message === "string" ? ` · ${entry.metadata.message}` : ""}`
-                        : entry.details || "";
-                      const endpoint = getEndpoint(entry);
-                      return (
-                        <tr key={entry.id} className="border-b last:border-b-0 hover:bg-muted/40 transition-colors">
-                          <td className="px-4 py-3 text-muted-foreground whitespace-nowrap text-xs">
-                            {new Date(entry.createdAt).toLocaleDateString("en-GB")}{" "}
-                            {new Date(entry.createdAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                              <span className="font-medium whitespace-nowrap">{actorName}</span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span
-                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${
-                                entry.userId
-                                  ? "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300"
-                                  : "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
-                              }`}
-                            >
-                              {entry.userId ? "Admin" : "System"}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${meta.color}`}>
-                              <Icon className="h-3.5 w-3.5" />
-                              {meta.label}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-muted-foreground font-mono text-xs break-all max-w-[22rem] min-w-0" title={endpoint || undefined}>
-                            {endpoint || "—"}
-                          </td>
-                          <td className="px-4 py-3 text-muted-foreground break-words">{detail || "—"}</td>
-                          <td className="px-4 py-3 text-muted-foreground whitespace-nowrap text-xs">{entry.ipAddress || "—"}</td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
+            <div className="divide-y divide-border/60">
+              {logs.length === 0 ? (
+                <div className="text-center text-muted-foreground py-12">No activity found</div>
+              ) : (
+                logs.map((entry) => {
+                  const meta = getActionMeta(entry.action);
+                  const Icon = meta.icon;
+                  const actorName = entry.userName || entry.userEmail || "System";
+                  const isError = entry.action.startsWith("api.error");
+                  const statusCode = entry.metadata?.statusCode as number | undefined;
+                  const detail = isError
+                    ? `HTTP ${statusCode ?? "?"}${typeof entry.metadata?.message === "string" ? ` · ${entry.metadata.message}` : ""}`
+                    : entry.details || "";
+                  const endpoint = getEndpoint(entry);
+                  return (
+                    <div key={entry.id} className="flex items-start gap-3 px-4 py-3 hover:bg-surface-muted/40 transition-colors">
+                      <div className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${meta.color}`}>
+                        <Icon className="h-3.5 w-3.5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-semibold text-text-primary">{actorName}</span>
+                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                            entry.userId
+                              ? "bg-status-processing/10 text-status-processing"
+                              : "bg-status-approved/10 text-status-approved"
+                          }`}>
+                            {entry.userId ? "Admin" : "System"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium ${meta.color}`}>
+                            {meta.label}
+                          </span>
+                          {endpoint && (
+                            <span className="text-[11px] text-text-tertiary font-mono truncate max-w-[20rem]">{endpoint}</span>
+                          )}
+                        </div>
+                        {detail && <p className="text-[11px] text-text-tertiary mt-0.5 truncate">{detail}</p>}
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-[10px] text-text-tertiary whitespace-nowrap">
+                          {new Date(entry.createdAt).toLocaleDateString("en-GB")}{" "}
+                          {new Date(entry.createdAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                        {entry.ipAddress && (
+                          <p className="text-[10px] text-text-tertiary/60 mt-0.5">{entry.ipAddress}</p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
 

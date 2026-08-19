@@ -92,8 +92,8 @@ export function QueryErrorState({
   onRetry?: () => void;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-border/60 bg-white px-8 py-20 text-center">
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500/20 to-red-600/10 mb-5 ring-1 ring-red-200/50">
+    <div className="flex flex-col items-center justify-center rounded-xl border border-border/60 bg-surface-base px-8 py-20 text-center">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500/20 to-red-600/10 mb-5 ring-1 ring-red-500/20">
         <AlertTriangle className="h-6 w-6 text-red-500" />
       </div>
       <h3 className="text-base font-semibold text-text-primary mb-1.5">{title}</h3>
@@ -111,7 +111,7 @@ export function FormSkeleton({ rows = 3, fieldsPerRow = 4 }: { rows?: number; fi
   return (
     <div className="space-y-5">
       {Array.from({ length: rows }).map((_, s) => (
-        <div key={s} className="rounded-xl border border-border/60 bg-white p-6 space-y-5 shadow-sm">
+        <div key={s} className="rounded-xl border border-border/60 bg-surface-base p-6 space-y-5 shadow-sm">
           <div className="flex items-center gap-3">
             <Skeleton className="h-10 w-10 rounded-xl" />
             <div className="space-y-1.5">
@@ -151,7 +151,7 @@ export function SettingsCard({
   return (
     <div
       className={cn(
-        "rounded-xl border border-border/60 bg-white shadow-sm overflow-hidden",
+        "rounded-xl border border-border/60 bg-surface-base shadow-sm overflow-hidden",
         className,
       )}
     >
@@ -195,7 +195,7 @@ export function SettingsSaveBar({
   onReset: () => void;
 }) {
   return (
-    <div className="rounded-xl border border-border/50 bg-white px-6 py-4 shadow-sm">
+    <div className="rounded-xl border border-border/50 bg-surface-base px-6 py-4 shadow-sm">
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
         <div className="text-sm text-center sm:text-left">
           {dirty ? (

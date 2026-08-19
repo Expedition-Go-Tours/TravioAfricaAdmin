@@ -9,9 +9,9 @@ interface ArticleCardProps {
 }
 
 const statusConfig: Record<ArticleStatus, { label: string; dot: string; bg: string }> = {
-  DRAFT: { label: "Draft", dot: "bg-amber-400", bg: "bg-amber-50 border-amber-200" },
-  PUBLISHED: { label: "Published", dot: "bg-emerald-400", bg: "bg-emerald-50 border-emerald-200" },
-  ARCHIVED: { label: "Archived", dot: "bg-gray-300", bg: "bg-gray-50 border-gray-200" },
+  DRAFT: { label: "Draft", dot: "bg-status-pending", bg: "bg-status-pending/15 border-status-pending/30" },
+  PUBLISHED: { label: "Published", dot: "bg-status-active", bg: "bg-green-50 border-green-200" },
+  ARCHIVED: { label: "Archived", dot: "bg-text-tertiary/50", bg: "bg-surface-muted border-border" },
 };
 
 const formatDate = (dateStr: string) => {
@@ -36,21 +36,21 @@ export function ArticleCard({ article, onPreview }: ArticleCardProps) {
 
   return (
     <div
-      className="group relative rounded-[1.25rem] p-1 bg-gradient-to-b from-gray-100/60 to-gray-50/30 ring-1 ring-gray-100/80 transition-all duration-500 ease-spring hover:shadow-soft-lg hover:from-gray-100/80 hover:to-gray-50/50 cursor-pointer"
+      className="group relative rounded-[1.25rem] p-1 bg-gradient-to-b from-surface-muted/60 to-surface-muted/30 ring-1 ring-surface-muted/80 transition-all duration-500 ease-spring hover:shadow-soft-lg hover:from-surface-muted/80 hover:to-surface-muted/50 cursor-pointer"
       onClick={onPreview}
     >
-      <div className="rounded-[calc(1.25rem-0.25rem)] overflow-hidden bg-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]">
+      <div className="rounded-[calc(1.25rem-0.25rem)] overflow-hidden bg-surface-base shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]">
         <div className="flex flex-1 flex-col sm:flex-row">
-          <div className={`relative sm:w-48 h-36 sm:h-auto shrink-0 overflow-hidden ${!hasImage ? "bg-gradient-to-br from-[#5645d4]/4 to-[#5645d4]/8" : ""}`}>
+          <div className={`relative sm:w-48 h-36 sm:h-auto shrink-0 overflow-hidden ${!hasImage ? "bg-gradient-to-br from-status-processing/4 to-status-processing/8" : ""}`}>
             {hasImage ? (
               <OptimizedImage src={article.featuredImage!} alt={article.title} width={800} className="h-full w-full object-cover transition-transform duration-700 ease-spring group-hover:scale-105" />
             ) : (
               <div className="flex h-full w-full items-center justify-center">
                 <div className="flex flex-col items-center gap-1">
-                  <div className="rounded-xl bg-[#5645d4]/6 p-2.5">
-                    <BookOpen className="h-5 w-5 text-[#5645d4]/30" />
+                  <div className="rounded-xl bg-status-processing/6 p-2.5">
+                    <BookOpen className="h-5 w-5 text-status-processing/30" />
                   </div>
-                  <span className="text-[10px] font-medium text-[#5645d4]/25 uppercase tracking-[0.15em]">No image</span>
+                  <span className="text-[10px] font-medium text-status-processing/25 uppercase tracking-[0.15em]">No image</span>
                 </div>
               </div>
             )}
@@ -66,16 +66,16 @@ export function ArticleCard({ article, onPreview }: ArticleCardProps) {
                       {status.label}
                     </span>
                   </div>
-                  <h3 className="text-base font-semibold text-gray-900 leading-snug group-hover:text-[#5645d4] transition-colors duration-300 line-clamp-1">
+                  <h3 className="text-base font-semibold text-text-primary leading-snug group-hover:text-status-processing transition-colors duration-300 line-clamp-1">
                     {article.title}
                   </h3>
                   {article.excerpt && (
-                    <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed">{truncate(article.excerpt, 150)}</p>
+                    <p className="text-sm text-text-secondary line-clamp-2 leading-relaxed">{truncate(article.excerpt, 150)}</p>
                   )}
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-400">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-tertiary">
                 {article.category && (
                   <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-normal">
                     {article.category.name}
@@ -86,7 +86,7 @@ export function ArticleCard({ article, onPreview }: ArticleCardProps) {
                     {article.author.photoURL ? (
                       <OptimizedImage src={article.author.photoURL} alt="" width={16} className="h-4 w-4 rounded-full" />
                     ) : (
-                      <span className="h-4 w-4 rounded-full bg-gray-100 inline-block" />
+                      <span className="h-4 w-4 rounded-full bg-surface-muted inline-block" />
                     )}
                     {article.author.name}
                   </span>

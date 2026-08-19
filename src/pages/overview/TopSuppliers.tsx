@@ -1,7 +1,7 @@
 ﻿import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Star, Users } from "lucide-react";
-import { formatCurrency, formatNumber } from "@/lib/utils";
+import { formatCurrency, formatNumber, cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import OptimizedImage from "@/components/shared/OptimizedImage";
 
@@ -22,11 +22,13 @@ export function TopSuppliers({ suppliers = [], loading }: TopSuppliersProps) {
   const navigate = useNavigate();
 
   return (
-    <Card className="h-full">
+    <Card className="h-full border border-border/60 shadow-soft bg-surface-base rounded-2xl">
       <CardHeader className="pb-3 pt-5 px-5">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-[15px] font-semibold text-text-primary">
-            <Users className="h-4 w-4 text-text-tertiary" />
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300">
+              <Users className="h-4 w-4" />
+            </span>
             Top Suppliers
           </CardTitle>
           <button
@@ -58,7 +60,7 @@ export function TopSuppliers({ suppliers = [], loading }: TopSuppliersProps) {
             {suppliers.slice(0, 5).map((supplier, idx) => (
               <div
                 key={supplier.id || idx}
-                className="flex items-center gap-3 rounded-lg p-2.5 transition-colors hover:bg-surface-muted/50 cursor-pointer"
+                className="flex items-center gap-3 rounded-lg p-2.5 transition-colors hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 cursor-pointer"
                 onClick={() => supplier.id && navigate(`/admin/suppliers/${supplier.id}`)}
               >
                 <div className="relative">
@@ -69,7 +71,10 @@ export function TopSuppliers({ suppliers = [], loading }: TopSuppliersProps) {
                       {supplier.user?.name?.charAt(0)?.toUpperCase() || "S"}
                     </div>
                   )}
-                  <span className="absolute -top-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full bg-text-primary text-[10px] font-bold text-white">
+                  <span className={cn(
+                    "absolute -top-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-sm",
+                    idx === 0 ? "bg-emerald-600" : idx === 1 ? "bg-blue-500" : idx === 2 ? "bg-violet-500" : "bg-text-tertiary"
+                  )}>
                     {idx + 1}
                   </span>
                 </div>

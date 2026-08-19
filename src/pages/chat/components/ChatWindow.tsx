@@ -94,7 +94,7 @@ const accent = (type: "suppliers" | "customers") => ({
   text400: type === "suppliers" ? "text-green-400" : "text-blue-400",
   text700: type === "suppliers" ? "text-green-700" : "text-blue-700",
   border: type === "suppliers" ? "focus-visible:border-green-400" : "focus-visible:border-blue-400",
-  gradient: type === "suppliers" ? "from-green-400 to-green-600" : "from-blue-400 to-blue-600",
+  gradient: type === "suppliers" ? "bg-green-500" : "bg-status-approved",
   hover: type === "suppliers" ? "hover:bg-green-50" : "hover:bg-blue-50",
   hoverText: type === "suppliers" ? "hover:text-green-600" : "hover:text-blue-600",
   hoverText700: type === "suppliers" ? "hover:text-green-700" : "hover:text-blue-700",
@@ -293,7 +293,7 @@ export function ChatWindow({
   if (!conversation) {
     return (
       <div className={cn("flex flex-1 w-full flex-col items-center justify-center text-center", a.bg30)}>
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-surface-base shadow-sm">
           <Send className={cn("h-6 w-6", a.text400)} />
         </div>
         <p className="mt-4 text-sm font-medium text-text-secondary">
@@ -309,12 +309,12 @@ export function ChatWindow({
   return (
     <div className="flex flex-1 min-h-0 flex-col">
       <div
-        className="group flex items-center gap-1 border-b border-border/50 bg-white px-5 py-3"
+        className="group flex items-center gap-1 border-b border-border/50 bg-surface-base px-5 py-3"
       >
         {onBack && (
           <button
             onClick={onBack}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-text-tertiary transition-colors hover:bg-gray-100 hover:text-text-primary lg:hidden"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-text-tertiary transition-colors hover:bg-surface-muted hover:text-text-primary lg:hidden"
             title="Back to conversations"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -384,7 +384,7 @@ export function ChatWindow({
               <button
                 onClick={onLoadMore}
                 disabled={loadingMore}
-                className={cn("rounded-full bg-white px-4 py-1.5 text-xs shadow-sm disabled:opacity-50 transition-colors", a.loadMore)}
+                className={cn("rounded-full bg-surface-base px-4 py-1.5 text-xs shadow-sm disabled:opacity-50 transition-colors", a.loadMore)}
               >
                 {loadingMore ? "Loading..." : "Load older messages"}
               </button>
@@ -442,7 +442,7 @@ export function ChatWindow({
                     <OptimizedImage src={otherParticipant.photoURL} alt="" width={32} className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                   )}
                 </div>
-                <div className="flex items-center gap-1.5 rounded-[18px] rounded-bl-[4px] border border-border/50 bg-white px-4 py-3 shadow-sm">
+                <div className="flex items-center gap-1.5 rounded-[18px] rounded-bl-[4px] border border-border/50 bg-surface-base px-4 py-3 shadow-sm">
                   <span className="flex gap-1">
                     {[0, 1, 2].map((i) => (
                       <motion.span
@@ -467,14 +467,14 @@ export function ChatWindow({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={() => scrollToBottom(true)}
-            className={cn("absolute bottom-20 right-8 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-lg border border-border/50 transition-colors", a.scrollBg)}
+            className={cn("absolute bottom-20 right-8 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-surface-base shadow-lg border border-border/50 transition-colors", a.scrollBg)}
           >
             <ChevronDown className="h-4 w-4 text-text-primary" />
           </motion.button>
         )}
       </AnimatePresence>
 
-      <div className="border-t border-border/50 bg-white px-4 py-3">
+      <div className="border-t border-border/50 bg-surface-base px-4 py-3">
         <div className="flex items-end gap-2">
           <button
             onClick={handleAttachmentClick}
@@ -497,7 +497,7 @@ export function ChatWindow({
               placeholder="Type a message..."
               rows={1}
               disabled={sending}
-              className={cn("w-full resize-none rounded-2xl border border-border/70 px-4 py-2.5 text-sm text-text-primary placeholder:text-text-tertiary focus-visible:outline-none focus-visible:ring-0 focus-visible:bg-white transition-colors disabled:cursor-not-allowed disabled:opacity-50 scrollbar-none", a.bg30, a.border)}
+              className={cn("w-full resize-none rounded-2xl border border-border/70 px-4 py-2.5 text-sm text-text-primary placeholder:text-text-tertiary focus-visible:outline-none focus-visible:ring-0 focus-visible:bg-surface-base transition-colors disabled:cursor-not-allowed disabled:opacity-50 scrollbar-none", a.bg30, a.border)}
               style={{ maxHeight: "120px" }}
             />
           </div>

@@ -48,7 +48,7 @@ export const TourListPanel = forwardRef<HTMLDivElement, TourListPanelProps>(func
   ref
 ) {
   return (
-    <div ref={ref} className="flex h-full flex-col border-r border-border/40 bg-white">
+    <div ref={ref} className="flex h-full flex-col border-r border-border/40 bg-surface-base">
       <div className="p-4 pb-3">
         <div className="relative mb-3">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

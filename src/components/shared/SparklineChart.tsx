@@ -1,4 +1,5 @@
 ﻿import { LineChart, Line, ResponsiveContainer } from "recharts";
+import { chartColors } from "./chartTheme";
 
 interface SparklineChartProps {
   data: number[];
@@ -6,7 +7,7 @@ interface SparklineChartProps {
   height?: number;
 }
 
-export function SparklineChart({ data, color = "#10b981", height = 40 }: SparklineChartProps) {
+export function SparklineChart({ data, color = chartColors.green, height = 40 }: SparklineChartProps) {
   const chartData = data.map((value, index) => ({ value, index }));
 
   return (

@@ -51,7 +51,7 @@ interface NavItem {
   children?: ChildItem[];
 }
 
-function getNavGroups(can: (key: string) => boolean): { group: string; items: NavItem[] }[] {
+export function getNavGroups(can: (key: string) => boolean): { group: string; items: NavItem[] }[] {
   const analyticsItems: NavItem[] = [
     ...(can('dashboard.*') || can('analytics.view') ? [{ label: "Overview", path: "/admin/overview", icon: <LayoutDashboard className="h-4 w-4" /> }] : []),
     ...(can('analytics.view') ? [{
@@ -152,7 +152,7 @@ function CountBadge({ value, collapsed }: { value: number; collapsed?: boolean }
     <span
       className={cn(
         "inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold",
-        collapsed ? "bg-text-primary text-white" : "bg-text-primary/10 text-text-primary",
+        collapsed ? "bg-white/20 text-white" : "bg-white/15 text-white",
       )}
     >
       {value > 99 ? "99+" : value}
@@ -245,16 +245,16 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       "relative flex items-center gap-3 rounded-lg text-sm transition-all duration-200",
       collapsed ? "justify-center px-0 py-2.5" : "px-3 py-2",
       active
-        ? "bg-text-primary/10 text-text-primary font-semibold"
-        : "text-text-primary hover:bg-surface-muted hover:text-text-primary",
+        ? "bg-white/15 text-white font-semibold shadow-[inset_4px_0_0_0_white]"
+        : "text-white/65 hover:bg-white/10 hover:text-white",
     );
 
   const childClasses = (active: boolean) =>
     cn(
       "relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-200",
       active
-        ? "bg-text-primary/10 text-text-primary font-semibold"
-        : "text-text-primary hover:bg-surface-muted hover:text-text-primary",
+        ? "bg-white/15 text-white font-semibold"
+        : "text-white/55 hover:bg-white/10 hover:text-white",
     );
 
   return (
@@ -262,7 +262,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-40 flex flex-col border-r border-sidebar-border bg-sidebar-bg",
-          collapsed ? "w-[76px]" : "w-[260px]",
+          collapsed ? "w-[76px]" : "w-[280px]",
           "transition-[width] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]",
           "transition-transform duration-400 ease-[cubic-bezier(0.32,0.72,0,1)] lg:relative lg:translate-x-0 lg:h-full lg:transition-[width]",
           open ? "translate-x-0" : "-translate-x-full",
@@ -272,20 +272,17 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         <div className={cn("flex h-16 shrink-0 items-center gap-2 border-b border-sidebar-border px-3", collapsed && "lg:px-0")}>
           <Link
             to="/admin/overview"
-            className={cn("flex items-center gap-2.5 overflow-hidden", collapsed && "hidden")}
+            className={cn("flex items-center overflow-hidden", collapsed && "hidden")}
             aria-label="Dashboard"
           >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-              <LayoutDashboard className="h-5 w-5" />
-            </span>
-            <span className="truncate text-[15px] font-semibold tracking-tight text-primary">
+            <span className="truncate text-[15px] font-semibold tracking-tight text-white">
               Travio Admin
             </span>
           </Link>
           <div className={cn("flex items-center gap-1", collapsed ? "mx-auto" : "ml-auto")}>
             <button
               onClick={() => setCollapsed((c) => !c)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-text-tertiary transition-colors hover:bg-surface-muted hover:text-text-primary"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-white/50 transition-colors hover:bg-white/10 hover:text-white"
               aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
               title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
@@ -294,21 +291,21 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           </div>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-text-tertiary transition-colors hover:bg-surface-muted hover:text-text-primary lg:hidden"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-white/50 transition-colors hover:bg-white/10 hover:text-white lg:hidden"
             aria-label="Close sidebar"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto scrollbar-thin px-2 py-3" role="navigation">
+        <nav className="flex-1 overflow-y-auto scrollbar-none px-2 py-3" role="navigation">
           {[...navGroups, ...adminGroups].map((group) => (
             <div key={group.group} className="mb-4">
               <div className={cn("px-3 py-2", collapsed && "lg:px-0 lg:py-2")}>
                 {collapsed ? (
-                  <span className="mx-auto hidden h-px w-6 bg-sidebar-border lg:block" />
+                  <span className="mx-auto hidden h-px w-6 bg-white/20 lg:block" />
                 ) : (
-                  <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-text-tertiary">
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/40">
                     {group.group}
                   </span>
                 )}
@@ -328,7 +325,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                           }}
                           className={cn(
                             "mx-auto flex w-12 items-center justify-center rounded-lg py-2.5 transition-all duration-200",
-                            childActive ? "text-text-primary" : "text-text-primary hover:bg-surface-muted hover:text-text-primary",
+                            childActive ? "text-white" : "text-white/65 hover:bg-white/10 hover:text-white",
                           )}
                           aria-label={item.label}
                           title={item.label}
@@ -344,8 +341,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                           className={cn(
                             "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-200",
                             childActive
-                              ? "bg-text-primary/10 text-text-primary font-medium"
-                              : "text-text-secondary hover:bg-surface-muted hover:text-text-primary",
+                              ? "bg-white/15 text-white font-medium"
+                              : "text-white/65 hover:bg-white/10 hover:text-white",
                           )}
                           aria-expanded={isOpen}
                         >
@@ -370,14 +367,14 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                               transition={{ duration: 0.2, ease: springEase }}
                               className="overflow-hidden"
                             >
-                              <div className="ml-3 mt-0.5 space-y-0.5 border-l border-sidebar-border pl-2">
+                              <div className="ml-3 mt-0.5 space-y-0.5 border-l border-white/20 pl-2">
                                 {item.children.map((child) => (
                                   <Link
                                     key={child.path}
                                     to={child.path}
                                     className={childClasses(location.pathname === child.path)}
                                   >
-                                    <span className="flex h-5 w-5 shrink-0 items-center justify-center text-text-tertiary">
+                                    <span className="flex h-5 w-5 shrink-0 items-center justify-center text-white/50">
                                       {child.icon}
                                     </span>
                                     <span className="truncate">{child.label}</span>
@@ -405,7 +402,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                       <span className="relative flex h-5 w-5 shrink-0 items-center justify-center">
                         {item.icon}
                         {collapsed && badge > 0 && (
-                          <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-text-primary px-1 text-[10px] font-semibold text-white">
+                          <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-white/20 px-1 text-[10px] font-semibold text-white">
                             {badge > 9 ? "9+" : badge}
                           </span>
                         )}
@@ -425,30 +422,30 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         </nav>
 
         <div className="shrink-0 border-t border-sidebar-border p-2">
-          <div className={cn("flex items-center gap-2.5 rounded-lg px-2 py-2 transition-colors", !collapsed && "hover:bg-surface-muted")}>
+          <div className={cn("flex items-center gap-2.5 rounded-lg px-2 py-2 transition-colors", !collapsed && "hover:bg-white/10")}>
             <div className="relative shrink-0">
-              <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-text-primary/10 text-sm font-semibold text-text-primary ring-1 ring-text-primary/10">
+              <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-white/15 text-sm font-semibold text-white ring-2 ring-white/20">
                 <span>{user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "A"}</span>
                 {user?.photoURL && (
                   <OptimizedImage
                     src={user.photoURL}
                     alt=""
                     referrerPolicy="no-referrer"
-                    className="absolute inset-0 h-full w-full object-cover"
-                    width={36}
+                    className="absolute inset-0 h-full w-full rounded-full object-cover"
+                    width={40}
                     onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                   />
                 )}
               </div>
-              <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-sidebar-bg bg-emerald-500" />
+              <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-sidebar-bg bg-white" />
             </div>
             {!collapsed && (
               <>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-text-primary">
+                  <p className="truncate text-sm font-medium text-white">
                     {user?.name || user?.email?.split("@")[0] || "Admin"}
                   </p>
-                  <p className="truncate text-xs text-text-tertiary">
+                  <p className="truncate text-xs text-white/50">
                     {user?.email || ""}
                   </p>
                 </div>
@@ -456,7 +453,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                   {isSuperAdmin && (
                     <Link
                       to="/admin/settings"
-                      className="flex h-8 w-8 items-center justify-center rounded-lg text-text-tertiary transition-colors hover:bg-surface-muted hover:text-text-primary"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg text-white/50 transition-colors hover:bg-white/10 hover:text-white"
                       aria-label="Settings"
                       title="Settings"
                     >
@@ -466,7 +463,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                   <button
                     onClick={handleSignOut}
                     disabled={signingOut}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg text-text-tertiary transition-colors hover:bg-destructive/10 hover:text-destructive"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-white/50 transition-colors hover:bg-red-500/20 hover:text-red-400"
                     aria-label="Sign out"
                     title="Sign out"
                   >

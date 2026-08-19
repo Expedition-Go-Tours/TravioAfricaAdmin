@@ -2,11 +2,14 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
-import { LogOut, Loader2, Settings, UserCircle, Menu, ChevronRight } from "lucide-react";
+import { LogOut, Loader2, Settings, UserCircle, Menu, ChevronRight, Sun, Moon } from "lucide-react";
 import { NotificationBell } from "@/components/ui/NotificationBell";
+import { SearchDropdown } from "./SearchDropdown";
 import { useAuth } from "@/auth/useAuth";
 import { isSuperAdmin, hasPermission } from "@/hooks/usePermission";
+import { useTheme } from "@/hooks/useTheme";
 import api from "@/lib/axios";
+import { cn } from "@/lib/utils";
 
 const breadcrumbMap: Record<string, string> = {
   overview: "Overview",
@@ -34,6 +37,7 @@ export function Header({ onMenuClick }: HeaderProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { theme, toggle } = useTheme();
   const [signingOut, setSigningOut] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -87,7 +91,7 @@ export function Header({ onMenuClick }: HeaderProps) {
   }, [logout]);
 
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-surface-base px-3 md:px-6">
+    <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b border-border/60 bg-surface-base/80 px-3 backdrop-blur-xl md:px-6">
       <div className="flex items-center gap-2 min-w-0">
         <button
           onClick={onMenuClick}
@@ -96,6 +100,8 @@ export function Header({ onMenuClick }: HeaderProps) {
         >
           <Menu className="h-5 w-5" />
         </button>
+
+        <SearchDropdown />
 
         <nav aria-label="Breadcrumb" className="hidden sm:flex items-center gap-1.5 text-sm text-text-secondary min-w-0">
           <Link to="/admin/overview" className="shrink-0 hover:text-text-primary transition-colors">
@@ -122,6 +128,14 @@ export function Header({ onMenuClick }: HeaderProps) {
 
       <div className="flex items-center gap-1 md:gap-2">
         {hasPermission('notifications.view') && <NotificationBell />}
+        <button
+          onClick={toggle}
+          className="flex h-10 w-10 items-center justify-center rounded-xl text-text-secondary hover:bg-surface-muted transition-colors"
+          aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+        >
+          {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+        </button>
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setMenuOpen(!menuOpen)}
@@ -166,8 +180,4 @@ export function Header({ onMenuClick }: HeaderProps) {
       </div>
     </header>
   );
-}
-
-function cn(...classes: (string | boolean | undefined | null)[]) {
-  return classes.filter(Boolean).join(" ");
 }

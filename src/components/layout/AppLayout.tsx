@@ -3,6 +3,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
+import { CommandPalette } from "./CommandPalette";
 import { pageTransition } from "@/lib/animations";
 import { useAdminRole } from "@/auth/useAdminRole";
 import { useTokenRefresh } from "@/hooks/useTokenRefresh";
@@ -23,6 +24,7 @@ export function AppLayout() {
         <Sidebar open={sidebarOpen} onClose={closeSidebar} onOpen={() => setSidebarOpen(true)} />
         <div className="flex min-w-0 flex-1 flex-col">
           <Header onMenuClick={() => setSidebarOpen(true)} />
+          <CommandPalette />
           <main className="flex flex-1 flex-col overflow-y-auto p-4 md:p-6 lg:p-8">
             <AnimatePresence mode="wait">
               <motion.div

@@ -4,8 +4,8 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { AlertTriangle, MapPin } from "lucide-react";
 
 const TILE_STYLE = "https://tiles.openfreemap.org/styles/liberty";
-const ZONE_FILL = "rgba(16, 185, 129, 0.18)";
-const ZONE_LINE = "#179237";
+const ZONE_FILL = "hsl(var(--green-500) / 0.18)";
+const ZONE_LINE = "hsl(var(--green-600))";
 const EXCL_FILL = "rgba(225, 29, 72, 0.18)";
 const EXCL_LINE = "#e11d48";
 
@@ -133,19 +133,19 @@ export function PickupZoneMap({ areas = [], height = 240, showLegend = true }: {
 
   return (
     <div>
-      <div className="relative overflow-hidden rounded-lg border border-slate-200/60">
+      <div className="relative overflow-hidden rounded-lg border border-border">
         <div ref={containerRef} style={{ height }} className="w-full" />
         {failed && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-white/95 px-4 text-center">
-            <AlertTriangle size={18} className="text-rose-400" />
-            <p className="text-xs text-slate-500">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-surface-base/95 px-4 text-center">
+            <AlertTriangle size={18} className="text-status-rejected" />
+            <p className="text-xs text-text-secondary">
               Map unavailable — {totalAreas} pickup zone{totalAreas === 1 ? "" : "s"}
               {exclusions.length > 0 ? `, ${exclusions.length} no-pickup zone${exclusions.length === 1 ? "" : "s"}` : ""} configured.
             </p>
           </div>
         )}
         {mapReady && showLegend && (
-          <div className="absolute left-2 top-2 z-10 flex flex-col gap-1.5 rounded-lg bg-white/90 px-2.5 py-2 text-[10px] font-medium text-slate-700 shadow-sm backdrop-blur-sm">
+          <div className="absolute left-2 top-2 z-10 flex flex-col gap-1.5 rounded-lg bg-surface-base/90 px-2.5 py-2 text-[10px] font-medium text-text-primary shadow-soft backdrop-blur-sm">
             <span className="flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-sm" style={{ background: ZONE_LINE }} /> Pickup zone
             </span>
@@ -158,7 +158,7 @@ export function PickupZoneMap({ areas = [], height = 240, showLegend = true }: {
         )}
       </div>
       <div className="mt-2 flex flex-wrap gap-2">
-        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700">
+        <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-1 text-[11px] font-medium text-green-700">
           <MapPin size={11} /> {zones.length} pickup zone{zones.length === 1 ? "" : "s"}
         </span>
         {exclusions.length > 0 && (

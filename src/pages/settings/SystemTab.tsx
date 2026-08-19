@@ -28,7 +28,7 @@ export function SystemTab() {
 
   if (maintLoading) {
     return (
-      <div className="rounded-xl border border-border/60 bg-white p-6 space-y-5 shadow-sm">
+      <div className="rounded-xl border border-border/60 bg-surface-base p-6 space-y-5 shadow-sm">
         <div className="flex items-center gap-3">
           <Skeleton className="h-10 w-10 rounded-xl" />
           <div className="space-y-1.5">
@@ -48,7 +48,7 @@ export function SystemTab() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-border/60 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-border/60 bg-surface-base shadow-sm overflow-hidden">
         <div className="px-6 py-5">
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">

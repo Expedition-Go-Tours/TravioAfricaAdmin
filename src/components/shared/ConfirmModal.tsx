@@ -28,8 +28,8 @@ interface ConfirmModalProps {
 const iconConfig = {
   publish: {
     icon: CheckCircle,
-    bg: "bg-emerald-100",
-    color: "text-emerald-600",
+    bg: "bg-green-100",
+    color: "text-status-active",
   },
   unpublish: {
     icon: XCircle,
@@ -93,16 +93,16 @@ export function ConfirmModal({
                 </div>
               </div>
             )}
-            <DialogTitle className="text-lg font-semibold text-slate-900 text-center">
+            <DialogTitle className="text-lg font-semibold text-text-primary text-center">
               {title}
             </DialogTitle>
-            <DialogDescription className="text-sm text-slate-500 mt-2 leading-relaxed text-center">
+            <DialogDescription className="text-sm text-text-secondary mt-2 leading-relaxed text-center">
               {description}
             </DialogDescription>
           </DialogHeader>
           {children && <div className="mt-4">{children}</div>}
         </div>
-        <DialogFooter className="px-6 py-4 bg-slate-50/80 border-t border-slate-100 gap-2.5">
+        <DialogFooter className="px-6 py-4 bg-surface-muted/80 border-t border-border/60 gap-2.5">
           <Button
             ref={cancelRef}
             variant="outline"

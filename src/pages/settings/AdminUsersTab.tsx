@@ -25,7 +25,7 @@ function TableSkeleton() {
         </div>
         <Skeleton className="h-9 w-32" />
       </div>
-      <div className="rounded-xl border border-border/60 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-border/60 bg-surface-base shadow-sm overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border/40">
@@ -212,7 +212,7 @@ export function AdminUsersTab() {
         </Button>
       </div>
 
-      <div className="rounded-xl border border-border/60 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-border/60 bg-surface-base shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -317,7 +317,7 @@ export function AdminUsersTab() {
       </div>
 
       <Dialog open={showAdd} onOpenChange={(o) => { if (!o) resetAddModal(); }}>
-        <DialogContent className="max-w-lg !bg-white/95 backdrop-blur-xl">
+        <DialogContent className="max-w-lg !bg-surface-base/95 backdrop-blur-xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
@@ -373,7 +373,7 @@ export function AdminUsersTab() {
                 <p className="text-xs font-medium text-text-tertiary">
                   {searchResults.length} result{searchResults.length !== 1 ? "s" : ""}
                 </p>
-                <div className="max-h-52 overflow-y-auto rounded-xl border border-border/60 bg-white shadow-sm -mt-2">
+                <div className="max-h-52 overflow-y-auto rounded-xl border border-border/60 bg-surface-base shadow-sm -mt-2">
                   {searchResults.map((u) => (
                     <button
                       key={u.id}
@@ -461,7 +461,7 @@ export function AdminUsersTab() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-red-500/20 to-red-600/10 ring-1 ring-red-200/50">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-red-500/20 to-red-600/10 ring-1 ring-red-500/20">
                 <AlertTriangle className="h-5 w-5 text-red-500" />
               </div>
               <div>

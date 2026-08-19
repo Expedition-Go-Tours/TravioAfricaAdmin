@@ -103,7 +103,7 @@ export function CategoryDialog({ open, onOpenChange, category, categories, onSav
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
-          <Button onClick={handleSave} disabled={saving} className="bg-[#5645d4] hover:bg-[#4534b3]">
+          <Button onClick={handleSave} disabled={saving} className="bg-status-processing hover:bg-status-processing/90">
             {saving ? "Saving..." : category ? "Update" : "Create"}
           </Button>
         </DialogFooter>

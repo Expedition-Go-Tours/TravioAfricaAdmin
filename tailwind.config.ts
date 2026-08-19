@@ -11,6 +11,7 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: ['"Plus Jakarta Sans"', "system-ui", "sans-serif"],
+        display: ['"Space Grotesk"', '"Plus Jakarta Sans"', "system-ui", "sans-serif"],
       },
       fontSize: {
         xs: ["13px", { lineHeight: "18px" }],
@@ -38,6 +39,7 @@ const config: Config = {
           700: "hsl(var(--green-700))",
           800: "hsl(var(--green-800))",
           900: "hsl(var(--green-900))",
+          950: "hsl(var(--green-950))",
         },
         sidebar: {
           bg: "hsl(var(--sidebar-bg))",
@@ -128,8 +130,8 @@ const config: Config = {
         "2": "0 0 2px rgba(145,158,171,0.2), 0 12px 24px -4px rgba(145,158,171,0.12)",
         "soft": "0 2px 8px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)",
         "soft-lg": "0 4px 16px rgba(0,0,0,0.04), 0 16px 48px rgba(0,0,0,0.06)",
-        "tinted": "0 2px 8px hsl(152 65% 35% / 0.08), 0 8px 24px hsl(152 65% 35% / 0.06)",
-        "tinted-lg": "0 4px 16px hsl(152 65% 35% / 0.1), 0 16px 48px hsl(152 65% 35% / 0.08)",
+        "tinted": "0 2px 8px hsl(163 85% 32% / 0.1), 0 8px 24px hsl(163 85% 32% / 0.08)",
+        "tinted-lg": "0 4px 16px hsl(163 85% 32% / 0.12), 0 16px 48px hsl(163 85% 32% / 0.1)",
         "inner-glow": "inset 0 1px 1px rgba(255,255,255,0.6)",
       },
       transitionTimingFunction: {

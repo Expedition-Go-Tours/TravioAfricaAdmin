@@ -8,10 +8,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 type StatAccent = "emerald" | "blue" | "amber" | "red";
 
 const ACCENT_CLASSES: Record<StatAccent, string> = {
-  emerald: "bg-gradient-to-br from-emerald-50 to-emerald-100",
-  blue: "bg-gradient-to-br from-blue-50 to-blue-100",
-  amber: "bg-gradient-to-br from-amber-50 to-amber-100",
-  red: "bg-gradient-to-br from-red-50 to-red-100",
+  emerald: "bg-green-50 text-green-800 dark:bg-green-950/30 dark:text-green-300",
+  blue: "bg-status-approved/15 text-status-approved",
+  amber: "bg-status-pending/15 text-status-pending",
+  red: "bg-status-rejected/15 text-status-rejected",
 };
 
 interface StatCardProps {
@@ -45,9 +45,9 @@ export function StatCard({
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={onClick ? (e) => { if (e.key === "Enter") onClick(); } : undefined}
       className={cn(
-        "rounded-lg shadow-sm border-0 p-5 transition-transform",
+        "rounded-lg border border-border/60 p-5 shadow-soft transition-all duration-300",
         ACCENT_CLASSES[accent],
-        onClick && "cursor-pointer hover:-translate-y-0.5",
+        onClick && "cursor-pointer hover:-translate-y-0.5 hover:shadow-soft-lg",
         className,
       )}
     >
@@ -57,7 +57,7 @@ export function StatCard({
           {loading ? (
             <Skeleton className="h-8 w-24" />
           ) : (
-            <p className="text-3xl font-bold tracking-tight text-text-primary tabular-nums leading-tight">{value}</p>
+            <p className="text-3xl font-display font-bold tracking-tight text-text-primary tabular-nums leading-tight">{value}</p>
           )}
           {(trend || subtitle) && (
             <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">

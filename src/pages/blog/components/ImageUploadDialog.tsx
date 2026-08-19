@@ -75,7 +75,7 @@ export function ImageUploadDialog({ open, onOpenChange, onImageSelect, title = "
         <div className="space-y-4 py-4">
           <div
             className={`relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-colors ${
-              dragOver ? "border-[#5645d4] bg-purple-50" : "border-gray-300 hover:border-gray-400"
+              dragOver ? "border-status-processing bg-surface-muted" : "border-border hover:border-text-secondary/40"
             } ${preview ? "py-4" : "py-8"}`}
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}
@@ -90,13 +90,13 @@ export function ImageUploadDialog({ open, onOpenChange, onImageSelect, title = "
               </div>
             ) : (
               <div className="flex flex-col items-center gap-2 text-center">
-                <div className="rounded-full bg-gray-100 p-3">
-                  <Upload className="h-6 w-6 text-gray-400" />
+                <div className="rounded-full bg-surface-muted p-3">
+                  <Upload className="h-6 w-6 text-text-tertiary" />
                 </div>
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium text-[#5645d4]">Click to upload</span> or drag and drop
+                <p className="text-sm text-text-secondary">
+                  <span className="font-medium text-status-processing">Click to upload</span> or drag and drop
                 </p>
-                <p className="text-xs text-gray-400">PNG, JPG, WebP up to 10MB</p>
+                <p className="text-xs text-text-tertiary">PNG, JPG, WebP up to 10MB</p>
               </div>
             )}
             <input
@@ -110,16 +110,16 @@ export function ImageUploadDialog({ open, onOpenChange, onImageSelect, title = "
             />
           </div>
 
-          {error && <p className="text-xs text-red-500">{error}</p>}
+          {error && <p className="text-xs text-status-rejected">{error}</p>}
 
           {uploading && (
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-xs text-gray-500">
+              <div className="flex items-center justify-between text-xs text-text-secondary">
                 <span>Uploading...</span>
                 <span>{progress}%</span>
               </div>
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
-                <div className="h-full rounded-full bg-[#5645d4] transition-all duration-300" style={{ width: `${progress}%` }} />
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-muted">
+                <div className="h-full rounded-full bg-status-processing transition-all duration-300" style={{ width: `${progress}%` }} />
               </div>
             </div>
           )}
@@ -128,7 +128,7 @@ export function ImageUploadDialog({ open, onOpenChange, onImageSelect, title = "
           <Button variant="outline" onClick={() => { if (!uploading) { onOpenChange(false); reset(); } }} disabled={uploading}>
             Cancel
           </Button>
-          <Button onClick={handleUpload} disabled={!file || uploading} className="bg-[#5645d4] hover:bg-[#4534b3]">
+          <Button onClick={handleUpload} disabled={!file || uploading} className="bg-status-processing hover:bg-status-processing/90">
             {uploading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

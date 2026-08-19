@@ -43,7 +43,7 @@ export function SlugField({ value, onChange, error, disabled }: SlugFieldProps) 
       </div>
       {value && (
         <p className="text-xs text-muted-foreground">
-          {baseUrl}/<span className="text-purple-600 font-medium">{value}</span>
+          {baseUrl}/<span className="text-primary font-medium">{value}</span>
         </p>
       )}
       {error && <p className="text-xs text-destructive mt-1">{error}</p>}

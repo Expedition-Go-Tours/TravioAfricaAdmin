@@ -341,7 +341,7 @@ export default function ChatPage() {
   return (
     <div className="flex h-full overflow-hidden">
       <div className={cn(
-        "flex flex-col border-r border-border/50 bg-white transition-all duration-300 overflow-hidden shrink-0",
+        "flex flex-col border-r border-border/50 bg-surface-base transition-all duration-300 overflow-hidden shrink-0",
         selectedConv ? "w-0 lg:w-[380px]" : "w-full lg:w-[380px]"
       )}>
         <div className="flex items-center justify-between border-b border-border/50 px-5 py-4">

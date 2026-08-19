@@ -8,7 +8,7 @@ import { SectionError } from "@/components/shared/SectionError";
 import { SectionEmpty } from "@/components/shared/SectionEmpty";
 import api from "@/lib/axios";
 
-const CATEGORY_COLORS = ["#5645d4", "#40966e", "#d45a0a", "#3b82f6", "#eab308", "#ec4899", "#06b6d4"];
+const CATEGORY_COLORS = ["hsl(var(--chart-5))", "hsl(var(--status-active))", "#d45a0a", "hsl(var(--status-approved))", "#eab308", "#ec4899", "#06b6d4"];
 
 export default function BlogAnalytics() {
   const navigate = useNavigate();
@@ -23,12 +23,12 @@ export default function BlogAnalytics() {
   const categoryDistribution = data?.data?.categoryDistribution || [];
 
   const kpis = [
-    { label: "Total Articles", value: totals?.totalArticles ?? 0, icon: FileText, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: "Published", value: totals?.publishedCount ?? 0, icon: BookMarked, color: "text-emerald-600", bg: "bg-emerald-50" },
-    { label: "Drafts", value: totals?.draftCount ?? 0, icon: FileText, color: "text-amber-600", bg: "bg-amber-50" },
-    { label: "Archived", value: totals?.archivedCount ?? 0, icon: Archive, color: "text-gray-600", bg: "bg-gray-50" },
-    { label: "Total Views", value: totals?.totalViews ?? 0, icon: Eye, color: "text-purple-600", bg: "bg-purple-50" },
-    { label: "Total Shares", value: totals?.totalShares ?? 0, icon: Share2, color: "text-rose-600", bg: "bg-rose-50" },
+    { label: "Total Articles", value: totals?.totalArticles ?? 0, icon: FileText, color: "text-status-approved", bg: "bg-surface-muted" },
+    { label: "Published", value: totals?.publishedCount ?? 0, icon: BookMarked, color: "text-status-active", bg: "bg-surface-muted" },
+    { label: "Drafts", value: totals?.draftCount ?? 0, icon: FileText, color: "text-status-pending", bg: "bg-surface-muted" },
+    { label: "Archived", value: totals?.archivedCount ?? 0, icon: Archive, color: "text-text-secondary", bg: "bg-surface-muted" },
+    { label: "Total Views", value: totals?.totalViews ?? 0, icon: Eye, color: "text-status-processing", bg: "bg-surface-muted" },
+    { label: "Total Shares", value: totals?.totalShares ?? 0, icon: Share2, color: "text-status-rejected", bg: "bg-surface-muted" },
   ];
 
   return (

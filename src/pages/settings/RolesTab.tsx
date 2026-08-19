@@ -19,7 +19,7 @@ function TableSkeleton() {
         <Skeleton className="h-9 w-64" />
         <Skeleton className="h-9 w-32" />
       </div>
-      <div className="rounded-xl border border-border/60 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-border/60 bg-surface-base shadow-sm overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border/40">
@@ -180,7 +180,7 @@ export function RolesTab() {
         </Button>
       </div>
 
-      <div className="rounded-xl border border-border/60 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-border/60 bg-surface-base shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -263,7 +263,7 @@ export function RolesTab() {
       </div>
 
       <Dialog open={showEditor} onOpenChange={closeEditor}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto !bg-white/95 backdrop-blur-xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto !bg-surface-base/95 backdrop-blur-xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-text-primary/5 text-text-primary flex items-center justify-center">
@@ -306,7 +306,7 @@ export function RolesTab() {
                 </div>
               ) : (
                 Object.entries(groupedPerms).map(([category, perms]) => (
-                  <div key={category} className="mb-3 rounded-xl border border-border/60 bg-white shadow-sm overflow-hidden">
+                  <div key={category} className="mb-3 rounded-xl border border-border/60 bg-surface-base shadow-sm overflow-hidden">
                     <div className="flex items-center justify-between px-4 py-2.5 bg-surface-muted/60 border-b border-border/40">
                       <h4 className="text-xs font-semibold text-text-secondary">
                         <span className="inline-flex items-center gap-1.5">
@@ -372,7 +372,7 @@ export function RolesTab() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-muted">
                 <Trash2 className="h-5 w-5 text-red-500" />
               </div>
               <div>

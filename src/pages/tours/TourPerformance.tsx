@@ -250,9 +250,9 @@ export default function TourPerformancePage() {
 
 function KpiCard({ label, value, icon, accent }: { label: string; value: string; icon: React.ReactNode; accent: "emerald" | "blue" | "amber" }) {
   const bg = {
-    emerald: "bg-gradient-to-br from-emerald-50 to-emerald-100",
-    blue: "bg-gradient-to-br from-blue-50 to-blue-100",
-    amber: "bg-gradient-to-br from-amber-50 to-amber-100",
+    emerald: "bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/30 dark:to-emerald-900/20",
+    blue: "bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20",
+    amber: "bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/30 dark:to-amber-900/20",
   }[accent];
   return (
     <motion.div

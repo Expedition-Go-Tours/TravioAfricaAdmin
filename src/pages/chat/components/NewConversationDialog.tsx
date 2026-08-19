@@ -55,7 +55,7 @@ const accent = (type: "suppliers" | "customers") => ({
   text400: type === "suppliers" ? "text-green-400" : "text-blue-400",
   text600: type === "suppliers" ? "text-green-600" : "text-blue-600",
   hoverText700: type === "suppliers" ? "hover:text-green-700" : "hover:text-blue-700",
-  gradient: type === "suppliers" ? "from-green-400 to-green-600" : "from-blue-400 to-blue-600",
+  gradient: type === "suppliers" ? "bg-green-500" : "bg-status-approved",
   border: type === "suppliers" ? "focus-visible:border-green-400" : "focus-visible:border-blue-400",
 });
 
@@ -198,7 +198,7 @@ export function NewConversationDialog({
             autoComplete="off"
             onChange={handleSearchChange}
             onKeyDown={handleKeyDown}
-            className={cn("w-full rounded-lg border border-border/60 py-2 pl-9 pr-9 text-sm text-text-primary placeholder:text-text-tertiary focus-visible:outline-none focus-visible:bg-white transition-colors", a.bg50slash20, a.border)}
+            className={cn("w-full rounded-lg border border-border/60 py-2 pl-9 pr-9 text-sm text-text-primary placeholder:text-text-tertiary focus-visible:outline-none focus-visible:bg-surface-base transition-colors", a.bg50slash20, a.border)}
           />
           {query && (
             <button

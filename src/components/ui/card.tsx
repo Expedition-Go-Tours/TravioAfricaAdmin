@@ -6,7 +6,7 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
     <div
       ref={ref}
       className={cn(
-        "rounded-lg border border-border/80 bg-surface-base shadow-soft transition-shadow duration-200",
+        "rounded-xl border border-primary/10 bg-surface-base shadow-sm transition-shadow duration-200",
         className,
       )}
       {...props}
@@ -30,7 +30,7 @@ const CardTitle = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivE
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn("font-semibold leading-none tracking-tight text-text-primary", className)}
+      className={cn("font-display font-semibold leading-none tracking-tight text-text-primary", className)}
       {...props}
     />
   ),

@@ -131,7 +131,7 @@ export function MessageBubble({
         <div className="w-8 shrink-0" />
       ) : showAvatar ? (
         <div
-          className="relative mt-1 flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-400 to-green-600 text-xs font-bold text-white"
+          className="relative mt-1 flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-green-500 text-xs font-bold text-white"
           onClick={() => message.sender?.id && onAvatarClick?.(message.sender.id)}
         >
           <span>{senderName?.charAt(0)?.toUpperCase() || "?"}</span>
@@ -158,7 +158,7 @@ export function MessageBubble({
             "relative px-3.5 py-2 text-sm leading-relaxed shadow-sm",
             isOwn
               ? "bg-green-600 text-white rounded-[18px] rounded-br-[4px]"
-              : "bg-white text-text-primary border border-border/50 rounded-[18px] rounded-bl-[4px]"
+              : "bg-surface-base text-text-primary border border-border/50 rounded-[18px] rounded-bl-[4px]"
           )}
         >
           {editing ? (
@@ -168,7 +168,7 @@ export function MessageBubble({
                 value={editValue}
                 onChange={(e) => setEditValue(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="w-full resize-none rounded-lg border border-green-400 bg-white px-3 py-2 text-sm text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 scrollbar-none"
+                className="w-full resize-none rounded-lg border border-green-400 bg-surface-base px-3 py-2 text-sm text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 scrollbar-none"
                 rows={3}
                 disabled={saving}
               />
@@ -176,7 +176,7 @@ export function MessageBubble({
                 <button
                   onClick={handleCancelEdit}
                   disabled={saving}
-                  className="rounded-full px-3 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50"
+                  className="rounded-full px-3 py-1 text-xs font-medium text-text-secondary hover:bg-surface-muted transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -247,7 +247,7 @@ export function MessageBubble({
             {menuOpen && (
               <div
                 className={cn(
-                  "absolute z-50 min-w-[120px] overflow-hidden rounded-lg border border-border/50 bg-white py-1 shadow-lg",
+                  "absolute z-50 min-w-[120px] overflow-hidden rounded-lg border border-border/50 bg-surface-base py-1 shadow-lg",
                   isOwn ? "right-0" : "left-0"
                 )}
               >
