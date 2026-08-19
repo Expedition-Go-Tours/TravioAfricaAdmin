@@ -18,6 +18,7 @@ import {
 import { staggerContainer, fadeIn } from "@/lib/animations";
 import { formatNumber, formatDate } from "@/lib/utils";
 import api from "@/lib/axios";
+import { toggleSupplierExpeditionRole } from "@/services/supplierService";
 
 interface Supplier {
   id: string;
@@ -28,6 +29,7 @@ interface Supplier {
   onExpedition: number;
   activeOnExpedition: number;
   directCount: number;
+  roles?: string[];
 }
 
 interface ExpeditionTour {
@@ -224,6 +226,9 @@ export default function ExpeditionSupplierTours({ supplier, onBack }: SupplierTo
   const tours: Tour[] = useMemo(() => data?.tours || [], [data]);
   const supplierDetail = data?.supplier;
 
+  const supplierRoles = Array.isArray(supplierDetail?.roles) ? supplierDetail.roles : supplier.roles ?? [];
+  const isExpeditionPartner = supplierRoles.includes("expedition");
+
   const publishMut = useMutation({
     mutationFn: ({ tourId, isActive }: { tourId: string; isActive: boolean }) =>
       api.patch(`/admin/tours/${tourId}/expedition-publish`, { isActive }),
@@ -235,6 +240,16 @@ export default function ExpeditionSupplierTours({ supplier, onBack }: SupplierTo
       setConfirmTarget(null);
     },
     onError: () => toast.error("Failed to update"),
+  });
+
+  const roleMut = useMutation({
+    mutationFn: ({ enabled }: { enabled: boolean }) => toggleSupplierExpeditionRole(supplier.id, enabled),
+    onSuccess: () => {
+      toast.success("Supplier booking type updated");
+      queryClient.invalidateQueries({ queryKey: ["admin", "expedition-supplier-tours", supplier.id] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "expedition-suppliers"] });
+    },
+    onError: () => toast.error("Failed to update supplier booking type"),
   });
 
   const stats = useMemo(() => {
@@ -329,7 +344,7 @@ export default function ExpeditionSupplierTours({ supplier, onBack }: SupplierTo
       {/* Supplier profile header */}
       <div className="rounded-2xl border border-border bg-surface-base p-5 shadow-soft sm:p-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-start gap-4">
             <div className="relative shrink-0">
               <SafeImage
                 src={supplierDetail?.photoURL || supplier.photoURL || undefined}
@@ -367,6 +382,45 @@ export default function ExpeditionSupplierTours({ supplier, onBack }: SupplierTo
                     Synced {formatDate(lastSyncedAt)}
                   </span>
                 )}
+                <span
+                  className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
+                    isExpeditionPartner
+                      ? "bg-primary/10 text-primary"
+                      : "bg-amber-100 text-amber-700"
+                  }`}
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  {isExpeditionPartner ? "Direct booking" : "External booking"}
+                </span>
+              </div>
+
+              {/* Expedition partner toggle — controls DIRECT vs EXTERNAL booking flow */}
+              <div className="mt-3 flex items-center gap-3 rounded-xl border border-border/70 bg-surface-muted/40 px-3.5 py-2.5">
+                <button
+                  role="switch"
+                  aria-checked={isExpeditionPartner}
+                  aria-label={isExpeditionPartner ? "Disable direct booking on Expedition Go" : "Enable direct booking on Expedition Go"}
+                  onClick={() => roleMut.mutate({ enabled: !isExpeditionPartner })}
+                  disabled={roleMut.isPending}
+                  title="Controls the booking flow (DIRECT vs EXTERNAL) for new publications on Expedition Go"
+                  className={`relative inline-flex h-6 w-10 shrink-0 items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-text-secondary/30 focus-visible:ring-offset-1 disabled:cursor-wait disabled:opacity-60 ${
+                    isExpeditionPartner ? "bg-primary" : "bg-text-tertiary/30"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
+                      isExpeditionPartner ? "translate-x-5" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-text-primary">Expedition partner</p>
+                  <p className="text-[11px] text-text-tertiary">
+                    {isExpeditionPartner
+                      ? "Tours publish with DIRECT booking on Expedition Go"
+                      : "Tours publish as EXTERNAL (redirect to Travio Africa)"}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
