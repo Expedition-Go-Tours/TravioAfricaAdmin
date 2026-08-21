@@ -51,18 +51,18 @@ export interface Booking {
   bookingNumber: string;
   status: BookingStatus;
   paymentStatus: PaymentStatus;
-  total: number;
+  grossAmount: number;
   currency: string;
-  selectedDate: string;
+  travelDate: string;
   selectedTime?: string | null;
   subtotal: number;
   taxes: number;
   fees: number;
   discounts: number;
   commissionRate: number;
-  commissionAmount: number;
+  platformCommission: number;
   supplierPayout: number;
-  travelers: Traveler[];
+  travelers: TravelerData;
   specialRequests?: string | null;
   cancellationReason?: string | null;
   paidAt?: string | null;
@@ -71,11 +71,26 @@ export interface Booking {
   customer: BookingCustomer;
   tour: BookingTour;
   payouts: BookingPayout[];
+  source?: string;
 }
 
-export interface Traveler {
-  firstName: string;
-  lastName: string;
-  email?: string;
-  phone?: string;
+export interface TravelerDetail {
+  name: string;
+  age?: number;
+  ageGroup?: string;
+}
+
+export interface TravelerData {
+  adults: number;
+  children: number;
+  infants: number;
+  seniors?: number;
+  phoneNumber?: string;
+  location?: string;
+  details?: TravelerDetail[];
+}
+
+export function travelerCount(travelers: TravelerData | null | undefined): number {
+  if (!travelers || typeof travelers !== "object") return 0;
+  return (travelers.adults || 0) + (travelers.children || 0) + (travelers.infants || 0) + (travelers.seniors || 0);
 }

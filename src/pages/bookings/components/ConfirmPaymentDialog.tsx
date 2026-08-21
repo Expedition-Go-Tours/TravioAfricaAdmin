@@ -45,7 +45,7 @@ export function ConfirmPaymentDialog({ booking, isPending, onConfirm, onClose }:
             <div className="border-t border-border pt-2 flex items-center justify-between">
               <span className="text-sm font-semibold text-text-primary">Total</span>
               <span className="text-base font-bold text-text-primary">
-                {booking.currency} {Number(booking.total).toLocaleString()}
+                {booking.currency} {Number(booking.grossAmount).toLocaleString()}
               </span>
             </div>
           </div>

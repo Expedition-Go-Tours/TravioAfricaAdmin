@@ -174,7 +174,7 @@ export default function OverviewPage() {
         id: string;
         bookingNumber: string;
         status: string;
-        total: number;
+        grossAmount: number;
         currency: string;
         createdAt: string;
         customer: { id: string; name: string; email: string };
@@ -203,7 +203,7 @@ export default function OverviewPage() {
         id: string;
         bookingNumber: string;
         status: string;
-        total: number;
+        grossAmount: number;
         currency: string;
         createdAt: string;
         customer: { name: string; email: string; photoURL?: string };
@@ -653,7 +653,7 @@ export default function OverviewPage() {
                           <p className="text-xs text-text-tertiary truncate">{booking.tour?.supplier?.name || "—"}</p>
                         </div>
                         <div className="sm:text-right">
-                          <p className="text-sm text-text-primary">{formatCurrency(booking.total)} {booking.currency}</p>
+                          <p className="text-sm text-text-primary">{formatCurrency(booking.grossAmount)} {booking.currency}</p>
                           <p className="text-xs text-text-tertiary mt-0.5">{booking.status}</p>
                         </div>
                       </div>

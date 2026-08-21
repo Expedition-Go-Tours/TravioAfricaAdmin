@@ -29,7 +29,7 @@ import { cn } from "@/lib/utils";
 import { BookingDetailPanel } from "./components/BookingDetailPanel";
 import { ConfirmPaymentDialog } from "./components/ConfirmPaymentDialog";
 import type { Booking } from "@/types/booking";
-import { isPaymentPaid } from "@/types/booking";
+import { isPaymentPaid, travelerCount } from "@/types/booking";
 import OptimizedImage from "@/components/shared/OptimizedImage";
 import { StatusChip } from "@/components/shared/StatusChip";
 
@@ -395,11 +395,11 @@ export default function BookingsPage() {
                         <span className="text-[11px] text-text-tertiary truncate">{booking.tour.title}</span>
                         <span className="text-[10px] text-text-tertiary hidden sm:inline">·</span>
                         <span className="text-[11px] text-text-tertiary hidden sm:inline">
-                          {new Date(booking.selectedDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                          {new Date(booking.travelDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                         </span>
                         <span className="text-[10px] text-text-tertiary hidden sm:inline">·</span>
                         <span className="text-[11px] text-text-tertiary hidden sm:inline">
-                          {booking.travelers?.length ?? 0} guests
+                          {travelerCount(booking.travelers)} guests
                         </span>
                       </div>
                     </div>
@@ -407,7 +407,7 @@ export default function BookingsPage() {
                     <div className="flex items-center gap-2.5 shrink-0">
                       <div className="text-right hidden sm:block">
                         <p className="text-sm font-semibold text-text-primary tabular-nums">
-                          {booking.currency} {Number(booking.total).toLocaleString()}
+                          {booking.currency} {Number(booking.grossAmount).toLocaleString()}
                         </p>
                         <p className="text-[10px] text-text-tertiary">
                           {new Date(booking.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}

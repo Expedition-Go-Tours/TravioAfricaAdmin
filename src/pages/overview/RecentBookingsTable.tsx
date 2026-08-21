@@ -9,7 +9,7 @@ interface Booking {
   id: string;
   bookingNumber: string;
   status: string;
-  total: number;
+  grossAmount: number;
   currency: string;
   createdAt: string;
   customer: { name: string; email: string; photoURL?: string };
@@ -82,7 +82,7 @@ export function RecentBookingsTable({ bookings = [], loading }: RecentBookingsTa
               </div>
               <div className="shrink-0 text-right">
                 <p className="text-sm font-semibold text-text-primary">
-                  {formatCurrency(booking.total)}
+                  {formatCurrency(booking.grossAmount)}
                 </p>
                 <p className="text-[10px] text-text-tertiary">{booking.bookingNumber}</p>
               </div>

@@ -193,8 +193,8 @@ export function PayoutDetailPanel({ payout, supplierPhotoUrl, onClose, onApprove
                   {(payout.booking?.tour?.title || payout.tour?.title) && (
                     <DetailRow icon={<MapPin className="h-3 w-3" />} label="Tour">{payout.booking?.tour?.title || payout.tour?.title}</DetailRow>
                   )}
-                  {payout.booking?.total && (
-                    <DetailRow icon={<DollarSign className="h-3 w-3" />} label="Total">{formatCurrency(payout.booking.total)}</DetailRow>
+                  {payout.booking?.grossAmount && (
+                    <DetailRow icon={<DollarSign className="h-3 w-3" />} label="Total">{formatCurrency(payout.booking.grossAmount)}</DetailRow>
                   )}
                   {payout.createdAt && (
                     <DetailRow icon={<Calendar className="h-3 w-3" />} label="Created">{formatDate(payout.createdAt)}</DetailRow>

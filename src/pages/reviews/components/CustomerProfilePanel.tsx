@@ -38,8 +38,8 @@ interface CustomerBooking {
   id?: string;
   status?: string;
   bookingNumber?: string;
-  selectedDate?: string;
-  total?: number;
+  travelDate?: string;
+  grossAmount?: number;
   currency?: string;
   tour?: { coverPhoto?: string; title?: string };
 }
@@ -284,15 +284,15 @@ export function CustomerProfilePanel({ customerId, onClose }: CustomerProfilePan
                             </div>
                           )}
                           <div className="flex items-center gap-3 text-[10px] text-text-tertiary mt-1">
-                            {booking.selectedDate && (
+                            {booking.travelDate && (
                               <span className="flex items-center gap-1">
                                 <Calendar className="h-2.5 w-2.5" />
-                                {new Date(booking.selectedDate).toLocaleDateString()}
+                                {new Date(booking.travelDate).toLocaleDateString()}
                               </span>
                             )}
-                            {booking.total != null && (
+                            {booking.grossAmount != null && (
                               <span className="font-medium text-text-secondary">
-                                {booking.currency || "USD"} {Number(booking.total).toLocaleString()}
+                                {booking.currency || "USD"} {Number(booking.grossAmount).toLocaleString()}
                               </span>
                             )}
                           </div>

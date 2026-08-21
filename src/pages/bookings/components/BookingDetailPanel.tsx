@@ -21,7 +21,7 @@ import { usePermission } from "@/hooks/usePermission";
 import { cn, timeAgo, getStatusColor } from "@/lib/utils";
 import { BookingTimeline } from "./BookingTimeline";
 import type { Booking } from "@/types/booking";
-import { isPaymentPaid } from "@/types/booking";
+import { isPaymentPaid, travelerCount } from "@/types/booking";
 import OptimizedImage from "@/components/shared/OptimizedImage";
 
 interface BookingDetailPanelProps {
@@ -77,7 +77,7 @@ export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onViewC
     { label: "Payout Processed", date: booking.payouts?.[0]?.paidAt || null, active: booking.payouts?.[0]?.status === "PAID" },
   ];
 
-  const travelerCount = Array.isArray(booking.travelers) ? booking.travelers.length : 0;
+  const numTravelers = travelerCount(booking.travelers);
   const commissionRate = Number(booking.commissionRate || 0) * 100;
 
   return createPortal(
@@ -174,7 +174,7 @@ export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onViewC
               <SectionTitle>Booking Details</SectionTitle>
               <div className="space-y-0.5">
                 <DetailRow icon={<Calendar className="h-3 w-3" />} label="Travel Date">
-                  {new Date(booking.selectedDate).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
+                  {new Date(booking.travelDate).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
                 </DetailRow>
                 {booking.selectedTime && (
                   <DetailRow icon={<Clock className="h-3 w-3" />} label="Time">
@@ -182,7 +182,7 @@ export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onViewC
                   </DetailRow>
                 )}
                 <DetailRow icon={<Users className="h-3 w-3" />} label="Travelers">
-                  {travelerCount} {travelerCount === 1 ? "person" : "people"}
+                  {numTravelers} {numTravelers === 1 ? "person" : "people"}
                 </DetailRow>
                 <DetailRow icon={<Hash className="h-3 w-3" />} label="Booking #">
                   {booking.bookingNumber}
@@ -215,7 +215,7 @@ export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onViewC
                 <div className="border-t border-border pt-2 mt-2 flex items-center justify-between">
                   <span className="text-xs font-semibold text-text-primary">Total</span>
                   <span className="text-sm font-bold text-text-primary tabular-nums">
-                    {booking.currency} {Number(booking.total).toLocaleString()}
+                    {booking.currency} {Number(booking.grossAmount).toLocaleString()}
                   </span>
                 </div>
               </div>
@@ -232,7 +232,7 @@ export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onViewC
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-text-secondary">Platform Commission</span>
                     <span className="text-xs font-medium text-text-primary tabular-nums">
-                      {booking.currency} {Number(booking.commissionAmount).toLocaleString()}
+                      {booking.currency} {Number(booking.platformCommission).toLocaleString()}
                     </span>
                   </div>
                   <div className="border-t border-border pt-2 flex items-center justify-between">

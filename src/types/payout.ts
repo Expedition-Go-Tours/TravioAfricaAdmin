@@ -21,7 +21,7 @@ export interface Payout {
     };
   };
   tour?: { title?: string };
-  booking?: { bookingNumber?: string; total?: string; paidAt?: string; tour?: { title?: string } };
+  booking?: { bookingNumber?: string; grossAmount?: string; paidAt?: string; tour?: { title?: string } };
   bookingId?: string;
   amount?: number | string;
   commissionAmount?: number | string;
