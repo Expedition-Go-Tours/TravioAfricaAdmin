@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Download, Search, X, Eye, MapPin, Hash, Building2, Wallet, Calendar, DollarSign, Receipt, Percent } from "lucide-react";
+import { Download, Search, X, Eye, MapPin, Hash, Building2, Wallet, Calendar, DollarSign, Receipt, Percent, Clock, Send, ArrowUpRight, Info } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -25,7 +25,7 @@ import { usePermission } from "@/hooks/usePermission";
 import { useSocketInvalidate } from "@/hooks/useSocketEvent";
 import { PayoutDetailPanel } from "./PayoutDetailPanel";
 import api from "@/lib/axios";
-import { formatCurrency, formatNumber, truncateId } from "@/lib/utils";
+import { cn, formatCurrency, formatNumber, truncateId } from "@/lib/utils";
 import type { Payout } from "@/types/payout";
 import OptimizedImage from "@/components/shared/OptimizedImage";
 
@@ -58,7 +58,7 @@ export function PayoutsListTab({ initialStatus, onStatusChange }: PayoutsListTab
   useSocketInvalidate("admin:payout-update", ["admin", "payouts"]);
 
   const [page, setPage] = useState(1);
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [statusTab, setStatusTab] = useState<string>(initialStatus || "ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -192,6 +192,15 @@ export function PayoutsListTab({ initialStatus, onStatusChange }: PayoutsListTab
   const pagination = data?.data?.pagination || data?.pagination;
   const statusCounts = useMemo(() => data?.data?.statusCounts || data?.statusCounts || {}, [data]);
   const summary = data?.data?.summary || data?.summary;
+  // Finance v2: batch withdrawal requests that haven't been paid out yet —
+  // they only become ledger rows here once an admin marks the request sent.
+  const inFlight = data?.data?.inFlight || null;
+
+  const goToRequestsTab = () => {
+    const next = new URLSearchParams(searchParams);
+    next.set("tab", "requests");
+    setSearchParams(next, { replace: true });
+  };
 
   const statusTabs = useMemo(() => {
     const total = STATUS_ORDER.reduce((sum, s) => sum + (statusCounts[s] || 0), 0);
@@ -362,6 +371,58 @@ export function PayoutsListTab({ initialStatus, onStatusChange }: PayoutsListTab
         </div>
       )}
 
+      {/* In-flight money — batch requests not yet in the ledger below */}
+      {inFlight && ((inFlight.awaitingApproval?.count ?? 0) > 0 || (inFlight.approvedAwaitingTransfer?.count ?? 0) > 0) && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <button
+            onClick={goToRequestsTab}
+            className={cn(
+              "flex items-center justify-between gap-3 rounded-xl border border-l-4 bg-surface-base p-4 text-left transition-colors hover:bg-surface-muted/60",
+              (inFlight.awaitingApproval?.count ?? 0) > 0 ? "border-l-status-pending" : "border-l-border"
+            )}
+          >
+            <div className="flex items-center gap-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-status-pending/10 text-status-pending">
+                <Clock className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-sm font-semibold text-text-primary">Awaiting approval</p>
+                <p className="text-xs text-text-secondary tabular-nums">
+                  {formatNumber(inFlight.awaitingApproval?.count ?? 0)} request(s) · {formatCurrency(inFlight.awaitingApproval?.total ?? 0)}
+                </p>
+              </div>
+            </div>
+            <ArrowUpRight className="h-4 w-4 shrink-0 text-text-tertiary" />
+          </button>
+          <button
+            onClick={goToRequestsTab}
+            className={cn(
+              "flex items-center justify-between gap-3 rounded-xl border border-l-4 bg-surface-base p-4 text-left transition-colors hover:bg-surface-muted/60",
+              (inFlight.approvedAwaitingTransfer?.count ?? 0) > 0 ? "border-l-status-processing" : "border-l-border"
+            )}
+          >
+            <div className="flex items-center gap-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-status-processing/10 text-status-processing">
+                <Send className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-sm font-semibold text-text-primary">Approved · awaiting transfer</p>
+                <p className="text-xs text-text-secondary tabular-nums">
+                  {formatNumber(inFlight.approvedAwaitingTransfer?.count ?? 0)} request(s) · {formatCurrency(inFlight.approvedAwaitingTransfer?.total ?? 0)}
+                </p>
+              </div>
+            </div>
+            <ArrowUpRight className="h-4 w-4 shrink-0 text-text-tertiary" />
+          </button>
+        </div>
+      )}
+
+      {/* Sync explanation */}
+      <p className="flex items-start gap-2 rounded-lg border border-border/60 bg-surface-muted/40 px-3 py-2.5 text-xs text-text-secondary">
+        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-text-tertiary" />
+        This register lists money actually sent to suppliers, one ledger row per booking. Supplier withdrawal requests appear here only after they are approved and marked as sent on the Payout Requests tab; everything still in flight is shown above.
+      </p>
+
       <Card>
         <CardHeader className="border-b border-border px-5 pb-4 pt-5">
           <PayoutStatusTabs tabs={statusTabs} active={statusTab} onChange={handleStatusTab} className="-mx-5 -mt-5 mb-4 px-5 pt-4" />
@@ -407,7 +468,7 @@ export function PayoutsListTab({ initialStatus, onStatusChange }: PayoutsListTab
               data={payoutsRaw}
               loading={isLoading}
               error={isError ? "Failed to load payouts" : null}
-              emptyMessage="No payouts found"
+              emptyMessage={debouncedSearch || statusParam || supplierFilter || startDate || endDate ? "No payouts match the current filters" : "No payouts yet. Completed withdrawal requests appear here once marked as sent"}
               pagination={pagination ? { page: pagination.page || page, totalPages: pagination.totalPages || 1, totalCount: pagination.totalCount || 0, onPageChange: setPage } : undefined}
               onRetry={() => refetch()}
               keyExtractor={(r) => r.id}

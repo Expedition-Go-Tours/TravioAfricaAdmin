@@ -3,10 +3,11 @@ import { cn, getStatusColor } from "@/lib/utils";
 
 interface StatusBadgeProps {
   status: string;
+  label?: string;
   className?: string;
 }
 
-export function StatusBadge({ status, className }: StatusBadgeProps) {
+export function StatusBadge({ status, label, className }: StatusBadgeProps) {
   return (
     <motion.span
       initial={{ opacity: 0, scale: 0.9 }}
@@ -18,7 +19,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
         className,
       )}
     >
-      {status.replace(/_/g, " ")}
+      {label || status.replace(/_/g, " ")}
     </motion.span>
   );
 }

@@ -50,3 +50,82 @@ export interface Payout {
     note?: string;
   }>;
 }
+
+// ── Finance v2 ──
+
+export interface PayoutRequestItem {
+  id: string;
+  bookingId: string;
+  booking?: {
+    bookingNumber?: string;
+    travelDate?: string;
+    grossAmount?: number | string;
+    currency?: string;
+    status?: string;
+    tour?: { title?: string };
+  };
+  grossAmount?: number | string;
+  platformCommission?: number | string;
+  supplierPayout?: number | string;
+  currency?: string;
+}
+
+export interface PayoutRequest {
+  id: string;
+  requestNumber: string;
+  supplierId: string;
+  supplier?: { id?: string; name?: string; email?: string };
+  amount: number | string;
+  currency: string;
+  bookingCount: number;
+  status: "PROCESSING" | "APPROVED" | "COMPLETED" | "REJECTED" | "CANCELLED";
+  cycleStartDate: string;
+  cycleEndDate: string;
+  cycleLabel: string;
+  payoutMethodId?: string | null;
+  payoutMethod?: {
+    id?: string;
+    type?: string;
+    bankName?: string;
+    paypalEmail?: string;
+    accountName?: string;
+    accountNumber?: string;
+    swiftCode?: string;
+    iban?: string;
+  } | null;
+  approvedBy?: string | null;
+  approvedAt?: string | null;
+  completedBy?: string | null;
+  completedAt?: string | null;
+  rejectedBy?: string | null;
+  rejectedAt?: string | null;
+  rejectedReason?: string | null;
+  reference?: string | null;
+  notes?: string | null;
+  items?: PayoutRequestItem[];
+  createdAt: string;
+}
+
+export interface Dispute {
+  id: string;
+  disputeNumber: string;
+  bookingId: string;
+  booking?: {
+    bookingNumber?: string;
+    travelDate?: string;
+    grossAmount?: number | string;
+    currency?: string;
+    tour?: { title?: string };
+  } | null;
+  openedById: string;
+  opener?: { name?: string; email?: string };
+  supplierId: string;
+  supplier?: { id?: string; name?: string; email?: string };
+  reason: string;
+  description?: string | null;
+  status: "OPEN" | "UNDER_REVIEW" | "RESOLVED_CUSTOMER" | "RESOLVED_SUPPLIER" | "WITHDRAWN";
+  resolution?: string | null;
+  resolvedAt?: string | null;
+  refundAmount?: number | string | null;
+  createdAt: string;
+}

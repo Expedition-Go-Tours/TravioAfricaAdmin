@@ -13,7 +13,6 @@ import { SectionEmpty } from "@/components/shared/SectionEmpty";
 import { useCallback, useMemo, useState } from "react";
 import api from "@/lib/axios";
 import { cn, formatCurrency, formatNumber } from "@/lib/utils";
-import type { Payout } from "@/types/payout";
 
 const RANGE_OPTIONS = [6, 12, 24] as const;
 
@@ -61,8 +60,9 @@ function QueueCard({
   );
 }
 
-export function PayoutsPaymentsTab({ onSwitchToList }: { onSwitchToList: (status?: string) => void }) {
+export function PayoutsPaymentsTab({ onSwitchToRequests }: { onSwitchToList?: (status?: string) => void; onSwitchToRequests: () => void }) {
   useSocketInvalidate("admin:payout-update", ["admin", "payout-summary"]);
+  useSocketInvalidate("admin:payout-request-update", ["admin", "payout-summary"]);
 
   const [range, setRange] = useState<(typeof RANGE_OPTIONS)[number]>(12);
 
@@ -71,29 +71,40 @@ export function PayoutsPaymentsTab({ onSwitchToList }: { onSwitchToList: (status
     queryFn: () => api.get("/payouts/admin/summary").then((r) => r.data),
   });
 
-  const pending = data?.data?.pending || {};
-  const processing = data?.data?.processing || {};
+  // Finance v2: the live queues are batch payout requests. Legacy per-booking
+  // payouts still exist for pre-v2 history and are folded in as secondary counts.
+  const legacyPending = data?.data?.pending || {};
+  const legacyProcessing = data?.data?.processing || {};
+  const reqQueues = data?.data?.requests || {};
+  const awaitingApproval = {
+    count: (reqQueues.awaitingApproval?.count ?? 0) + (legacyPending.count ?? 0),
+    total: (reqQueues.awaitingApproval?.total ?? 0) + (legacyPending.total ?? 0),
+    legacyCount: legacyPending.count ?? 0,
+  };
+  const approvedInFlight = {
+    count: (reqQueues.approvedAwaitingTransfer?.count ?? 0) + (legacyProcessing.count ?? 0),
+    total: (reqQueues.approvedAwaitingTransfer?.total ?? 0) + (legacyProcessing.total ?? 0),
+    legacyCount: legacyProcessing.count ?? 0,
+  };
   const paidThisMonth = data?.data?.paidThisMonth || {};
   const avgCommission = data?.data?.avgCommission;
 
-  const { data: pendingPayoutsData } = useQuery({
-    queryKey: ["admin", "payouts", { page: 1, limit: 1, status: "PENDING" }],
-    queryFn: () => api.get("/payouts/admin?page=1&limit=1&status=PENDING").then((r) => r.data),
+  const { data: oldestApprovalData } = useQuery({
+    queryKey: ["admin", "payout-requests", "oldest", "PROCESSING"],
+    queryFn: () => api.get("/admin/finance/payout-requests?status=PROCESSING&limit=1").then((r) => r.data),
   });
-  const { data: processingPayoutsData } = useQuery({
-    queryKey: ["admin", "payouts", { page: 1, limit: 1, status: "PROCESSING" }],
-    queryFn: () => api.get("/payouts/admin?page=1&limit=1&status=PROCESSING").then((r) => r.data),
+  const { data: oldestApprovedData } = useQuery({
+    queryKey: ["admin", "payout-requests", "oldest", "APPROVED"],
+    queryFn: () => api.get("/admin/finance/payout-requests?status=APPROVED&limit=1").then((r) => r.data),
   });
 
-  const oldestAge = useCallback((list: unknown[] | undefined): number | null => {
-    if (!list || list.length === 0) return null;
-    const first = list[0] as Payout;
-    if (!first?.createdAt) return null;
-    return Math.max(1, Math.floor((Date.now() - new Date(first.createdAt).getTime()) / (1000 * 60 * 60 * 24)));
+  const oldestAge = useCallback((createdAt?: string): number | null => {
+    if (!createdAt) return null;
+    return Math.max(1, Math.floor((Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24)));
   }, []);
 
-  const pendingAge = oldestAge(pendingPayoutsData?.data?.payouts || pendingPayoutsData?.payouts);
-  const processingAge = oldestAge(processingPayoutsData?.data?.payouts || processingPayoutsData?.payouts);
+  const approvalAge = oldestAge(oldestApprovalData?.data?.requests?.[0]?.createdAt);
+  const transferAge = oldestAge(oldestApprovedData?.data?.requests?.[0]?.createdAt);
 
   const monthly = useMemo(() => {
     const raw = (data?.data?.monthlyBreakdown || data?.monthlyBreakdown || []) as {
@@ -124,17 +135,17 @@ export function PayoutsPaymentsTab({ onSwitchToList }: { onSwitchToList: (status
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Pending Approval"
-          value={isLoading ? "..." : formatNumber(pending.count ?? 0)}
+          value={isLoading ? "..." : formatNumber(awaitingApproval.count)}
           icon={<Clock className="h-5 w-5" />}
           accent="amber"
-          subtitle={isLoading ? undefined : `${formatCurrency(pending.total ?? 0)} awaiting approval`}
+          subtitle={isLoading ? undefined : `${formatCurrency(awaitingApproval.total)} awaiting approval`}
         />
         <StatCard
-          label="In Transit"
-          value={isLoading ? "..." : formatNumber(processing.count ?? 0)}
+          label="Approved · Awaiting Transfer"
+          value={isLoading ? "..." : formatNumber(approvedInFlight.count)}
           icon={<Send className="h-5 w-5" />}
           accent="blue"
-          subtitle={isLoading ? undefined : `${formatCurrency(processing.total ?? 0)} released`}
+          subtitle={isLoading ? undefined : `${formatCurrency(approvedInFlight.total)} authorized, not sent`}
         />
         <StatCard
           label="Paid This Month"
@@ -157,19 +168,19 @@ export function PayoutsPaymentsTab({ onSwitchToList }: { onSwitchToList: (status
           title="Approval Queue"
           icon={<Clock className="h-4 w-4" />}
           accent="amber"
-          count={pending.count ?? 0}
-          total={pending.total ?? 0}
-          oldestDays={pendingAge}
-          onView={() => onSwitchToList("PENDING")}
+          count={awaitingApproval.count}
+          total={awaitingApproval.total}
+          oldestDays={approvalAge}
+          onView={onSwitchToRequests}
         />
         <QueueCard
-          title="In Transit"
+          title="Awaiting Transfer"
           icon={<Send className="h-4 w-4" />}
           accent="violet"
-          count={processing.count ?? 0}
-          total={processing.total ?? 0}
-          oldestDays={processingAge}
-          onView={() => onSwitchToList("PROCESSING")}
+          count={approvedInFlight.count}
+          total={approvedInFlight.total}
+          oldestDays={transferAge}
+          onView={onSwitchToRequests}
         />
       </div>
 

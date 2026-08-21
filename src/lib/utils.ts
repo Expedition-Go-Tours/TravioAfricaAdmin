@@ -112,6 +112,10 @@ export function getStatusColor(status: string): string {
     EXPIRED: "bg-status-suspended/10 text-status-suspended border-status-suspended/30",
     VERIFIED: "bg-status-active/10 text-status-active border-status-active/30",
     REPLACEMENT_REQUESTED: "bg-status-pending/10 text-status-pending border-status-pending/30",
+    OPEN: "bg-status-pending/10 text-status-pending border-status-pending/30",
+    RESOLVED_CUSTOMER: "bg-status-flagged/10 text-status-flagged border-status-flagged/30",
+    RESOLVED_SUPPLIER: "bg-status-approved/10 text-status-approved border-status-approved/30",
+    WITHDRAWN: "bg-status-suspended/10 text-status-suspended border-status-suspended/30",
   };
   return map[status] || "bg-surface-muted text-text-secondary border-border/60";
 }
