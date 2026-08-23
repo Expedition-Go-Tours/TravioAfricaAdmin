@@ -108,6 +108,7 @@ export default function OverviewPage() {
             coverPhoto: t.coverPhoto as string,
             bookingCount: (t.totalBookings as number) || 0,
             revenue: (t.totalRevenue as number) || 0,
+            currency: (t.currency as string) || "USD",
             averageRating: (t.averageRating as number) || 0,
             reviewCount: (t.reviewCount as number) || 0,
           })),
@@ -115,6 +116,7 @@ export default function OverviewPage() {
             id: s.id as string,
             user: { name: s.name as string, email: s.email as string, photoURL: s.photoURL as string },
             totalEarnings: (s.totalEarnings as number) || 0,
+            currency: (s.currency as string) || "USD",
             totalBookings: (s.totalBookings as number) || 0,
             averageRating: (s.averageRating as number) || 0,
           })),
@@ -267,12 +269,13 @@ export default function OverviewPage() {
     return { value: rounded, isPositive: change >= 0 };
   };
 
-  // Mock sparkline data (in real app, this would come from API)
-  const bookingsSparkline = [120, 135, 142, 128, 156, 168, Number(overview?.bookings?.today) || 180];
-  const revenueSparkline = [4500, 5200, 4800, 5600, 6200, 5900, Number(overview?.revenue?.today?.revenue) || 6500];
-  const usersSparkline = [800, 820, 835, 810, 845, 860, Number(overview?.activeUsers) || 890];
-
+  // Sparkline data from real API (last 7 data points from weekly booking data)
   const weeklyBookingData = overview?.weeklyBookingData || [];
+  const bookingsSparkline = weeklyBookingData.length > 0
+    ? weeklyBookingData.slice(-7).map((d) => d.count)
+    : [Number(overview?.bookings?.today) || 0];
+  const revenueSparkline = [Number(overview?.revenue?.today?.revenue) || 0];
+  const usersSparkline = [Number(overview?.activeUsers) || 0];
 
   const weeklyTotal = weeklyBookingData.reduce((sum, d) => sum + d.count, 0);
 
@@ -488,7 +491,7 @@ export default function OverviewPage() {
                           <span className="font-medium text-text-primary truncate flex-1 min-w-0">{tour.title}</span>
                           <div className="flex items-center gap-4 text-xs tabular-nums shrink-0">
                             <span className="text-text-secondary text-right w-16">{formatNumber(tour.bookingCount)} <span className="text-text-tertiary">bk</span></span>
-                            <span className="text-text-primary font-semibold text-right w-20">{formatCurrency(tour.revenue)}</span>
+                            <span className="text-text-primary font-semibold text-right w-20">{formatCurrency(tour.revenue, tour.currency)}</span>
                             {tour.averageRating != null && (
                               <span className={cn("text-right w-10", styles.hideMobile)}>
                                 <span className="text-status-pending font-semibold">{Number(tour.averageRating).toFixed(1)}</span>
@@ -661,7 +664,7 @@ export default function OverviewPage() {
                           <p className="text-xs text-text-tertiary truncate">{booking.tour?.supplier?.name || "—"}</p>
                         </div>
                         <div className="sm:text-right">
-                          <p className="text-sm text-text-primary">{formatCurrency(booking.grossAmount)} {booking.currency}</p>
+                          <p className="text-sm text-text-primary">{formatCurrency(booking.grossAmount, booking.currency)}</p>
                           <p className="text-xs text-text-tertiary mt-0.5">{booking.status}</p>
                         </div>
                       </div>
@@ -839,6 +842,7 @@ function KPICardWithSparkline({
   onClick,
   accent = "emerald",
   icon,
+  currency,
 }: {
   label: string;
   value: number;
@@ -850,8 +854,9 @@ function KPICardWithSparkline({
   onClick?: () => void;
   accent?: KpiAccent;
   icon?: React.ReactNode;
+  currency?: string;
 }) {
-  const displayValue = format === "currency" ? formatCurrency(value) : formatNumber(value);
+  const displayValue = format === "currency" ? formatCurrency(value, currency) : formatNumber(value);
   const a = KPI_ACCENTS[accent];
 
   return (

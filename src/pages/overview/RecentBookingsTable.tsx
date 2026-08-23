@@ -82,7 +82,7 @@ export function RecentBookingsTable({ bookings = [], loading }: RecentBookingsTa
               </div>
               <div className="shrink-0 text-right">
                 <p className="text-sm font-semibold text-text-primary">
-                  {formatCurrency(booking.grossAmount)}
+                  {formatCurrency(booking.grossAmount, booking.currency)}
                 </p>
                 <p className="text-[10px] text-text-tertiary">{booking.bookingNumber}</p>
               </div>

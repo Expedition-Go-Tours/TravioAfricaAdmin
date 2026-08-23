@@ -9,6 +9,7 @@ interface Supplier {
   id?: string;
   user?: { name?: string; email?: string; photoURL?: string };
   totalEarnings?: number;
+  currency?: string;
   totalBookings?: number;
   averageRating?: number;
 }
@@ -83,7 +84,7 @@ export function TopSuppliers({ suppliers = [], loading }: TopSuppliersProps) {
                   <p className="text-xs text-text-tertiary">{formatNumber(supplier.totalBookings)} bookings</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-semibold text-text-primary">{formatCurrency(supplier.totalEarnings)}</p>
+                  <p className="text-sm font-semibold text-text-primary">{formatCurrency(supplier.totalEarnings, supplier.currency)}</p>
                   <div className="flex items-center gap-1 justify-end">
                     <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
                     <span className="text-xs text-text-tertiary">{supplier.averageRating != null ? Number(supplier.averageRating).toFixed(1) : "—"}</span>

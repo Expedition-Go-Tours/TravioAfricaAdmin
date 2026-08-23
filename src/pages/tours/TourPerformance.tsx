@@ -28,6 +28,7 @@ interface Tour {
   reviewCount?: number;
   viewCount?: number;
   createdAt?: string;
+  schedulesAndPricing?: { currency?: string } | string;
   _count?: { bookings?: number };
 }
 
@@ -107,7 +108,10 @@ export default function TourPerformancePage() {
       header: "Revenue",
       sortable: true,
       align: "right",
-      render: (r) => <MoneyCell value={r.totalRevenue} />,
+      render: (r) => {
+        const sp = typeof r.schedulesAndPricing === "string" ? JSON.parse(r.schedulesAndPricing || "{}") : (r.schedulesAndPricing || {});
+        return <MoneyCell value={r.totalRevenue} currency={sp.currency} />;
+      },
     },
     {
       key: "conversion",
