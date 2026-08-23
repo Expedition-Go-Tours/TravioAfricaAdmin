@@ -147,10 +147,15 @@ export default function OverviewPage() {
     enabled: can('payouts.view'),
     queryFn: async () => {
       const res = await api.get("/payouts/admin/summary");
-      const d = res.data?.data as { pending?: { count: number; total: number }; paidThisMonth?: { count: number; total: string } } | undefined;
+      const d = res.data?.data as {
+        pending?: { count: number; total: number };
+        paidThisMonth?: { count: number; total: string };
+        outstanding?: { count: number; total: number };
+      } | undefined;
       return {
         pending: { count: d?.pending?.count ?? 0, totalAmount: d?.pending?.total ?? 0 },
         paidThisMonth: { count: d?.paidThisMonth?.count ?? 0, totalAmount: d?.paidThisMonth?.total ?? "0" },
+        outstanding: { count: d?.outstanding?.count ?? 0, totalAmount: d?.outstanding?.total ?? 0 },
       };
     },
   });
@@ -580,6 +585,13 @@ export default function OverviewPage() {
                       <>
                         <div className="flex items-center justify-between py-2.5 border-b border-border/60">
                           <div className="flex items-center gap-2">
+                            <span className="h-2 w-2 rounded-full bg-red-400" />
+                            <span className="text-sm text-text-secondary">Outstanding</span>
+                          </div>
+                          <span className="text-sm font-semibold text-red-600 dark:text-red-400">{formatNumber(payoutSummary.outstanding?.count)}</span>
+                        </div>
+                        <div className="flex items-center justify-between py-2.5 border-b border-border/60">
+                          <div className="flex items-center gap-2">
                             <span className="h-2 w-2 rounded-full bg-amber-400" />
                             <span className="text-sm text-text-secondary">Pending</span>
                           </div>
@@ -593,6 +605,7 @@ export default function OverviewPage() {
                           <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">{formatNumber(payoutSummary.paidThisMonth?.count)}</span>
                         </div>
                         <div className="text-xs text-text-tertiary space-y-1.5 pt-1">
+                          <div className="flex justify-between"><span>Outstanding total</span><span className="font-medium text-red-600 dark:text-red-400">{formatCurrency(payoutSummary.outstanding?.totalAmount)}</span></div>
                           <div className="flex justify-between"><span>Pending total</span><span className="font-medium text-amber-600 dark:text-amber-400">{formatCurrency(payoutSummary.pending?.totalAmount)}</span></div>
                           <div className="flex justify-between"><span>Paid total</span><span className="font-medium text-emerald-600 dark:text-emerald-400">{formatCurrency(payoutSummary.paidThisMonth?.totalAmount)}</span></div>
                         </div>
