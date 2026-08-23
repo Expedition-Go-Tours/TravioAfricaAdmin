@@ -247,7 +247,7 @@ export function PayoutsMethodsTab() {
             loading={isLoading}
             error={isError ? "Failed to load payout methods" : null}
             emptyMessage={search ? "No suppliers match your search" : "No suppliers found"}
-            pagination={!search && pagination ? { page: pagination.page || page, totalPages: pagination.totalPages || 1, totalCount: pagination.totalCount || 0, onPageChange: setPage } : undefined}
+            pagination={!search && pagination ? { page: pagination.currentPage || page, totalPages: pagination.totalPages || 1, totalCount: pagination.totalCount || 0, onPageChange: setPage } : undefined}
             onRetry={() => refetch()}
             keyExtractor={(r) => r.id}
             onRowClick={(r) => setViewSupplierId(r.id)}

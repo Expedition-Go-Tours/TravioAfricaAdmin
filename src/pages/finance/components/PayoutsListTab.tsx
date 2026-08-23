@@ -469,7 +469,7 @@ export function PayoutsListTab({ initialStatus, onStatusChange }: PayoutsListTab
               loading={isLoading}
               error={isError ? "Failed to load payouts" : null}
               emptyMessage={debouncedSearch || statusParam || supplierFilter || startDate || endDate ? "No payouts match the current filters" : "No payouts yet. Completed withdrawal requests appear here once marked as sent"}
-              pagination={pagination ? { page: pagination.page || page, totalPages: pagination.totalPages || 1, totalCount: pagination.totalCount || 0, onPageChange: setPage } : undefined}
+              pagination={pagination ? { page: pagination.currentPage || page, totalPages: pagination.totalPages || 1, totalCount: pagination.totalCount || 0, onPageChange: setPage } : undefined}
               onRetry={() => refetch()}
               keyExtractor={(r) => r.id}
               highlightedKey={highlightedPayoutId || undefined}

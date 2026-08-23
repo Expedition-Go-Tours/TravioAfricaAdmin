@@ -51,7 +51,7 @@ import OptimizedImage from "@/components/shared/OptimizedImage";
 interface OverviewData {
   forbidden?: boolean;
   revenue?: { today?: { revenue?: number }; yesterday?: { revenue?: number }; thisWeek?: { revenue?: number; commission?: number; supplierPayout?: number }; thisMonth?: { revenue?: number; commission?: number; supplierPayout?: number }; ytd?: { revenue?: number; commission?: number; supplierPayout?: number } };
-  bookings?: { today?: number; yesterday?: number };
+  bookings?: { today?: number; yesterday?: number; thisWeek?: number; thisMonth?: number; ytd?: number };
   signups?: { today?: number; yesterday?: number };
   activeUsers?: number;
   activeUsersPrevious?: number;
@@ -276,6 +276,14 @@ export default function OverviewPage() {
 
   const weeklyTotal = weeklyBookingData.reduce((sum, d) => sum + d.count, 0);
 
+  const weeklyTrend = (() => {
+    if (weeklyBookingData.length < 2) return undefined;
+    const mid = Math.floor(weeklyBookingData.length / 2);
+    const firstHalf = weeklyBookingData.slice(0, mid).reduce((s, d) => s + d.count, 0);
+    const secondHalf = weeklyBookingData.slice(mid).reduce((s, d) => s + d.count, 0);
+    return calcTrend(secondHalf, firstHalf);
+  })();
+
   // Transform event feed for RecentActivityPanel
   const activities = (overview?.eventFeed || []).slice(0, 10).map((event, idx) => {
     const resource = (event.resource || "").toLowerCase();
@@ -401,7 +409,7 @@ export default function OverviewPage() {
               <BookingVolumeChart
                 data={weeklyBookingData}
                 total={weeklyTotal}
-                trend={{ value: 8, isPositive: true }}
+                trend={weeklyTrend}
                 loading={overviewLoading}
                 period={timeFilter}
               />

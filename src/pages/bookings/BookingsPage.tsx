@@ -29,9 +29,8 @@ import { cn } from "@/lib/utils";
 import { BookingDetailPanel } from "./components/BookingDetailPanel";
 import { ConfirmPaymentDialog } from "./components/ConfirmPaymentDialog";
 import type { Booking } from "@/types/booking";
-import { isPaymentPaid, travelerCount } from "@/types/booking";
+import { isPaymentPaid } from "@/types/booking";
 import OptimizedImage from "@/components/shared/OptimizedImage";
-import { StatusChip } from "@/components/shared/StatusChip";
 
 const STATUS_BADGE: Record<string, "success" | "warning" | "error" | "info"> = {
   PENDING: "warning",
@@ -65,11 +64,11 @@ const FADE_SLIDE = {
 const STATUS_PILLS = ["All", "Pending", "Confirmed", "Completed", "Cancelled"];
 
 const statCards = [
-  { label: "Total", key: "total", gradient: "bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20", Icon: ShoppingCart },
-  { label: "Pending", key: "PENDING", gradient: "bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/30 dark:to-amber-900/20", Icon: Clock },
-  { label: "Confirmed", key: "CONFIRMED", gradient: "bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/30 dark:to-emerald-900/20", Icon: CheckCircle2 },
-  { label: "Completed", key: "COMPLETED", gradient: "bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/20", Icon: CheckCircle2 },
-  { label: "Cancelled", key: "CANCELLED", gradient: "bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/30 dark:to-purple-900/20", Icon: Ban },
+  { label: "Total", key: "total", gradient: "bg-gradient-to-br from-blue-50 to-blue-100", Icon: ShoppingCart },
+  { label: "Pending", key: "PENDING", gradient: "bg-gradient-to-br from-amber-50 to-amber-100", Icon: Clock },
+  { label: "Confirmed", key: "CONFIRMED", gradient: "bg-gradient-to-br from-emerald-50 to-emerald-100", Icon: CheckCircle2 },
+  { label: "Completed", key: "COMPLETED", gradient: "bg-gradient-to-br from-green-50 to-green-100", Icon: CheckCircle2 },
+  { label: "Cancelled", key: "CANCELLED", gradient: "bg-gradient-to-br from-purple-50 to-purple-100", Icon: Ban },
 ];
 
 export default function BookingsPage() {
@@ -270,13 +269,13 @@ export default function BookingsPage() {
               onClick={() => { setStatusFilter(pill); setPage(1); }}
               className={cn(
                 "relative px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-colors",
-                statusFilter === pill ? "text-primary-foreground" : "text-text-secondary hover:text-text-primary",
+                statusFilter === pill ? "text-primary" : "text-text-secondary hover:text-text-primary",
               )}
             >
               {statusFilter === pill && (
                 <motion.span
                   layoutId="activePill"
-                  className="absolute inset-0 bg-primary rounded-md shadow-sm"
+                  className="absolute inset-0 bg-surface-base rounded-md border border-border shadow-sm"
                   transition={{ type: "spring", stiffness: 380, damping: 30 }}
                 />
               )}
@@ -354,70 +353,122 @@ export default function BookingsPage() {
             className="flex-1 min-h-0"
           >
             <div className="rounded-lg border border-border bg-surface-base overflow-hidden">
-              <div className="divide-y divide-border/60">
-                {filtered.map((booking) => (
-                  <motion.div
-                    key={booking.id}
-                    variants={FADE_SLIDE}
-                    onClick={() => {
-                      setSelectedBooking(booking);
-                      setSearchParams({ bookingId: booking.id });
-                    }}
-                    className={cn(
-                      "flex items-center gap-3 px-4 py-3.5 cursor-pointer transition-colors hover:bg-surface-muted/40",
-                      selectedBooking?.id === booking.id && "bg-primary/5",
-                    )}
-                  >
-                    <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-[10px] font-bold text-primary">
-                      {booking.customer.photoURL ? (
-                        <OptimizedImage src={booking.customer.photoURL} alt="" width={36} className="absolute inset-0 h-full w-full object-cover" />
-                      ) : null}
-                      <span className={booking.customer.photoURL ? "opacity-0" : ""}>
-                        {(booking.customer.name || "?").charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <Hash className="h-3 w-3 text-text-tertiary shrink-0" />
-                        <span className="text-xs font-semibold text-text-primary">{booking.bookingNumber}</span>
-                        <span className="text-[10px] text-text-tertiary">·</span>
-                        <span className="text-xs text-text-secondary truncate">{booking.customer.name}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <div className="w-4 h-4 rounded-sm shrink-0 overflow-hidden bg-surface-muted">
-                          {booking.tour.coverPhoto ? (
-                            <OptimizedImage src={booking.tour.coverPhoto} alt="" width={16} className="w-full h-full object-cover" />
-                          ) : (
-                            <MapPin className="h-2.5 w-2.5 text-text-tertiary m-0.5" />
-                          )}
-                        </div>
-                        <span className="text-[11px] text-text-tertiary truncate">{booking.tour.title}</span>
-                        <span className="text-[10px] text-text-tertiary hidden sm:inline">·</span>
-                        <span className="text-[11px] text-text-tertiary hidden sm:inline">
-                          {new Date(booking.travelDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                        </span>
-                        <span className="text-[10px] text-text-tertiary hidden sm:inline">·</span>
-                        <span className="text-[11px] text-text-tertiary hidden sm:inline">
-                          {travelerCount(booking.travelers)} guests
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2.5 shrink-0">
-                      <div className="text-right hidden sm:block">
-                        <p className="text-sm font-semibold text-text-primary tabular-nums">
-                          {booking.currency} {Number(booking.grossAmount).toLocaleString()}
-                        </p>
-                        <p className="text-[10px] text-text-tertiary">
-                          {new Date(booking.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                        </p>
-                      </div>
-                      <StatusChip status={booking.status} className="text-[10px] min-w-0 px-2" />
-                      <StatusChip status={booking.paymentStatus} className="text-[10px] min-w-0 px-2 hidden sm:inline-flex" />
-                    </div>
-                  </motion.div>
-                ))}
+              <div className="overflow-x-auto scrollbar-thin">
+                <table className="w-full min-w-[760px] border-collapse">
+                  <thead>
+                    <tr className="border-b border-border/60 bg-surface-muted/60">
+                      <th className="whitespace-nowrap text-left text-xs font-semibold text-text-secondary px-4 py-3">Booking #</th>
+                      <th className="whitespace-nowrap text-left text-xs font-semibold text-text-secondary px-4 py-3">Customer</th>
+                      <th className="whitespace-nowrap text-left text-xs font-semibold text-text-secondary px-4 py-3">Tour</th>
+                      <th className="whitespace-nowrap text-left text-xs font-semibold text-text-secondary px-4 py-3">Tour Date</th>
+                      <th className="whitespace-nowrap text-left text-xs font-semibold text-text-secondary px-4 py-3">Created</th>
+                      <th className="whitespace-nowrap text-center text-xs font-semibold text-text-secondary px-4 py-3">Guests</th>
+                      <th className="whitespace-nowrap text-right text-xs font-semibold text-text-secondary px-4 py-3">Total</th>
+                      <th className="whitespace-nowrap text-center text-xs font-semibold text-text-secondary px-4 py-3">Status</th>
+                      <th className="whitespace-nowrap text-center text-xs font-semibold text-text-secondary px-4 py-3">Payment</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map((booking) => (
+                      <motion.tr
+                        key={booking.id}
+                        variants={FADE_SLIDE}
+                        onClick={() => {
+                          setSelectedBooking(booking);
+                          setSearchParams({ bookingId: booking.id });
+                        }}
+                        className={cn(
+                          "min-h-[48px] border-b border-border/50 cursor-pointer transition-colors hover:bg-surface-muted/40",
+                          selectedBooking?.id === booking.id && "bg-primary/5",
+                        )}
+                      >
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-1.5">
+                            <Hash className="h-3 w-3 text-text-tertiary" />
+                            <span className="text-xs font-medium text-text-primary">{booking.bookingNumber}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2.5">
+                            <div className="relative flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-md bg-accent text-[10px] font-bold text-accent-foreground">
+                              {booking.customer.photoURL ? (
+                                <OptimizedImage src={booking.customer.photoURL} alt="" width={28} className="absolute inset-0 h-full w-full object-cover" />
+                              ) : null}
+                              <span className={booking.customer.photoURL ? "opacity-0" : ""}>
+                                {(booking.customer.name || "?").charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs font-medium text-text-primary truncate">{booking.customer.name}</p>
+                              <p className="text-[10px] text-text-tertiary truncate">{booking.customer.email}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2 min-w-0 max-w-[220px]">
+                            <div className="w-7 h-7 rounded-md shrink-0 overflow-hidden bg-surface-muted border border-border">
+                              {booking.tour.coverPhoto ? (
+                                <OptimizedImage src={booking.tour.coverPhoto} alt="" width={28} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <MapPin className="h-3 w-3 text-text-tertiary" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs font-medium text-text-primary truncate">{booking.tour.title}</p>
+                              <p className="text-[10px] text-text-tertiary truncate">{booking.tour.supplier.name}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-1.5">
+                            <Calendar className="h-3 w-3 text-text-tertiary" />
+                            <span className="text-xs text-text-secondary">
+                              {new Date(booking.travelDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-1.5">
+                            <Clock className="h-3 w-3 text-text-tertiary" />
+                            <span className="text-xs text-text-tertiary">
+                              {new Date(booking.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <span className="text-xs font-medium text-text-secondary tabular-nums">
+                            {booking.travelers?.length ?? 0}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <span className="text-xs font-semibold text-text-primary tabular-nums">
+                            {booking.currency} {Number(booking.grossAmount).toLocaleString()}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <Badge variant={STATUS_BADGE[booking.status] || "info"} className="text-[10px] px-1.5 py-0">
+                            {booking.status}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <Badge variant={PAYMENT_BADGE[booking.paymentStatus] || "warning"} className="text-[10px] px-1.5 py-0">
+                            {isPaymentPaid(booking.paymentStatus) ? (
+                              <><CheckCircle2 className="h-2.5 w-2.5" /> Paid</>
+                            ) : booking.paymentStatus === "FAILED" ? (
+                              "Failed"
+                            ) : booking.paymentStatus === "PROCESSING" ? (
+                              "Processing"
+                            ) : (
+                              "Pending"
+                            )}
+                          </Badge>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
 

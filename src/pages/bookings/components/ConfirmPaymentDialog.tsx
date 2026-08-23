@@ -42,9 +42,9 @@ export function ConfirmPaymentDialog({ booking, isPending, onConfirm, onClose }:
               <span className="text-text-secondary">Tour</span>
               <span className="font-medium text-text-primary truncate ml-4">{booking.tour.title}</span>
             </div>
-            <div className="border-t border-border pt-2 flex items-center justify-between">
-              <span className="text-sm font-semibold text-text-primary">Total</span>
-              <span className="text-base font-bold text-text-primary">
+            <div className="border-t border-slate-200 pt-2 flex items-center justify-between">
+              <span className="text-sm font-semibold text-slate-900">Total</span>
+              <span className="text-base font-bold text-slate-900">
                 {booking.currency} {Number(booking.grossAmount).toLocaleString()}
               </span>
             </div>

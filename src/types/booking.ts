@@ -8,15 +8,14 @@ export type BookingStatus =
 
 export type PaymentStatus =
   | "PENDING"
-  | "PAID"
   | "SUCCEEDED"
   | "PROCESSING"
   | "FAILED"
-  | "REFUNDED"
-  | "PARTIALLY_REFUNDED";
+  | "CANCELLED"
+  | "REFUNDED";
 
 export function isPaymentPaid(status: PaymentStatus | string): boolean {
-  return status === "PAID" || status === "SUCCEEDED";
+  return status === "SUCCEEDED";
 }
 
 export interface BookingPayout {
