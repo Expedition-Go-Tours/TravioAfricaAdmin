@@ -72,6 +72,98 @@ function businessLocation(s: Supplier): string {
   return [city, s.businessInfo?.country].filter(Boolean).join(", ");
 }
 
+function SupplierCard({
+  s,
+  canSuspend,
+  onView,
+  onSuspendAction,
+}: {
+  s: Supplier;
+  canSuspend: boolean;
+  onView: () => void;
+  onSuspendAction: () => void;
+}) {
+  const name = s.user?.name || "—";
+  const initial = name.charAt(0).toUpperCase();
+  const isPending = s.status === "PENDING" || s.status === "UNDER_REVIEW";
+  const hasRating = s.averageRating != null && Number(s.averageRating) > 0;
+
+  return (
+    <div
+      className="flex flex-col gap-3 rounded-xl border border-border bg-surface-base p-4 transition-colors hover:bg-surface-muted/30 cursor-pointer"
+      onClick={onView}
+    >
+      <div className="flex items-start gap-3">
+        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-sm font-bold text-white">
+          <span>{initial}</span>
+          {s.user?.photoURL && (
+            <OptimizedImage
+              src={s.user.photoURL}
+              alt={name}
+              referrerPolicy="no-referrer"
+              className="absolute inset-0 h-full w-full object-cover"
+              width={40}
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+            />
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-text-primary">{name}</p>
+              <p className="truncate text-xs text-text-tertiary">{s.user?.email}</p>
+            </div>
+            <StatusBadge status={s.status || "UNKNOWN"} />
+          </div>
+        </div>
+      </div>
+
+      <div className="min-w-0">
+        <p className="truncate text-sm font-medium text-text-primary">{businessName(s)}</p>
+        <div className="mt-0.5 flex items-center gap-1.5 text-xs text-text-tertiary">
+          <MapPin className="h-3 w-3 shrink-0" />
+          <span className="truncate">{businessLocation(s) || "—"}</span>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3 text-xs">
+        <span className="inline-flex items-center rounded-md bg-surface-muted px-2 py-1 font-medium text-text-secondary">
+          {supplierTypeLabel(s.supplierType)}
+        </span>
+        <span className="tabular-nums text-text-secondary">{formatNumber(s.totalBookings)} bookings</span>
+        <span className="font-semibold tabular-nums text-text-primary">{formatCurrency(s.totalEarnings)}</span>
+        {hasRating ? (
+          <span className="inline-flex items-center gap-1 tabular-nums text-text-primary">
+            <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+            {Number(s.averageRating).toFixed(1)}
+          </span>
+        ) : (
+          <span className="text-text-tertiary">No ratings</span>
+        )}
+      </div>
+
+      <div className="flex items-center justify-between border-t border-border/50 pt-3">
+        <span className="text-xs text-text-tertiary">Joined {formatDate(s.createdAt)}</span>
+        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          <Button size="sm" variant="outline" onClick={onView}>
+            {isPending ? "Review" : "View"}
+            <ArrowRight className="ml-1 h-3 w-3" />
+          </Button>
+          {canSuspend && (s.status === "ACTIVE" || s.status === "SUSPENDED") && (
+            <Button
+              size="sm"
+              variant={s.status === "ACTIVE" ? "destructive" : "default"}
+              onClick={onSuspendAction}
+            >
+              {s.status === "ACTIVE" ? "Suspend" : "Reactivate"}
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function SuppliersPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -287,8 +379,10 @@ export default function SuppliersPage() {
     },
   ];
 
+  const emptyMessage = activeTab === "ALL" ? "No suppliers yet" : `No ${TABS.find((t) => t.key === activeTab)?.label.toLowerCase()} suppliers`;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader
         title="Suppliers"
         subtitle="Every supplier on the platform, from new applications to live operators"
@@ -298,7 +392,7 @@ export default function SuppliersPage() {
         Suppliers are the businesses behind every tour customers book. New applications only become inventory once you approve them, so a long Pending queue quietly slows your catalog. Active suppliers keep listings live, while Suspended accounts have been taken offline. Keep the review pipeline moving and watch the Active number to gauge marketplace health.
       </PageInsight>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <StatCard
           label="Total Suppliers"
           value={isLoading ? "..." : formatNumber(rawApplications.length)}
@@ -339,14 +433,15 @@ export default function SuppliersPage() {
 
       <Card>
         <CardContent className="p-0">
-          <div className="flex flex-wrap items-center gap-3 border-b border-border px-5 py-4">
-            <div className="relative flex-1 min-w-[200px] max-w-xs">
+          {/* Search + count */}
+          <div className="flex flex-col gap-3 border-b border-border px-4 py-3 sm:px-5 sm:py-4 sm:flex-row sm:items-center">
+            <div className="relative flex-1 min-w-0 sm:min-w-[200px] sm:max-w-xs">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" />
               <Input
-                placeholder="Search by name, business or location..."
+                placeholder="Search suppliers..."
                 value={searchQuery}
                 onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
-                className="pl-9"
+                className="pl-9 w-full"
               />
               {searchQuery && (
                 <button
@@ -357,19 +452,20 @@ export default function SuppliersPage() {
                 </button>
               )}
             </div>
-            <div className="ml-auto text-xs text-text-tertiary">
+            <div className="text-xs text-text-tertiary sm:ml-auto">
               {formatNumber(filtered.length)} of {formatNumber(rawApplications.length)} suppliers
             </div>
           </div>
 
-          <div className="flex items-center gap-2 overflow-x-auto border-b border-border px-5 py-2.5 scrollbar-thin">
+          {/* Type filter pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto border-b border-border px-4 py-2.5 sm:px-5 sm:gap-2 scrollbar-thin">
             <span className="shrink-0 text-xs font-medium uppercase tracking-wider text-text-tertiary">Type</span>
             {TYPE_FILTERS.map((f) => (
               <button
                 key={f.value}
                 onClick={() => { setTypeFilter(f.value); setPage(1); }}
                 className={cn(
-                  "shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                  "shrink-0 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors sm:px-3",
                   typeFilter === f.value
                     ? "border-primary bg-primary/10 text-primary"
                     : "border-border text-text-secondary hover:border-primary/40 hover:text-text-primary",
@@ -380,46 +476,123 @@ export default function SuppliersPage() {
             ))}
           </div>
 
-          <div className="flex items-center gap-1 overflow-x-auto border-b border-border px-5 py-3 scrollbar-thin">
+          {/* Status tabs */}
+          <div className="flex items-center gap-0.5 overflow-x-auto border-b border-border px-4 py-2.5 sm:px-5 sm:gap-1 sm:py-3 scrollbar-thin">
             {TABS.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => { setActiveTab(tab.key); setPage(1); }}
                 className={cn(
-                  "shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors",
+                  "shrink-0 rounded-full px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3.5",
                   activeTab === tab.key
                     ? "bg-primary/10 text-primary"
                     : "text-text-secondary hover:bg-surface-muted hover:text-text-primary",
                 )}
               >
                 {tab.label}
-                <span className={cn("ml-1.5 tabular-nums", activeTab === tab.key ? "text-primary" : "text-text-tertiary")}>
+                <span className={cn("ml-1 tabular-nums", activeTab === tab.key ? "text-primary" : "text-text-tertiary")}>
                   {formatNumber(counts[tab.key] || 0)}
                 </span>
               </button>
             ))}
           </div>
 
-          <DataTable
-            columns={columns}
-            data={pageData}
-            loading={isLoading}
-            error={isError ? "Failed to load suppliers" : null}
-            emptyMessage={activeTab === "ALL" ? "No suppliers yet" : `No ${TABS.find((t) => t.key === activeTab)?.label.toLowerCase()} suppliers`}
-            onRowClick={(row) => navigate(`/admin/suppliers/${row.id}`)}
-            sortBy={sortKey || undefined}
-            sortOrder={sortDir}
-            onSort={handleSort}
-            onRetry={() => refetch()}
-            keyExtractor={(r) => r.id}
-            pagination={{
-              page: currentPage,
-              totalPages,
-              totalCount: sorted.length,
-              pageSize: PAGE_SIZE,
-              onPageChange: setPage,
-            }}
-          />
+          {/* Desktop table */}
+          <div className="hidden md:block">
+            <DataTable
+              columns={columns}
+              data={pageData}
+              loading={isLoading}
+              error={isError ? "Failed to load suppliers" : null}
+              emptyMessage={emptyMessage}
+              onRowClick={(row) => navigate(`/admin/suppliers/${row.id}`)}
+              sortBy={sortKey || undefined}
+              sortOrder={sortDir}
+              onSort={handleSort}
+              onRetry={() => refetch()}
+              keyExtractor={(r) => r.id}
+              pagination={{
+                page: currentPage,
+                totalPages,
+                totalCount: sorted.length,
+                pageSize: PAGE_SIZE,
+                onPageChange: setPage,
+              }}
+            />
+          </div>
+
+          {/* Mobile card list */}
+          <div className="md:hidden">
+            {isLoading ? (
+              <div className="p-4 space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="animate-pulse rounded-xl border border-border p-4 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-gray-100" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-3 w-24 bg-gray-100 rounded" />
+                        <div className="h-2.5 w-32 bg-gray-100 rounded" />
+                      </div>
+                    </div>
+                    <div className="h-3 w-40 bg-gray-100 rounded" />
+                    <div className="flex gap-3">
+                      <div className="h-5 w-16 bg-gray-100 rounded" />
+                      <div className="h-5 w-20 bg-gray-100 rounded" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : isError ? (
+              <div className="flex flex-col items-center justify-center py-12 text-text-secondary">
+                <p className="text-sm">Failed to load suppliers</p>
+                <Button variant="outline" size="sm" className="mt-3" onClick={() => refetch()}>Retry</Button>
+              </div>
+            ) : pageData.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-text-secondary">
+                <p className="text-sm">{emptyMessage}</p>
+              </div>
+            ) : (
+              <div className="p-4 space-y-3">
+                {pageData.map((s) => (
+                  <SupplierCard
+                    key={s.id}
+                    s={s}
+                    canSuspend={can("suppliers.suspend")}
+                    onView={() => navigate(`/admin/suppliers/${s.id}`)}
+                    onSuspendAction={() => {
+                      setActionTarget({ id: s.id, name: s.user?.name || "Unknown", status: s.status || "" });
+                      setSuspendReason("");
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Mobile pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-border/60 px-4 py-3">
+                <p className="text-xs text-text-tertiary">
+                  Page {currentPage} of {totalPages}
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    disabled={currentPage <= 1}
+                    onClick={() => setPage(currentPage - 1)}
+                    className="px-3 py-1.5 rounded-md text-xs font-medium text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none"
+                  >
+                    Prev
+                  </button>
+                  <button
+                    disabled={currentPage >= totalPages}
+                    onClick={() => setPage(currentPage + 1)}
+                    className="px-3 py-1.5 rounded-md text-xs font-medium text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
