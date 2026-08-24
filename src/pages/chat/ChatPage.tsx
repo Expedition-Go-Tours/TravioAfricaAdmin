@@ -113,12 +113,8 @@ export default function ChatPage() {
   });
 
   const conversations = allConversations.filter((c: Conversation) => {
-    const otherUser = c.participants?.find(
-      (p) => p.user.roles && !p.user.roles.includes('admin')
-    )?.user;
-    if (!otherUser?.roles) return false;
-    if (type === "suppliers") return otherUser.roles.includes('supplier');
-    return otherUser.roles.includes('customer') && !otherUser.roles.includes('supplier');
+    if (type === "suppliers") return c.type === "SUPPLIER_ADMIN";
+    return c.type === "USER_SUPPORT";
   });
 
   useEffect(() => {

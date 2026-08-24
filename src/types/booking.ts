@@ -72,6 +72,20 @@ export interface Booking {
   leadTravelerPhone?: string | null;
   pickup?: PickupData | null;
   source?: string;
+  offerName?: string | null;
+  offerPromoCode?: string | null;
+  offerDiscountType?: string | null;
+  offerDiscountPct?: number | null;
+  offerDiscountFix?: number | null;
+  appliedOffer?: {
+    id: string;
+    name: string;
+    offerType: string;
+    discountType: string;
+    discountPercentage?: number | null;
+    fixedDiscountValue?: number | null;
+    promoCode?: string | null;
+  } | null;
   customer: BookingCustomer;
   tour: BookingTour;
   payouts: BookingPayout[];

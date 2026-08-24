@@ -17,6 +17,7 @@ import {
   Calendar,
   Hash,
   MapPin,
+  Tag,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -443,9 +444,17 @@ export default function BookingsPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <span className="text-xs font-semibold text-text-primary tabular-nums">
-                            {booking.currency} {Number(booking.grossAmount).toLocaleString()}
-                          </span>
+                          <div className="flex flex-col items-end gap-0.5">
+                            <span className="text-xs font-semibold text-text-primary tabular-nums">
+                              {booking.currency} {Number(booking.grossAmount).toLocaleString()}
+                            </span>
+                            {booking.discounts > 0 && (
+                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0 rounded-full bg-emerald-50 border border-emerald-200/60 text-[9px] font-medium text-emerald-700">
+                                <Tag size={8} />
+                                {booking.offerName || 'Discount'}
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-4 py-3 text-center">
                           <Badge variant={STATUS_BADGE[booking.status] || "info"} className="text-[10px] px-1.5 py-0">

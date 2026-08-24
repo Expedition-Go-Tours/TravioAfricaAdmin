@@ -52,10 +52,22 @@ const notificationRouteMap: Record<string, (data?: Record<string, unknown>) => {
   REVIEW_NEEDS_MODERATION: (d) => (d?.reviewId ? { path: "/admin/reviews", state: { reviewId: d.reviewId } } : null),
   TOUR_SUBMITTED_FOR_REVIEW: (d) => (d?.tourId ? { path: "/admin/tour-moderation", state: { tourId: d.tourId } } : null),
   PAYOUT_NEEDS_APPROVAL: (d) => ({ path: "/admin/payouts", state: { payoutId: d?.payoutId || d?.payoutRequestId } }),
-  PAYOUT_PROCESSED: (d) => ({ path: "/admin/payouts", state: { payoutId: d?.payoutId || d?.payoutRequestId } }),
-  PAYOUT_APPROVED: (d) => ({ path: "/admin/payouts", state: { payoutId: d?.payoutId || d?.payoutRequestId } }),
-  BOOKING_CONFIRMED: (d) => (d?.bookingId ? { path: `/admin/bookings?bookingId=${d.bookingId}` } : null),
-  BOOKING_CANCELLED: (d) => (d?.bookingId ? { path: `/admin/bookings?bookingId=${d.bookingId}` } : null),
+  BOOKING_CREATED: (d) => (d?.bookingId ? { path: `/admin/bookings?bookingId=${d.bookingId}` } : { path: "/admin/bookings" }),
+  BOOKING_CONFIRMED: (d) => (d?.bookingId ? { path: `/admin/bookings?bookingId=${d.bookingId}` } : { path: "/admin/bookings" }),
+  DOCUMENT_EXPIRING: (d) => (d?.supplierId ? { path: `/admin/suppliers/${d.supplierId}` } : { path: "/admin/suppliers" }),
+  DOCUMENT_EXPIRED: (d) => (d?.supplierId ? { path: `/admin/suppliers/${d.supplierId}` } : { path: "/admin/suppliers" }),
+  REFUND_REQUEST: (d) => (d?.disputeId ? { path: "/admin/payouts?tab=disputes", state: { disputeId: d.disputeId } } : { path: "/admin/payouts?tab=disputes" }),
+  PAYMENT_UPCOMING: (d) => (d?.bookingId ? { path: `/admin/bookings?bookingId=${d.bookingId}` } : { path: "/admin/bookings" }),
+  PAYMENT_COLLECTED: (d) => (d?.bookingId ? { path: `/admin/bookings?bookingId=${d.bookingId}` } : { path: "/admin/bookings" }),
+  PAYMENT_COLLECTION_FAILED: (d) => (d?.bookingId ? { path: `/admin/bookings?bookingId=${d.bookingId}` } : { path: "/admin/bookings" }),
+  STRIPE_CUSTOMER_CREATE_FAILED: () => ({ path: "/admin/settings" }),
+  REFUND_NEEDS_ATTENTION: (d) => (d?.bookingId ? { path: `/admin/bookings?bookingId=${d.bookingId}` } : { path: "/admin/payouts?tab=disputes" }),
+  SYSTEM_ALERT: (d) => d?.payoutMethodId ? { path: "/admin/payouts?tab=methods", state: { viewSupplierId: d.supplierId } } : d?.supplierId ? { path: `/admin/suppliers/${d.supplierId}` } : { path: "/admin" },
+  NEW_MESSAGE: (d) => {
+    if (!d?.conversationId) return null;
+    if (d.conversationType === 'SUPPLIER_CUSTOMER') return { path: "/admin/chat/customers" };
+    return { path: `/admin/chat/${d.chatType || "suppliers"}`, state: { conversationId: d.conversationId } };
+  },
 };
 
 const statItems = [

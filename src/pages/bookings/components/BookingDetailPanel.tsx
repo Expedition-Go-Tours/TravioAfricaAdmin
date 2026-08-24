@@ -19,6 +19,7 @@ import {
   Baby,
   PersonStanding,
   Globe,
+  Tag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePermission } from "@/hooks/usePermission";
@@ -385,7 +386,26 @@ export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onViewC
                 </DetailRow>
                 {Number(booking.discounts) > 0 && (
                   <DetailRow icon={<Percent className="h-3 w-3" />} label="Discounts">
-                    -{booking.currency} {Number(booking.discounts).toLocaleString()}
+                    <span className="text-emerald-600 font-medium">
+                      -{booking.currency} {Number(booking.discounts).toLocaleString()}
+                    </span>
+                    {booking.offerName && (
+                      <span className="ml-1.5 inline-flex items-center gap-0.5 px-1.5 py-0 rounded-full bg-emerald-50 border border-emerald-200/60 text-[10px] font-medium text-emerald-700">
+                        <Tag size={9} />
+                        {booking.offerName}
+                        {booking.offerPromoCode && (
+                          <span className="ml-0.5 px-1 py-px rounded bg-emerald-100 text-emerald-800 font-mono text-[9px]">
+                            {booking.offerPromoCode}
+                          </span>
+                        )}
+                      </span>
+                    )}
+                    {booking.offerDiscountType === 'PERCENTAGE' && booking.offerDiscountPct && (
+                      <span className="ml-1 text-xs text-emerald-600">({booking.offerDiscountPct}% off)</span>
+                    )}
+                    {booking.offerDiscountType === 'FIXED' && booking.offerDiscountFix && (
+                      <span className="ml-1 text-xs text-emerald-600">(-{booking.currency} {booking.offerDiscountFix} off)</span>
+                    )}
                   </DetailRow>
                 )}
                 <div className="border-t border-border pt-2 mt-2 flex items-center justify-between">

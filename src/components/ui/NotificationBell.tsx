@@ -19,6 +19,8 @@ import {
   Loader2,
   ChevronRight,
   ClipboardCheck,
+  FileWarning,
+  RefreshCw,
 } from "lucide-react";
 import { getNotifications, getUnreadCount, markAsRead, markAllAsRead } from "@/services/notificationService";
 import { onAdminNotification, onAdminSocketConnect } from "@/lib/adminSocket";
@@ -32,18 +34,32 @@ const notificationRouteMap: Record<string, (data?: Record<string, unknown>) => {
   REVIEW_NEEDS_MODERATION: (data) => data?.reviewId ? { path: "/admin/reviews", state: { reviewId: data.reviewId } } : null,
   TOUR_SUBMITTED_FOR_REVIEW: (data) => data?.tourId ? { path: "/admin/tour-moderation", state: { tourId: data.tourId } } : null,
   PAYOUT_NEEDS_APPROVAL: (data) => ({ path: "/admin/payouts", state: { payoutId: data?.payoutId || data?.payoutRequestId } }),
-  PAYOUT_PROCESSED: (data) => ({ path: "/admin/payouts", state: { payoutId: data?.payoutId || data?.payoutRequestId } }),
-  PAYOUT_APPROVED: (data) => ({ path: "/admin/payouts", state: { payoutId: data?.payoutId || data?.payoutRequestId } }),
-  SYSTEM_ALERT: (data) => data?.supplierId ? { path: `/admin/suppliers/${data.supplierId}?tab=payout` } : { path: "/admin" },
-  NEW_MESSAGE: (data) => data?.conversationId ? { path: `/admin/chat/${data.chatType || "suppliers"}`, state: { conversationId: data.conversationId } } : null,
+  BOOKING_CREATED: (data) => data?.bookingId ? { path: `/admin/bookings?bookingId=${data.bookingId}` } : { path: "/admin/bookings" },
+  BOOKING_CONFIRMED: (data) => data?.bookingId ? { path: `/admin/bookings?bookingId=${data.bookingId}` } : { path: "/admin/bookings" },
+  DOCUMENT_EXPIRING: (data) => data?.supplierId ? { path: `/admin/suppliers/${data.supplierId}` } : { path: "/admin/suppliers" },
+  DOCUMENT_EXPIRED: (data) => data?.supplierId ? { path: `/admin/suppliers/${data.supplierId}` } : { path: "/admin/suppliers" },
+  REFUND_REQUEST: (data) => data?.disputeId ? { path: "/admin/payouts?tab=disputes", state: { disputeId: data.disputeId } } : { path: "/admin/payouts?tab=disputes" },
+  PAYMENT_UPCOMING: (data) => data?.bookingId ? { path: `/admin/bookings?bookingId=${data.bookingId}` } : { path: "/admin/bookings" },
+  PAYMENT_COLLECTED: (data) => data?.bookingId ? { path: `/admin/bookings?bookingId=${data.bookingId}` } : { path: "/admin/bookings" },
+  PAYMENT_COLLECTION_FAILED: (data) => data?.bookingId ? { path: `/admin/bookings?bookingId=${data.bookingId}` } : { path: "/admin/bookings" },
+  STRIPE_CUSTOMER_CREATE_FAILED: () => ({ path: "/admin/settings" }),
+  REFUND_NEEDS_ATTENTION: (data) => data?.bookingId ? { path: `/admin/bookings?bookingId=${data.bookingId}` } : { path: "/admin/payouts?tab=disputes" },
+  SYSTEM_ALERT: (data) => data?.payoutMethodId ? { path: "/admin/payouts?tab=methods", state: { viewSupplierId: data.supplierId } } : data?.supplierId ? { path: `/admin/suppliers/${data.supplierId}` } : { path: "/admin" },
+  NEW_MESSAGE: (data) => {
+    if (!data?.conversationId) return null;
+    if (data.conversationType === 'SUPPLIER_CUSTOMER') return { path: "/admin/chat/customers" };
+    return { path: `/admin/chat/${data.chatType || "suppliers"}`, state: { conversationId: data.conversationId } };
+  },
 };
 
 const typeConfig: Record<string, { icon: React.ReactNode; color: string }> = {
   BOOKING_CONFIRMED: { icon: <ShoppingBag className="h-3.5 w-3.5" />, color: "text-green-600 dark:text-green-400" },
   BOOKING_CANCELLED: { icon: <XCircle className="h-3.5 w-3.5" />, color: "text-red-500 dark:text-red-400" },
+  BOOKING_CREATED: { icon: <ShoppingBag className="h-3.5 w-3.5" />, color: "text-blue-600 dark:text-blue-400" },
   PAYMENT_RECEIVED: { icon: <CreditCard className="h-3.5 w-3.5" />, color: "text-green-600 dark:text-green-400" },
-  PAYOUT_PROCESSED: { icon: <Banknote className="h-3.5 w-3.5" />, color: "text-green-600 dark:text-green-400" },
-  PAYOUT_APPROVED: { icon: <Banknote className="h-3.5 w-3.5" />, color: "text-amber-600 dark:text-amber-400" },
+  PAYMENT_UPCOMING: { icon: <CreditCard className="h-3.5 w-3.5" />, color: "text-amber-600 dark:text-amber-400" },
+  PAYMENT_COLLECTED: { icon: <CreditCard className="h-3.5 w-3.5" />, color: "text-green-600 dark:text-green-400" },
+  PAYMENT_COLLECTION_FAILED: { icon: <XCircle className="h-3.5 w-3.5" />, color: "text-red-500 dark:text-red-400" },
   PAYOUT_NEEDS_APPROVAL: { icon: <Banknote className="h-3.5 w-3.5" />, color: "text-amber-600 dark:text-amber-400" },
   PAYOUT_COMPLETED: { icon: <Banknote className="h-3.5 w-3.5" />, color: "text-green-600 dark:text-green-400" },
   PAYOUT_REQUEST_SUBMITTED: { icon: <Banknote className="h-3.5 w-3.5" />, color: "text-amber-600 dark:text-amber-400" },
@@ -58,6 +74,11 @@ const typeConfig: Record<string, { icon: React.ReactNode; color: string }> = {
   TOUR_SUBMITTED_FOR_REVIEW: { icon: <ClipboardCheck className="h-3.5 w-3.5" />, color: "text-amber-600 dark:text-amber-400" },
   SYSTEM_ALERT: { icon: <AlertTriangle className="h-3.5 w-3.5" />, color: "text-red-500 dark:text-red-400" },
   NEW_MESSAGE: { icon: <MessageSquare className="h-3.5 w-3.5" />, color: "text-green-600 dark:text-green-400" },
+  DOCUMENT_EXPIRING: { icon: <FileWarning className="h-3.5 w-3.5" />, color: "text-amber-600 dark:text-amber-400" },
+  DOCUMENT_EXPIRED: { icon: <FileWarning className="h-3.5 w-3.5" />, color: "text-red-500 dark:text-red-400" },
+  REFUND_REQUEST: { icon: <RefreshCw className="h-3.5 w-3.5" />, color: "text-amber-600 dark:text-amber-400" },
+  REFUND_NEEDS_ATTENTION: { icon: <RefreshCw className="h-3.5 w-3.5" />, color: "text-red-500 dark:text-red-400" },
+  STRIPE_CUSTOMER_CREATE_FAILED: { icon: <AlertTriangle className="h-3.5 w-3.5" />, color: "text-red-500 dark:text-red-400" },
 };
 
 function getTypeConfig(type: string) {
