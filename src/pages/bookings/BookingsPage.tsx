@@ -449,7 +449,7 @@ export default function BookingsPage() {
                               {booking.currency} {Number(booking.grossAmount).toLocaleString()}
                             </span>
                             {booking.discounts > 0 && (
-                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0 rounded-full bg-emerald-50 border border-emerald-200/60 text-[9px] font-medium text-emerald-700">
+                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0 rounded-full bg-red-50 border border-red-200/60 text-[9px] font-medium text-red-700">
                                 <Tag size={8} />
                                 {booking.offerName || 'Discount'}
                               </span>
