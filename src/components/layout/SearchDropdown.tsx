@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, CornerDownLeft, Clock, ArrowRight, X, Package, Building2, Loader2 } from "lucide-react";
-import { getNavGroups } from "@/components/layout/Sidebar";
+import { getNavGroups } from "@/components/layout/navConfig";
 import { usePermission } from "@/hooks/usePermission";
 import { useAdminSearch } from "@/hooks/useAdminSearch";
 import { SafeImage } from "@/components/shared/SafeImage";

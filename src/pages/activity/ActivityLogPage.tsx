@@ -9,7 +9,6 @@ import {
   Search,
   Download,
   History,
-  Mail,
   ShieldCheck,
   ShieldOff,
   UserCog,

@@ -17,7 +17,6 @@ import {
   LayoutDashboard,
   Settings,
   ShoppingCart,
-  Calendar,
   UserCheck,
 } from "lucide-react";
 import {
