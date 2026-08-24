@@ -55,7 +55,7 @@ interface OverviewData {
   signups?: { today?: number; yesterday?: number };
   activeUsers?: number;
   activeUsersPrevious?: number;
-  topTours?: Array<{ id?: string; title?: string; coverPhoto?: string; bookingCount?: number; revenue?: number; averageRating?: number; reviewCount?: number }>;
+  topTours?: Array<{ id?: string; title?: string; coverPhoto?: string; bookingCount?: number; revenue?: number; currency?: string; averageRating?: number; reviewCount?: number }>;
   topSuppliers?: Array<{ id?: string; user?: { name?: string; email?: string; photoURL?: string }; totalEarnings?: number; totalBookings?: number; averageRating?: number }>;
   weeklyBookingData?: Array<{ day: string; count: number }>;
   bookingStatusDistribution?: Array<{ status?: string; count?: number }>;

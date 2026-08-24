@@ -29,7 +29,7 @@ import { cn } from "@/lib/utils";
 import { BookingDetailPanel } from "./components/BookingDetailPanel";
 import { ConfirmPaymentDialog } from "./components/ConfirmPaymentDialog";
 import type { Booking } from "@/types/booking";
-import { isPaymentPaid } from "@/types/booking";
+import { isPaymentPaid, travelerCount } from "@/types/booking";
 import OptimizedImage from "@/components/shared/OptimizedImage";
 
 const STATUS_BADGE: Record<string, "success" | "warning" | "error" | "info"> = {
@@ -439,7 +439,7 @@ export default function BookingsPage() {
                         </td>
                         <td className="px-4 py-3 text-center">
                           <span className="text-xs font-medium text-text-secondary tabular-nums">
-                            {booking.travelers?.length ?? 0}
+                            {travelerCount(booking.travelers)}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right">
