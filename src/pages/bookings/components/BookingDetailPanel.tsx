@@ -15,12 +15,16 @@ import {
   Mail,
   Phone,
   ArrowUpRight,
+  User,
+  Baby,
+  PersonStanding,
+  Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePermission } from "@/hooks/usePermission";
 import { cn, timeAgo, getStatusColor } from "@/lib/utils";
 import { BookingTimeline } from "./BookingTimeline";
-import type { Booking } from "@/types/booking";
+import type { Booking, TravelerData } from "@/types/booking";
 import { isPaymentPaid, travelerCount } from "@/types/booking";
 import OptimizedImage from "@/components/shared/OptimizedImage";
 
@@ -62,6 +66,69 @@ function DetailRow({ icon, label, children }: { icon: React.ReactNode; label: st
         <span>{label}</span>
       </div>
       <div className="text-xs font-medium text-text-primary text-right">{children}</div>
+    </div>
+  );
+}
+
+function TravelerBreakdown({ travelers }: { travelers: TravelerData }) {
+  const categories = [
+    { label: "Adults", count: travelers.adults || 0, icon: <User className="h-3.5 w-3.5" /> },
+    { label: "Children", count: travelers.children || 0, icon: <PersonStanding className="h-3.5 w-3.5" /> },
+    { label: "Infants", count: travelers.infants || 0, icon: <Baby className="h-3.5 w-3.5" /> },
+    { label: "Seniors", count: travelers.seniors || 0, icon: <Users className="h-3.5 w-3.5" /> },
+  ].filter((c) => c.count > 0);
+
+  if (categories.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {categories.map((cat) => (
+        <div key={cat.label} className="flex items-center gap-1.5 rounded-lg border border-border bg-surface-base px-2.5 py-1.5">
+          <span className="text-text-tertiary">{cat.icon}</span>
+          <span className="text-xs font-semibold text-text-primary">{cat.count}</span>
+          <span className="text-xs text-text-secondary">{cat.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TravelerManifest({ details }: { details: NonNullable<TravelerData["details"]> }) {
+  if (!details || details.length === 0) return null;
+
+  return (
+    <div className="rounded-xl border border-border overflow-hidden">
+      <table className="w-full text-xs">
+        <thead>
+          <tr className="bg-surface-muted/50 border-b border-border">
+            <th className="px-3 py-2 text-left font-semibold text-text-secondary">#</th>
+            <th className="px-3 py-2 text-left font-semibold text-text-secondary">Name</th>
+            <th className="px-3 py-2 text-left font-semibold text-text-secondary">Age</th>
+            <th className="px-3 py-2 text-left font-semibold text-text-secondary">Category</th>
+          </tr>
+        </thead>
+        <tbody>
+          {details.map((t, i) => (
+            <tr key={i} className="border-b border-border/50 last:border-0">
+              <td className="px-3 py-2 text-text-tertiary">{i + 1}</td>
+              <td className="px-3 py-2 font-medium text-text-primary">{t.name || "—"}</td>
+              <td className="px-3 py-2 text-text-secondary">{t.age ?? "—"}</td>
+              <td className="px-3 py-2">
+                <span className={cn(
+                  "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                  t.ageGroup === "adult" && "bg-blue-50 text-blue-700",
+                  t.ageGroup === "child" && "bg-amber-50 text-amber-700",
+                  t.ageGroup === "infant" && "bg-pink-50 text-pink-700",
+                  t.ageGroup === "senior" && "bg-purple-50 text-purple-700",
+                  !t.ageGroup && "bg-gray-50 text-gray-500",
+                )}>
+                  {t.ageGroup || "—"}
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -187,6 +254,18 @@ export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onViewC
                 <DetailRow icon={<Hash className="h-3 w-3" />} label="Booking #">
                   {booking.bookingNumber}
                 </DetailRow>
+                {booking.source && (
+                  <DetailRow icon={<Globe className="h-3 w-3" />} label="Source">
+                    <span className={cn(
+                      "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                      booking.source === "expedition" && "bg-emerald-50 text-emerald-700",
+                      booking.source === "travio" && "bg-blue-50 text-blue-700",
+                      !["expedition", "travio"].includes(booking.source) && "bg-gray-50 text-gray-600",
+                    )}>
+                      {booking.source === "expedition" ? "Expedition Go" : booking.source === "travio" ? "Travio" : booking.source}
+                    </span>
+                  </DetailRow>
+                )}
                 <DetailRow icon={<Clock className="h-3 w-3" />} label="Created">
                   {timeAgo(booking.createdAt)}
                 </DetailRow>
@@ -197,6 +276,103 @@ export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onViewC
                 )}
               </div>
             </div>
+
+            <div>
+              <SectionTitle>Travelers</SectionTitle>
+              <div className="space-y-3">
+                <TravelerBreakdown travelers={booking.travelers} />
+                {booking.travelers.details && booking.travelers.details.length > 0 && (
+                  <TravelerManifest details={booking.travelers.details} />
+                )}
+                {(booking.travelers.phoneNumber || booking.travelers.location) && (
+                  <div className="rounded-xl border border-border p-3 space-y-1.5">
+                    {booking.travelers.phoneNumber && (
+                      <div className="flex items-center gap-1.5 text-xs text-text-secondary">
+                        <Phone className="h-3 w-3" />
+                        <span>{booking.travelers.phoneNumber}</span>
+                      </div>
+                    )}
+                    {booking.travelers.location && (
+                      <div className="flex items-center gap-1.5 text-xs text-text-secondary">
+                        <MapPin className="h-3 w-3" />
+                        <span>{booking.travelers.location}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {(booking.leadTravelerName || booking.leadTravelerEmail || booking.leadTravelerPhone) && (
+              <div>
+                <SectionTitle>Lead Traveler</SectionTitle>
+                <div className="rounded-xl border border-border p-4 space-y-2">
+                  {booking.leadTravelerName && (
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-text-tertiary" />
+                      <span className="text-sm font-medium text-text-primary">{booking.leadTravelerName}</span>
+                    </div>
+                  )}
+                  {booking.leadTravelerEmail && (
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-text-tertiary" />
+                      <a href={`mailto:${booking.leadTravelerEmail}`} className="text-xs text-primary hover:underline">{booking.leadTravelerEmail}</a>
+                    </div>
+                  )}
+                  {booking.leadTravelerPhone && (
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-text-tertiary" />
+                      <a href={`tel:${booking.leadTravelerPhone}`} className="text-xs text-primary hover:underline">{booking.leadTravelerPhone}</a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {booking.pickup && (
+              <div>
+                <SectionTitle>Pickup Details</SectionTitle>
+                <div className="rounded-xl border border-border p-4 space-y-2">
+                  {booking.pickup.pickupLater ? (
+                    <div className="flex items-center gap-2 text-xs text-amber-600">
+                      <Clock className="h-3.5 w-3.5" />
+                      <span className="font-medium">Customer will choose pickup location later</span>
+                    </div>
+                  ) : (
+                    <>
+                      {(booking.pickup.areaName || booking.pickup.locationName || booking.pickup.address?.name) && (
+                        <div className="flex items-start gap-2">
+                          <MapPin className="h-4 w-4 text-text-tertiary mt-0.5 shrink-0" />
+                          <div>
+                            <p className="text-xs font-medium text-text-primary">
+                              {booking.pickup.address?.name || booking.pickup.locationName || booking.pickup.areaName}
+                            </p>
+                            {booking.pickup.address?.address && booking.pickup.address.address !== booking.pickup.address.name && (
+                              <p className="text-[10px] text-text-tertiary mt-0.5">{booking.pickup.address.address}</p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      {booking.pickup.time && (
+                        <div className="flex items-center gap-2 text-xs text-text-secondary">
+                          <Clock className="h-3.5 w-3.5 text-text-tertiary" />
+                          <span>Pickup at {booking.pickup.time}</span>
+                        </div>
+                      )}
+                      {booking.pickup.instructions && (
+                        <p className="text-[10px] text-text-tertiary bg-surface-muted/50 rounded-lg p-2">{booking.pickup.instructions}</p>
+                      )}
+                    </>
+                  )}
+                  {booking.pickup.mode && (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-text-tertiary">Mode:</span>
+                      <span className="text-[10px] font-medium text-text-secondary capitalize">{booking.pickup.mode}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             <div>
               <SectionTitle>Pricing</SectionTitle>

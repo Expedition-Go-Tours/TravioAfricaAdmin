@@ -67,16 +67,21 @@ export interface Booking {
   paidAt?: string | null;
   createdAt: string;
   updatedAt: string;
+  leadTravelerName?: string | null;
+  leadTravelerEmail?: string | null;
+  leadTravelerPhone?: string | null;
+  pickup?: PickupData | null;
+  source?: string;
   customer: BookingCustomer;
   tour: BookingTour;
   payouts: BookingPayout[];
-  source?: string;
 }
 
 export interface TravelerDetail {
-  name: string;
+  name?: string;
   age?: number;
   ageGroup?: string;
+  specialRequests?: string;
 }
 
 export interface TravelerData {
@@ -87,6 +92,16 @@ export interface TravelerData {
   phoneNumber?: string;
   location?: string;
   details?: TravelerDetail[];
+}
+
+export interface PickupData {
+  mode?: string;
+  areaName?: string;
+  locationName?: string;
+  address?: { name?: string; address?: string; lat?: number; lng?: number } | null;
+  time?: string;
+  instructions?: string;
+  pickupLater?: boolean;
 }
 
 export function travelerCount(travelers: TravelerData | null | undefined): number {

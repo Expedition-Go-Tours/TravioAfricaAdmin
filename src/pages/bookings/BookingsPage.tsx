@@ -64,11 +64,11 @@ const FADE_SLIDE = {
 const STATUS_PILLS = ["All", "Pending", "Confirmed", "Completed", "Cancelled"];
 
 const statCards = [
-  { label: "Total", key: "total", gradient: "bg-gradient-to-br from-blue-50 to-blue-100", Icon: ShoppingCart },
-  { label: "Pending", key: "PENDING", gradient: "bg-gradient-to-br from-amber-50 to-amber-100", Icon: Clock },
-  { label: "Confirmed", key: "CONFIRMED", gradient: "bg-gradient-to-br from-emerald-50 to-emerald-100", Icon: CheckCircle2 },
-  { label: "Completed", key: "COMPLETED", gradient: "bg-gradient-to-br from-green-50 to-green-100", Icon: CheckCircle2 },
-  { label: "Cancelled", key: "CANCELLED", gradient: "bg-gradient-to-br from-purple-50 to-purple-100", Icon: Ban },
+  { label: "Total", key: "total", gradient: "bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900", Icon: ShoppingCart },
+  { label: "Pending", key: "PENDING", gradient: "bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950 dark:to-amber-900", Icon: Clock },
+  { label: "Confirmed", key: "CONFIRMED", gradient: "bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950 dark:to-emerald-900", Icon: CheckCircle2 },
+  { label: "Completed", key: "COMPLETED", gradient: "bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900", Icon: CheckCircle2 },
+  { label: "Cancelled", key: "CANCELLED", gradient: "bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900", Icon: Ban },
 ];
 
 export default function BookingsPage() {
