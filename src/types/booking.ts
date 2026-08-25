@@ -50,6 +50,7 @@ export interface Booking {
   bookingNumber: string;
   status: BookingStatus;
   paymentStatus: PaymentStatus;
+  paymentTiming?: "now" | "later";
   grossAmount: number;
   currency: string;
   travelDate: string;

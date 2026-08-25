@@ -29,6 +29,7 @@ import api from "@/lib/axios";
 import { cn } from "@/lib/utils";
 import { BookingDetailPanel } from "./components/BookingDetailPanel";
 import { ConfirmPaymentDialog } from "./components/ConfirmPaymentDialog";
+import { ChargeNowDialog } from "./components/ChargeNowDialog";
 import type { Booking } from "@/types/booking";
 import { isPaymentPaid, travelerCount } from "@/types/booking";
 import OptimizedImage from "@/components/shared/OptimizedImage";
@@ -121,6 +122,23 @@ export default function BookingsPage() {
       setSelectedBooking(null);
     },
     onError: () => toast.error("Failed to confirm payment"),
+  });
+
+  const [chargeNowBooking, setChargeNowBooking] = useState<Booking | null>(null);
+
+  const chargeNowMutation = useMutation({
+    mutationFn: (bookingId: string) =>
+      api.post(`/admin/bookings/${bookingId}/charge-now`),
+    onSuccess: (_, bookingId) => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "bookings"] });
+      const b = chargeNowBooking || rawBookings.find((x) => x.id === bookingId);
+      toast.success(`Card charged for #${b?.bookingNumber || bookingId}`);
+      setChargeNowBooking(null);
+      setSelectedBooking(null);
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Failed to charge card");
+    },
   });
 
   const location = useLocation();
@@ -469,6 +487,8 @@ export default function BookingsPage() {
                               "Failed"
                             ) : booking.paymentStatus === "PROCESSING" ? (
                               "Processing"
+                            ) : booking.paymentTiming === "later" ? (
+                              <><Clock className="h-2.5 w-2.5" /> Pay Later</>
                             ) : (
                               "Pending"
                             )}
@@ -507,6 +527,9 @@ export default function BookingsPage() {
             onConfirmPayment={(booking) => {
               setConfirmPayBooking(booking);
             }}
+            onChargeNow={(booking) => {
+              setChargeNowBooking(booking);
+            }}
             onViewCustomer={() => {
               setSelectedBooking(null);
             }}
@@ -520,6 +543,15 @@ export default function BookingsPage() {
           isPending={confirmPaymentMutation.isPending}
           onConfirm={(reference) => confirmPaymentMutation.mutate({ reference })}
           onClose={() => setConfirmPayBooking(null)}
+        />
+      )}
+
+      {chargeNowBooking && (
+        <ChargeNowDialog
+          booking={chargeNowBooking}
+          isPending={chargeNowMutation.isPending}
+          onConfirm={() => chargeNowMutation.mutate(chargeNowBooking.id)}
+          onClose={() => setChargeNowBooking(null)}
         />
       )}
     </div>

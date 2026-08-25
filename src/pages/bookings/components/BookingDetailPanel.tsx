@@ -20,6 +20,7 @@ import {
   PersonStanding,
   Globe,
   Tag,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePermission } from "@/hooks/usePermission";
@@ -33,6 +34,7 @@ interface BookingDetailPanelProps {
   booking: Booking;
   onClose: () => void;
   onConfirmPayment: (booking: Booking) => void;
+  onChargeNow: (booking: Booking) => void;
   onViewCustomer: (customerId: string) => void;
 }
 
@@ -134,7 +136,7 @@ function TravelerManifest({ details }: { details: NonNullable<TravelerData["deta
   );
 }
 
-export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onViewCustomer }: BookingDetailPanelProps) {
+export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onChargeNow, onViewCustomer }: BookingDetailPanelProps) {
   const navigate = useNavigate();
   const { can } = usePermission();
 
@@ -451,7 +453,25 @@ export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onViewC
                   </span>
                   <StatusChip status={booking.paymentStatus} />
                 </div>
-                {booking.paymentStatus === "PENDING" && can('bookings.confirm-payment') && (
+                {booking.paymentTiming === "later" && (
+                  <div className="flex items-center gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
+                    <Clock className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                    <span className="text-xs text-amber-700">
+                      Reserve now, pay later — card on file, auto-charges before activity date
+                    </span>
+                  </div>
+                )}
+                {booking.paymentTiming === "later" && booking.paymentStatus !== "SUCCEEDED" && can('bookings.confirm-payment') && (
+                  <Button
+                    onClick={() => onChargeNow(booking)}
+                    size="sm"
+                    className="w-full h-8 bg-amber-600 hover:bg-amber-700 text-white"
+                  >
+                    <Zap className="h-3.5 w-3.5" />
+                    Charge Now
+                  </Button>
+                )}
+                {booking.paymentTiming !== "later" && booking.paymentStatus === "PENDING" && can('bookings.confirm-payment') && (
                   <Button
                     onClick={() => onConfirmPayment(booking)}
                     size="sm"
