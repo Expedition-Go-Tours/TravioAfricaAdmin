@@ -221,6 +221,22 @@ export function PayoutRequestsTab() {
             <p className="text-[11px] font-semibold uppercase tracking-wider text-text-tertiary">Paid via</p>
             <div className="mt-1.5"><MethodLabel request={action.request} /></div>
           </div>
+          {!itemsCheck(action.request).matches && (
+            <div className="rounded-lg border border-red-300 bg-red-50 dark:bg-red-950/30 dark:border-red-800 p-3">
+              <p className="text-sm font-medium text-red-700 dark:text-red-400 flex items-center gap-1.5">
+                <AlertTriangle className="h-4 w-4" />
+                Items total mismatch — cannot complete
+              </p>
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                The sum of item payouts ({formatCurrency(itemsCheck(action.request).sum, action.request.currency)}) does not match the request amount ({formatCurrency(Number(action.request.amount), action.request.currency)}). This must be resolved before marking as sent.
+              </p>
+            </div>
+          )}
+          <div className="rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800 p-3">
+            <p className="text-xs text-amber-700 dark:text-amber-400">
+              If any booking in this request has an open dispute, the backend will block completion. Resolve disputes first.
+            </p>
+          </div>
           <div className="space-y-1.5">
             <Label htmlFor="complete-reference">Transaction reference (required)</Label>
             <Input
@@ -484,7 +500,7 @@ export function PayoutRequestsTab() {
           confirmLabel={modalConfig.confirmLabel}
           icon={modalConfig.icon}
           loading={busy}
-          confirmDisabled={busy || (action.kind === "complete" && !!refError)}
+          confirmDisabled={busy || (action.kind === "complete" && (!!refError || !itemsCheck(action.request).matches))}
           onConfirm={handleConfirm}
           onCancel={() => setAction(null)}
         >

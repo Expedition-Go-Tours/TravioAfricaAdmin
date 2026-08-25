@@ -85,6 +85,12 @@ export function DisputesQueueTab() {
   const handleResolve = () => {
     if (!resolving) return;
     if (!resolution.trim()) { toast.error("A resolution note is required"); return; }
+    const bookingAmount = Number(resolving.booking?.grossAmount || 0);
+    if (outcome === "CUSTOMER" && refundOverride.trim()) {
+      const amount = Number(refundOverride);
+      if (Number.isNaN(amount) || amount <= 0) { toast.error("Refund amount must be a positive number"); return; }
+      if (amount > bookingAmount) { toast.error(`Refund amount cannot exceed the booking total (${formatCurrency(bookingAmount, resolving.booking?.currency)})`); return; }
+    }
     const refundAmount = outcome === "CUSTOMER" && refundOverride.trim() ? Number(refundOverride) : undefined;
     resolveMutation.mutate({
       id: resolving.id,
@@ -274,6 +280,7 @@ export function DisputesQueueTab() {
                 id="refund-override"
                 type="number"
                 min="0"
+                max={Number(resolving.booking?.grossAmount || 0)}
                 step="0.01"
                 placeholder="Leave empty for full refund"
                 value={refundOverride}
