@@ -44,6 +44,7 @@ import CategoryManagerPage from "@/pages/blog/CategoryManagerPage";
 import TagManagerPage from "@/pages/blog/TagManagerPage";
 import BlogAnalytics from "@/pages/blog/BlogAnalytics";
 import ExpeditionListingsPage from "@/pages/expedition/ExpeditionListingsPage";
+import AiProcessingPage from "@/pages/ai/AiProcessingPage";
 
 function DataSocketInit() {
   const { isAuthenticated } = useAuthContext();
@@ -169,6 +170,7 @@ const router = createBrowserRouter([
       { path: "blog/tags", element: <PermissionRoute permission="blog.manage"><TagManagerPage /></PermissionRoute> },
       { path: "blog/analytics", element: <PermissionRoute permission="blog.manage"><BlogAnalytics /></PermissionRoute> },
       { path: "expedition", element: <PermissionRoute permission="tours.view"><ExpeditionListingsPage /></PermissionRoute> },
+      { path: "ai-processing", element: <PermissionRoute permission="tours.view"><AiProcessingPage /></PermissionRoute> },
     ],
   },
   { path: "*", element: <Navigate to={getDefaultRoute()} replace /> },

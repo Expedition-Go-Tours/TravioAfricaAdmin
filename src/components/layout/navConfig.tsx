@@ -17,6 +17,7 @@ import {
   Globe,
   FileText,
   MessageSquare,
+  Brain,
 } from "lucide-react";
 
 export interface ChildItem {
@@ -70,6 +71,7 @@ export function getNavGroups(can: (key: string) => boolean): { group: string; it
     ...(can('tours.approve') ? [{ label: "Tour Moderation", path: "/admin/tour-moderation", icon: <ClipboardCheck className="h-4 w-4" />, badgeKey: "tours" as const, keywords: ["approve", "approval"] }] : []),
     ...(can('chat.suppliers') ? [{ label: "Supplier Messages", path: "/admin/chat/suppliers", icon: <Building className="h-4 w-4" />, keywords: ["inbox", "messages"] }] : []),
     ...(can('blog.manage') ? [{ label: "Blog", path: "/admin/blog", icon: <FileText className="h-4 w-4" />, keywords: ["posts", "articles", "content"] }] : []),
+    ...(can('tours.view') ? [{ label: "AI Processing", path: "/admin/ai-processing", icon: <Brain className="h-4 w-4" />, keywords: ["mimo", "ai", "image", "classification"] }] : []),
   ];
 
   const financeItems: NavItem[] = [
