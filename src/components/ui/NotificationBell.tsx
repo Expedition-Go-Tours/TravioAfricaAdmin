@@ -33,6 +33,7 @@ const notificationRouteMap: Record<string, (data?: Record<string, unknown>) => {
   PAYOUT_NEEDS_APPROVAL: (data) => ({ path: "/admin/payouts", state: { payoutId: data?.payoutId || data?.payoutRequestId } }),
   BOOKING_CREATED: (data) => data?.bookingId ? { path: `/admin/bookings?bookingId=${data.bookingId}` } : { path: "/admin/bookings" },
   BOOKING_CONFIRMED: (data) => data?.bookingId ? { path: `/admin/bookings?bookingId=${data.bookingId}` } : { path: "/admin/bookings" },
+  BOOKING_MODIFIED: (data) => data?.bookingId ? { path: `/admin/bookings?bookingId=${data.bookingId}` } : { path: "/admin/bookings" },
   DOCUMENT_EXPIRED: (data) => data?.supplierId ? { path: `/admin/suppliers/${data.supplierId}` } : { path: "/admin/suppliers" },
   REFUND_REQUEST: (data) => data?.disputeId ? { path: "/admin/payouts?tab=disputes", state: { disputeId: data.disputeId } } : { path: "/admin/payouts?tab=disputes" },
   PAYMENT_UPCOMING: (data) => data?.bookingId ? { path: `/admin/bookings?bookingId=${data.bookingId}` } : { path: "/admin/bookings" },
@@ -51,6 +52,7 @@ const notificationRouteMap: Record<string, (data?: Record<string, unknown>) => {
 const typeConfig: Record<string, { icon: React.ReactNode; color: string }> = {
   BOOKING_CONFIRMED: { icon: <ShoppingBag className="h-3.5 w-3.5" />, color: "text-green-600 dark:text-green-400" },
   BOOKING_CREATED: { icon: <ShoppingBag className="h-3.5 w-3.5" />, color: "text-blue-600 dark:text-blue-400" },
+  BOOKING_MODIFIED: { icon: <ShoppingBag className="h-3.5 w-3.5" />, color: "text-indigo-600 dark:text-indigo-400" },
   PAYMENT_UPCOMING: { icon: <CreditCard className="h-3.5 w-3.5" />, color: "text-amber-600 dark:text-amber-400" },
   PAYMENT_COLLECTED: { icon: <CreditCard className="h-3.5 w-3.5" />, color: "text-green-600 dark:text-green-400" },
   PAYMENT_COLLECTION_FAILED: { icon: <CreditCard className="h-3.5 w-3.5" />, color: "text-red-500 dark:text-red-400" },
