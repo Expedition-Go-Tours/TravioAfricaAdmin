@@ -36,6 +36,7 @@ const notificationRouteMap: Record<string, (data?: Record<string, unknown>) => {
   BOOKING_MODIFIED: (data) => data?.bookingId ? { path: `/admin/bookings?bookingId=${data.bookingId}` } : { path: "/admin/bookings" },
   DOCUMENT_EXPIRED: (data) => data?.supplierId ? { path: `/admin/suppliers/${data.supplierId}` } : { path: "/admin/suppliers" },
   REFUND_REQUEST: (data) => data?.disputeId ? { path: "/admin/payouts?tab=disputes", state: { disputeId: data.disputeId } } : { path: "/admin/payouts?tab=disputes" },
+REFUND_CLAIM: (data) => data?.claimId ? { path: `/admin/payouts?tab=claims&claimId=${data.claimId}` } : { path: "/admin/payouts?tab=claims" },
   PAYMENT_UPCOMING: (data) => data?.bookingId ? { path: `/admin/bookings?bookingId=${data.bookingId}` } : { path: "/admin/bookings" },
   PAYMENT_COLLECTED: (data) => data?.bookingId ? { path: `/admin/bookings?bookingId=${data.bookingId}` } : { path: "/admin/bookings" },
   PAYMENT_COLLECTION_FAILED: (data) => data?.bookingId ? { path: `/admin/bookings?bookingId=${data.bookingId}` } : { path: "/admin/bookings" },
@@ -65,6 +66,7 @@ const typeConfig: Record<string, { icon: React.ReactNode; color: string }> = {
   NEW_MESSAGE: { icon: <MessageSquare className="h-3.5 w-3.5" />, color: "text-green-600 dark:text-green-400" },
   DOCUMENT_EXPIRED: { icon: <FileWarning className="h-3.5 w-3.5" />, color: "text-red-500 dark:text-red-400" },
   REFUND_REQUEST: { icon: <RefreshCw className="h-3.5 w-3.5" />, color: "text-amber-600 dark:text-amber-400" },
+REFUND_CLAIM: { icon: <RefreshCw className="h-3.5 w-3.5" />, color: "text-amber-600 dark:text-amber-400" },
   REFUND_NEEDS_ATTENTION: { icon: <RefreshCw className="h-3.5 w-3.5" />, color: "text-red-500 dark:text-red-400" },
   STRIPE_CUSTOMER_CREATE_FAILED: { icon: <AlertTriangle className="h-3.5 w-3.5" />, color: "text-red-500 dark:text-red-400" },
 };

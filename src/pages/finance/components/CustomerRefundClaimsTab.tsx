@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ChevronDown, ShieldAlert, Store, CheckCircle2, XCircle, RotateCcw } from "lucide-react";
@@ -81,9 +82,12 @@ type Action = "release" | "decline";
 export function CustomerRefundClaimsTab() {
   const queryClient = useQueryClient();
   const { can } = usePermission();
+  const [searchParams] = useSearchParams();
+  const focusClaimId = searchParams.get("claimId");
 
   const [statusTab, setStatusTab] = useState<ClaimStatus | "ALL">("SUPPLIER_APPROVED");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [focusedId, setFocusedId] = useState<string | null>(null);
   const [actionTarget, setActionTarget] = useState<{ claim: RefundClaim; action: Action } | null>(null);
   const [note, setNote] = useState("");
   const [releaseAmount, setReleaseAmount] = useState("");
@@ -101,6 +105,22 @@ export function CustomerRefundClaimsTab() {
 
   const claims = (data?.data?.claims || []) as RefundClaim[];
   const canRelease = can("disputes.resolve");
+
+  // Deep link from the admin bell (?claimId=) — reveal + scroll to the claim.
+  useEffect(() => {
+    if (!focusClaimId || isLoading) return;
+    const list = (data?.data?.claims || []) as RefundClaim[];
+    if (list.length === 0 || !list.some((c) => c.id === focusClaimId)) return;
+    const timer = setTimeout(() => {
+      setFocusedId(focusClaimId);
+      document.getElementById(`claim-${focusClaimId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 60);
+    const clear = setTimeout(() => setFocusedId(null), 7000);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(clear);
+    };
+  }, [focusClaimId, isLoading, data]);
 
   const releaseMutation = useMutation({
     mutationFn: ({ id, releasedAmount }: { id: string; releasedAmount?: number }) =>
@@ -207,9 +227,12 @@ export function CustomerRefundClaimsTab() {
                 const booking = claim.booking || {};
                 const paidTotal = Number(booking.grossAmount || 0);
                 return (
-                  <div key={claim.id}>
+                  <div key={claim.id} id={`claim-${claim.id}`}>
                     <div
-                      className="flex cursor-pointer items-center gap-4 px-5 py-4 transition-colors hover:bg-surface-muted/40"
+                      className={cn(
+                        "flex cursor-pointer items-center gap-4 px-5 py-4 transition-colors hover:bg-surface-muted/40",
+                        focusedId === claim.id && "bg-amber-50 ring-1 ring-inset ring-amber-300 dark:bg-amber-500/10"
+                      )}
                       onClick={() => setExpandedId(expanded ? null : claim.id)}
                     >
                       <ChevronDown className={cn("h-4 w-4 shrink-0 text-text-tertiary transition-transform", expanded && "rotate-180")} />
