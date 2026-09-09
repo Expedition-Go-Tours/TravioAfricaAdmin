@@ -20,6 +20,7 @@ import { cn, formatCurrency, formatDate } from "@/lib/utils";
 type ClaimStatus =
   | "SUBMITTED"
   | "SUPPLIER_APPROVED"
+  | "PROCESSING"
   | "SUPPLIER_DECLINED"
   | "RELEASED"
   | "ADMIN_DECLINED"
@@ -51,6 +52,7 @@ interface RefundClaim {
 
 const STATUS_TABS: Array<{ key: ClaimStatus | "ALL"; label: string }> = [
   { key: "SUPPLIER_APPROVED", label: "Ready to release" },
+  { key: "PROCESSING", label: "Releasing" },
   { key: "SUBMITTED", label: "Awaiting supplier" },
   { key: "RELEASED", label: "Released" },
   { key: "SUPPLIER_DECLINED", label: "Declined by supplier" },
@@ -71,6 +73,7 @@ const REASON_LABELS: Record<string, string> = {
 const STATUS_LABELS: Record<string, string> = {
   SUBMITTED: "Awaiting supplier",
   SUPPLIER_APPROVED: "Ready to release",
+  PROCESSING: "Releasing",
   SUPPLIER_DECLINED: "Declined by supplier",
   RELEASED: "Released",
   ADMIN_DECLINED: "Declined by admin",
@@ -223,7 +226,9 @@ export function CustomerRefundClaimsTab() {
               {claims.map((claim) => {
                 const expanded = expandedId === claim.id;
                 const ready = claim.status === "SUPPLIER_APPROVED";
-                const editable = ready || claim.status === "SUBMITTED";
+                const releasing = claim.status === "PROCESSING";
+                const canDecline = claim.status === "SUBMITTED" || ready;
+                const hasActions = (ready || releasing || canDecline) && canRelease;
                 const booking = claim.booking || {};
                 const paidTotal = Number(booking.grossAmount || 0);
                 return (
@@ -236,7 +241,7 @@ export function CustomerRefundClaimsTab() {
                       onClick={() => setExpandedId(expanded ? null : claim.id)}
                     >
                       <ChevronDown className={cn("h-4 w-4 shrink-0 text-text-tertiary transition-transform", expanded && "rotate-180")} />
-                      <ShieldAlert className={cn("h-5 w-5 shrink-0", ready ? "text-status-pending" : "text-text-tertiary")} />
+                      <ShieldAlert className={cn("h-5 w-5 shrink-0", ready || releasing ? "text-status-pending" : "text-text-tertiary")} />
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="font-mono text-xs font-semibold text-primary">{claim.claimNumber}</span>
@@ -256,16 +261,19 @@ export function CustomerRefundClaimsTab() {
                         <p className="text-sm font-semibold text-text-primary tabular-nums">{formatCurrency(paidTotal, booking.currency)}</p>
                         <p className="text-xs text-text-tertiary">paid</p>
                       </div>
-                      {editable && canRelease && (
+                      {hasActions && (
                         <div className="flex shrink-0 items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                          {ready && (
+                          {(ready || releasing) && (
                             <Button size="sm" variant="outline" className="gap-1" onClick={() => openRelease(claim)}>
-                              <RotateCcw className="h-3.5 w-3.5" /> Release
+                              <RotateCcw className="h-3.5 w-3.5" />
+                              {releasing ? "Retry release" : "Release"}
                             </Button>
                           )}
-                          <Button size="sm" variant="outline" className="gap-1" onClick={() => openDecline(claim)}>
-                            <XCircle className="h-3.5 w-3.5" /> Decline
-                          </Button>
+                          {canDecline && (
+                            <Button size="sm" variant="outline" className="gap-1" onClick={() => openDecline(claim)}>
+                              <XCircle className="h-3.5 w-3.5" /> Decline
+                            </Button>
+                          )}
                         </div>
                       )}
                     </div>
