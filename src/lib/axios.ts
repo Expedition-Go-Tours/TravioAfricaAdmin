@@ -11,6 +11,29 @@ const api = axios.create({
   timeout: 30_000,
 });
 
+// ── Travio Africa Admin route rewriting ─────────────────────────────────
+// Auth endpoints (/auth/*) and blog stay on the shared backend. Everything
+// else is rewritten to /travioafrica/admin/* so this dashboard only sees
+// Africa-scoped data (mirrors TravioGhana-Admin's /travioghana/admin/*).
+api.interceptors.request.use((config) => {
+  const url = config.url || "";
+
+  // /admin/* → /travioafrica/admin/*
+  if (url.startsWith("/admin")) {
+    config.url = "/travioafrica" + url;
+    return config;
+  }
+
+  // /chat/* → /travioafrica/admin/chat/* (Africa-scoped)
+  if (url.startsWith("/chat")) {
+    config.url = "/travioafrica/admin" + url;
+    return config;
+  }
+
+  // Blog + auth stay shared (cross-platform).
+  return config;
+});
+
 // Augment AxiosRequestConfig so callers can opt in/out of the global error
 // toast on a per-request basis.
 declare module "axios" {

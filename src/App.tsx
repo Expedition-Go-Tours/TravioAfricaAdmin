@@ -44,7 +44,6 @@ import BlogEditorPage from "@/pages/blog/BlogEditorPage";
 import CategoryManagerPage from "@/pages/blog/CategoryManagerPage";
 import TagManagerPage from "@/pages/blog/TagManagerPage";
 import BlogAnalytics from "@/pages/blog/BlogAnalytics";
-import ExpeditionListingsPage from "@/pages/expedition/ExpeditionListingsPage";
 import AiProcessingPage from "@/pages/ai/AiProcessingPage";
 
 function DataSocketInit() {
@@ -163,7 +162,6 @@ const router = createBrowserRouter([
       { path: "reviews", element: <PermissionRoute permission="reviews.view"><ReviewModerationPage /></PermissionRoute> },
       { path: "chat/suppliers", element: <PermissionRoute permission="chat.suppliers"><ChatPage /></PermissionRoute> },
       { path: "chat/customers", element: <PermissionRoute permission="chat.customers"><ChatPage /></PermissionRoute> },
-      { path: "chat/expedition", element: <PermissionRoute permission="chat.expedition"><ChatPage /></PermissionRoute> },
       { path: "settings", element: <PermissionRoute permission="settings.access"><SettingsPage /></PermissionRoute> },
       { path: "activity-log", element: <PermissionRoute permission="settings.access"><ActivityLogPage /></PermissionRoute> },
       { path: "blog", element: <PermissionRoute permission="blog.manage"><BlogListPage /></PermissionRoute> },
@@ -173,7 +171,6 @@ const router = createBrowserRouter([
       { path: "blog/categories", element: <PermissionRoute permission="blog.manage"><CategoryManagerPage /></PermissionRoute> },
       { path: "blog/tags", element: <PermissionRoute permission="blog.manage"><TagManagerPage /></PermissionRoute> },
       { path: "blog/analytics", element: <PermissionRoute permission="blog.manage"><BlogAnalytics /></PermissionRoute> },
-      { path: "expedition", element: <PermissionRoute permission="tours.view"><ExpeditionListingsPage /></PermissionRoute> },
       { path: "ai-processing", element: <PermissionRoute permission="tours.view"><AiProcessingPage /></PermissionRoute> },
     ],
   },
