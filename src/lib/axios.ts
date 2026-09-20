@@ -12,9 +12,12 @@ const api = axios.create({
 });
 
 // ── Travio Africa Admin route rewriting ─────────────────────────────────
-// Auth endpoints (/auth/*) and blog stay on the shared backend. Everything
-// else is rewritten to /travioafrica/admin/* so this dashboard only sees
-// Africa-scoped data (mirrors TravioGhana-Admin's /travioghana/admin/*).
+// Auth endpoints (/auth/*) and blog stay on the shared backend. Every other
+// admin surface is rewritten to /travioafrica/admin/* so this dashboard only
+// sees Africa-scoped data. The resource prefixes below MUST mirror
+// TravioGhana-Admin's interceptor exactly — a missing rule silently falls
+// through to the shared endpoint and leaks the other brand's data (this is
+// what made Ghana reviews and suppliers appear here).
 api.interceptors.request.use((config) => {
   const url = config.url || "";
 
@@ -24,9 +27,50 @@ api.interceptors.request.use((config) => {
     return config;
   }
 
+  // /reviews/admin/* → /travioafrica/admin/reviews/*
+  if (url.startsWith("/reviews/admin/")) {
+    config.url = "/travioafrica/admin/reviews" + url.slice("/reviews/admin".length);
+    return config;
+  }
+  if (url.match(/^\/reviews\/[^/]+\/(moderate|admin)/)) {
+    config.url = "/travioafrica/admin/reviews" + url.slice("/reviews".length);
+    return config;
+  }
+
+  // /suppliers/admin/* → /travioafrica/admin/suppliers/*
+  if (url.startsWith("/suppliers/admin/")) {
+    config.url = "/travioafrica/admin/suppliers" + url.slice("/suppliers/admin".length);
+    return config;
+  }
+
+  // /payouts/admin/* → /travioafrica/admin/payouts/*
+  if (url.startsWith("/payouts/admin")) {
+    config.url = "/travioafrica/admin/payouts" + url.slice("/payouts/admin".length);
+    return config;
+  }
+
+  // /payout-methods/admin/* → /travioafrica/admin/payout-methods/*
+  if (url.startsWith("/payout-methods/admin")) {
+    config.url = "/travioafrica/admin/payout-methods" + url.slice("/payout-methods/admin".length);
+    return config;
+  }
+
+  // /notifications → /travioafrica/admin/notifications (Africa-scoped)
+  if (url.startsWith("/notifications")) {
+    config.url = "/travioafrica/admin" + url;
+    return config;
+  }
+
   // /chat/* → /travioafrica/admin/chat/* (Africa-scoped)
   if (url.startsWith("/chat")) {
     config.url = "/travioafrica/admin" + url;
+    return config;
+  }
+
+  // /tours/* (non-admin) → /travioafrica/admin/tours/* (Africa tours only)
+  // Exception: /tours/filters/options stays shared (filter metadata)
+  if (url.startsWith("/tours/") && !url.startsWith("/tours/filters")) {
+    config.url = "/travioafrica/admin/tours" + url.slice("/tours".length);
     return config;
   }
 
