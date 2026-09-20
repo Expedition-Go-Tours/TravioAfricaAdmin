@@ -33,11 +33,11 @@ interface NewConversationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSelect: (recipientId: string, recipientName: string) => void;
-  chatType?: "suppliers" | "customers" | "expedition";
+  chatType?: "suppliers" | "customers";
 }
 
-function Skeleton({ chatType }: { chatType: "suppliers" | "customers" | "expedition" }) {
-  const bg = chatType === "suppliers" ? "bg-green-100/60" : chatType === "expedition" ? "bg-purple-100/60" : "bg-blue-100/60";
+function Skeleton({ chatType }: { chatType: "suppliers" | "customers" }) {
+  const bg = chatType === "suppliers" ? "bg-green-100/60" : "bg-blue-100/60";
   return (
     <div className="flex items-center gap-3 px-4 py-3">
       <div className={cn("h-10 w-10 animate-pulse rounded-full", bg)} />
@@ -49,17 +49,16 @@ function Skeleton({ chatType }: { chatType: "suppliers" | "customers" | "expedit
   );
 }
 
-const accent = (type: "suppliers" | "customers" | "expedition") => {
+const accent = (type: "suppliers" | "customers") => {
   const isSup = type === "suppliers";
-  const isExp = type === "expedition";
   return {
-    bg50: isSup ? "bg-green-50" : isExp ? "bg-purple-50" : "bg-blue-50",
-    bg50slash20: isSup ? "bg-green-50/20" : isExp ? "bg-purple-50/20" : "bg-blue-50/20",
-    text400: isSup ? "text-green-400" : isExp ? "text-purple-400" : "text-blue-400",
-    text600: isSup ? "text-green-600" : isExp ? "text-purple-600" : "text-blue-600",
-    hoverText700: isSup ? "hover:text-green-700" : isExp ? "hover:text-purple-700" : "hover:text-blue-700",
-    gradient: isSup ? "bg-green-500" : isExp ? "bg-purple-500" : "bg-status-approved",
-    border: isSup ? "focus-visible:border-green-400" : isExp ? "focus-visible:border-purple-400" : "focus-visible:border-blue-400",
+    bg50: isSup ? "bg-green-50" : "bg-blue-50",
+    bg50slash20: isSup ? "bg-green-50/20" : "bg-blue-50/20",
+    text400: isSup ? "text-green-400" : "text-blue-400",
+    text600: isSup ? "text-green-600" : "text-blue-600",
+    hoverText700: isSup ? "hover:text-green-700" : "hover:text-blue-700",
+    gradient: isSup ? "bg-green-500" : "bg-status-approved",
+    border: isSup ? "focus-visible:border-green-400" : "focus-visible:border-blue-400",
   };
 };
 

@@ -73,15 +73,6 @@ interface PricingCategory {
 
 interface SupplierInfo { id?: string; name?: string; email?: string; photoURL?: string | null; }
 
-interface ExpeditionTour {
-  isActive: boolean;
-  bookingFlow: "DIRECT" | "EXTERNAL";
-  externalUrl: string | null;
-  syncStatus: string | null;
-  lastSyncAt: string | null;
-  publishedAt: string | null;
-}
-
 interface TourDetail {
   id: string;
   title?: string;
@@ -132,7 +123,6 @@ interface TourDetail {
   maxParticipants?: number | null;
   ticketType?: string;
   supplier?: SupplierInfo | null;
-  expeditionTour?: ExpeditionTour | null;
   bookingCount?: number;
   totalRevenue?: number;
   averageRating?: number;
@@ -241,7 +231,6 @@ function normalizeTour(raw: Record<string, unknown>): TourDetail {
   const dropoffLocation = asObject(productContent.dropoffLocation);
 
   const supplierRaw = asObject(raw.supplier);
-  const expeditionRaw = asObject(raw.expeditionTour);
 
   const count = asObject(raw._count);
 
@@ -300,14 +289,6 @@ function normalizeTour(raw: Record<string, unknown>): TourDetail {
       name: typeof supplierRaw.name === "string" ? supplierRaw.name : undefined,
       email: typeof supplierRaw.email === "string" ? supplierRaw.email : undefined,
       photoURL: typeof supplierRaw.photoURL === "string" ? supplierRaw.photoURL : null,
-    } : null,
-    expeditionTour: expeditionRaw.isActive !== undefined ? {
-      isActive: expeditionRaw.isActive === true,
-      bookingFlow: expeditionRaw.bookingFlow === "EXTERNAL" ? "EXTERNAL" : "DIRECT",
-      externalUrl: (expeditionRaw.externalUrl as string) || null,
-      syncStatus: (expeditionRaw.syncStatus as string) || null,
-      lastSyncAt: (expeditionRaw.lastSyncAt as string) || null,
-      publishedAt: (expeditionRaw.publishedAt as string) || null,
     } : null,
     bookingCount: (count.bookings as number) ?? (typeof raw.totalBookings === "number" ? raw.totalBookings : undefined),
     totalRevenue: typeof raw.totalRevenue === "number" ? raw.totalRevenue : undefined,

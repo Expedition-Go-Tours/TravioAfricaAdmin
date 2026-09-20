@@ -30,12 +30,11 @@ import type { Booking, TravelerData } from "@/types/booking";
 import { isPaymentPaid, travelerCount } from "@/types/booking";
 import OptimizedImage from "@/components/shared/OptimizedImage";
 
-// Booking source = the storefront the sale happened on. Three entities:
-// Expedition Go (company storefront), Travio Ghana, Travio Africa.
-// The DB stores these as uppercase enum values (EXPEDITION / GHANA /
-// TRAVIO_AFRICA); TRAVIO is a legacy value from seed data only.
+// Booking source = the storefront the sale happened on. The Africa admin only
+// receives TRAVIO_AFRICA bookings (Ghana and Expedition sales belong to Ghana);
+// the DB stores these as uppercase enum values. Unknown sources fall back to
+// the raw value below.
 const SOURCE_META: Record<string, { label: string; className: string }> = {
-  EXPEDITION: { label: "Expedition Go", className: "bg-emerald-50 text-emerald-700" },
   GHANA: { label: "Travio Ghana", className: "bg-yellow-50 text-yellow-700" },
   TRAVIO_AFRICA: { label: "Travio Africa", className: "bg-sky-50 text-sky-700" },
 };

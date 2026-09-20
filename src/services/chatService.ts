@@ -33,7 +33,7 @@ export interface Message {
 
 export interface Conversation {
   id: string;
-  type: "SUPPLIER_ADMIN" | "USER_SUPPORT" | "EXPEDITION_CUSTOMER";
+  type: "SUPPLIER_ADMIN" | "USER_SUPPORT";
   title?: string | null;
   createdAt: string;
   updatedAt: string;

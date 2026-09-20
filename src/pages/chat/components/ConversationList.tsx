@@ -10,24 +10,23 @@ interface ConversationListProps {
   selectedId: string | null;
   onSelect: (conv: Conversation) => void;
   loading: boolean;
-  chatType?: "suppliers" | "customers" | "expedition";
+  chatType?: "suppliers" | "customers";
   typingConversations: Record<string, { userName: string }>;
 }
 
-const accent = (type: "suppliers" | "customers" | "expedition") => {
+const accent = (type: "suppliers" | "customers") => {
   const isSup = type === "suppliers";
-  const isExp = type === "expedition";
   return {
-    bg: isSup ? "green" : isExp ? "purple" : "blue",
-    bg50: isSup ? "bg-green-50" : isExp ? "bg-purple-50" : "bg-blue-50",
-    bg50slash: isSup ? "bg-green-50/70" : isExp ? "bg-purple-50/70" : "bg-blue-50/70",
-    bg100: isSup ? "bg-green-100/60" : isExp ? "bg-purple-100/60" : "bg-blue-100/60",
-    text: isSup ? "text-green-600" : isExp ? "text-purple-600" : "text-blue-600",
-    text700: isSup ? "text-green-700" : isExp ? "text-purple-700" : "text-blue-700",
-    text400: isSup ? "text-green-400" : isExp ? "text-purple-400" : "text-blue-400",
-    ring: isSup ? "focus-visible:ring-green-400" : isExp ? "focus-visible:ring-purple-400" : "focus-visible:ring-blue-400",
-    gradient: isSup ? "bg-green-500" : isExp ? "bg-purple-500" : "bg-status-approved",
-    badge: isSup ? "bg-green-600" : isExp ? "bg-purple-600" : "bg-blue-600",
+    bg: isSup ? "green" : "blue",
+    bg50: isSup ? "bg-green-50" : "bg-blue-50",
+    bg50slash: isSup ? "bg-green-50/70" : "bg-blue-50/70",
+    bg100: isSup ? "bg-green-100/60" : "bg-blue-100/60",
+    text: isSup ? "text-green-600" : "text-blue-600",
+    text700: isSup ? "text-green-700" : "text-blue-700",
+    text400: isSup ? "text-green-400" : "text-blue-400",
+    ring: isSup ? "focus-visible:ring-green-400" : "focus-visible:ring-blue-400",
+    gradient: isSup ? "bg-green-500" : "bg-status-approved",
+    badge: isSup ? "bg-green-600" : "bg-blue-600",
   };
 };
 
