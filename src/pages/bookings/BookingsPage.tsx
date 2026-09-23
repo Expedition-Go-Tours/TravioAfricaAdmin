@@ -136,8 +136,9 @@ export default function BookingsPage() {
       setChargeNowBooking(null);
       setSelectedBooking(null);
     },
-    onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to charge card");
+    onError: (err: unknown) => {
+      const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(message || "Failed to charge card");
     },
   });
 

@@ -4,28 +4,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import {
-  LayoutDashboard,
-  TrendingUp,
-  Search,
-  ShoppingCart,
-  Users,
-  DollarSign,
-  Map,
-  UserPlus,
-  Banknote,
-  Star,
-  Building,
   ChevronDown,
-  BarChart3,
-  UserCog,
-  Target,
-  MessageSquare,
   Settings,
   X,
-  FileText,
-  Globe,
   History,
-  ClipboardCheck,
   PanelLeftClose,
   PanelLeftOpen,
   LogOut,
@@ -50,6 +32,7 @@ function useSidebarCounts(can: (key: string) => boolean) {
   const canBookings = can('bookings.view') || can('dashboard.*');
   const canReviews = can('reviews.view');
   const canTours = can('tours.approve') || can('tours.view');
+  const canCancellations = can('bookings.view') || can('dashboard.*');
 
   const bookingsQuery = useQuery({
     queryKey: ["admin", "bookings", "sidebar-count"],
@@ -75,6 +58,17 @@ function useSidebarCounts(can: (key: string) => boolean) {
     staleTime: 5 * 60 * 1000,
   });
 
+  const cancellationsQuery = useQuery({
+    queryKey: ["admin", "cancellations", "sidebar-count"],
+    queryFn: () =>
+      api
+        .get("/admin/cancellation-requests?limit=1")
+        .then((r) => r.data?.data?.pendingCount ?? 0),
+    enabled: canCancellations,
+    refetchInterval: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
+  });
+
   useSocketInvalidate("admin:new-booking", ["admin", "bookings"]);
   useSocketInvalidate("admin:new-review", ["admin", "reviews-pending-count"]);
   useSocketInvalidate("admin:tour-update", ["admin", "tour-review"]);
@@ -83,6 +77,7 @@ function useSidebarCounts(can: (key: string) => boolean) {
     bookings: bookingsQuery.data ?? 0,
     reviews: reviewsQuery.data ?? 0,
     tours: toursQuery.data ?? 0,
+    cancellations: cancellationsQuery.data ?? 0,
   };
 }
 

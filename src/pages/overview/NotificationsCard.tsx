@@ -42,6 +42,8 @@ const dotColors: Record<string, string> = {
   SUPPLIER_STATUS_CHANGE: "bg-violet-400",
   SYSTEM_ALERT: "bg-red-400",
   NEW_MESSAGE: "bg-cyan-400",
+  SUPPLIER_CANCELLATION_REQUEST: "bg-amber-400",
+  SUPPLIER_CANCELLATION_DECIDED: "bg-emerald-400",
 };
 
 const dotColor = (type: string) => dotColors[type] || "bg-text-tertiary";
@@ -69,6 +71,10 @@ const notificationRouteMap: Record<string, (data?: Record<string, unknown>) => {
     if (d.conversationType === 'SUPPLIER_CUSTOMER') return { path: "/admin/chat/customers" };
     return { path: `/admin/chat/${d.chatType || "suppliers"}`, state: { conversationId: d.conversationId } };
   },
+  SUPPLIER_CANCELLATION_REQUEST: (d) =>
+    d?.requestId ? { path: `/cancellations?request=${d.requestId}` } : { path: "/cancellations" },
+  SUPPLIER_CANCELLATION_DECIDED: (d) =>
+    d?.requestId ? { path: `/cancellations?request=${d.requestId}` } : { path: "/cancellations" },
 };
 
 const statItems = [

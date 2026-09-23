@@ -35,6 +35,7 @@ import { DisputesQueueTab } from "@/pages/finance/components/DisputesQueueTab";
 import { CustomerRefundClaimsTab } from "@/pages/finance/components/CustomerRefundClaimsTab";
 import ReviewModerationPage from "@/pages/reviews/ReviewModeration";
 import BookingsPage from "@/pages/bookings/BookingsPage";
+import CancellationsPage from "@/pages/cancellations/CancellationsPage";
 import ChatPage from "@/pages/chat/ChatPage";
 import SettingsPage from "@/pages/settings/SettingsPage";
 import ActivityLogPage from "@/pages/activity/ActivityLogPage";
@@ -170,6 +171,23 @@ const router = createBrowserRouter([
       { path: "blog/categories", element: <PermissionRoute permission="blog.manage"><CategoryManagerPage /></PermissionRoute> },
       { path: "blog/tags", element: <PermissionRoute permission="blog.manage"><TagManagerPage /></PermissionRoute> },
       { path: "blog/analytics", element: <PermissionRoute permission="blog.manage"><BlogAnalytics /></PermissionRoute> },
+    ],
+  },
+  {
+    // Canonical cancellation-approval queue deep link. The backend ops email and
+    // admin notification feed both link to `/cancellations?request=<id>`, so the
+    // route lives at the app root (still inside the authenticated admin shell).
+    path: "/cancellations",
+    element: <AdminLayout />,
+    children: [
+      {
+        index: true,
+        element: (
+          <PermissionRoute permission="bookings.view">
+            <CancellationsPage />
+          </PermissionRoute>
+        ),
+      },
     ],
   },
   { path: "*", element: <Navigate to={getDefaultRoute()} replace /> },

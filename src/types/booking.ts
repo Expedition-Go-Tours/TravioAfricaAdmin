@@ -1,3 +1,8 @@
+import type {
+  CancellationRequestPayload,
+  CancellationRequestPreview,
+} from "./cancellation";
+
 export type BookingStatus =
   | "PENDING"
   | "CONFIRMED"
@@ -45,6 +50,16 @@ export interface BookingTour {
   };
 }
 
+/** A supplier cancellation request awaiting admin approval (flag ON). */
+export interface PendingCancellation {
+  id: string;
+  status: string;
+  createdAt: string;
+  payload?: CancellationRequestPayload | null;
+  preview?: CancellationRequestPreview | null;
+  stopSellingApplied?: boolean;
+}
+
 export interface Booking {
   id: string;
   bookingNumber: string;
@@ -65,6 +80,19 @@ export interface Booking {
   travelers: TravelerData;
   specialRequests?: string | null;
   cancellationReason?: string | null;
+  /** Structured cancellation outcome fields (post-decision). */
+  cancellationCode?: string | null;
+  cancellationCategory?: string | null;
+  cancellationOrigin?: string | null;
+  countsTowardRate?: boolean | null;
+  cancellationFee?: number | null;
+  refundStatus?: string | null;
+  refundAmount?: number | null;
+  cancelledAt?: string | null;
+  cancellationChoiceDeadline?: string | null;
+  customerChoice?: string | null;
+  /** Set while a supplier cancellation request is awaiting admin approval. */
+  pendingCancellation?: PendingCancellation | null;
   paidAt?: string | null;
   createdAt: string;
   updatedAt: string;

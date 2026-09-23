@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   X,
   MapPin,
@@ -21,13 +24,30 @@ import {
   Globe,
   Tag,
   Zap,
+  ShieldOff,
+  XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  ApproveCancellationDialog,
+  RejectCancellationDialog,
+} from "@/components/cancellations/DecisionDialogs";
+import {
+  approveCancellationRequest,
+  decisionErrorInfo,
+  rejectCancellationRequest,
+} from "@/services/cancellationService";
 import { usePermission } from "@/hooks/usePermission";
-import { cn, timeAgo, getStatusColor } from "@/lib/utils";
+import { cn, timeAgo, getStatusColor, formatCurrency, formatDateTime } from "@/lib/utils";
 import { BookingTimeline } from "./BookingTimeline";
 import type { Booking, TravelerData } from "@/types/booking";
 import { isPaymentPaid, travelerCount } from "@/types/booking";
+import {
+  cancellationStatusLabel,
+  cancellationStatusVariant,
+  type CancellationDecisionContext,
+} from "@/types/cancellation";
 import OptimizedImage from "@/components/shared/OptimizedImage";
 
 // Booking source = the storefront the sale happened on. The Africa admin only
@@ -150,6 +170,70 @@ function TravelerManifest({ details }: { details: NonNullable<TravelerData["deta
 export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onChargeNow, onViewCustomer }: BookingDetailPanelProps) {
   const navigate = useNavigate();
   const { can } = usePermission();
+  const queryClient = useQueryClient();
+  const [decisionAction, setDecisionAction] = useState<"approve" | "reject" | null>(null);
+
+  const pendingCancellation = booking.pendingCancellation ?? null;
+  const canDecideCancellation = can("cancellations.approve");
+
+  const decisionContext: CancellationDecisionContext | null = pendingCancellation
+    ? {
+        id: pendingCancellation.id,
+        preview: pendingCancellation.preview,
+        booking: { bookingNumber: booking.bookingNumber, currency: booking.currency },
+      }
+    : null;
+
+  const approveCancellation = useMutation({
+    mutationFn: ({ id, note }: { id: string; note: string }) =>
+      approveCancellationRequest(id, note),
+    onSuccess: () => {
+      toast.success("Cancellation approved — the refund has been executed");
+      queryClient.invalidateQueries({ queryKey: ["admin", "bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "cancellations"] });
+      setDecisionAction(null);
+      onClose();
+    },
+    onError: (err) => {
+      const { message, conflict } = decisionErrorInfo(err);
+      toast.error(conflict ? `${message} — refreshing` : message);
+      queryClient.invalidateQueries({ queryKey: ["admin", "bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "cancellations"] });
+    },
+  });
+
+  const rejectCancellation = useMutation({
+    mutationFn: ({ id, note }: { id: string; note: string }) =>
+      rejectCancellationRequest(id, note),
+    onSuccess: () => {
+      toast.success("Cancellation request rejected — the booking is unchanged");
+      queryClient.invalidateQueries({ queryKey: ["admin", "bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "cancellations"] });
+      setDecisionAction(null);
+      onClose();
+    },
+    onError: (err) => {
+      const { message, conflict } = decisionErrorInfo(err);
+      toast.error(conflict ? `${message} — refreshing` : message);
+      queryClient.invalidateQueries({ queryKey: ["admin", "bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "cancellations"] });
+    },
+  });
+
+  const decidingCancellation =
+    approveCancellation.isPending || rejectCancellation.isPending;
+
+  const hasCancellationOutcome =
+    !!booking.cancelledAt ||
+    !!booking.refundStatus ||
+    !!booking.cancellationCode ||
+    !!booking.cancellationCategory ||
+    !!booking.cancellationOrigin ||
+    booking.cancellationFee != null ||
+    booking.refundAmount != null ||
+    booking.countsTowardRate != null ||
+    !!booking.cancellationChoiceDeadline ||
+    !!booking.customerChoice;
 
   const timelineSteps = [
     { label: "Booking Created", date: booking.createdAt, active: true },
@@ -529,6 +613,160 @@ export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onCharg
               </div>
             )}
 
+            {pendingCancellation && (
+              <div>
+                <SectionTitle>Cancellation Request</SectionTitle>
+                <div className="space-y-2 rounded-xl border border-status-pending/30 bg-status-pending/5 p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-text-secondary">Status</span>
+                    <Badge
+                      variant={cancellationStatusVariant(pendingCancellation.status)}
+                      className="text-[10px]"
+                    >
+                      {cancellationStatusLabel(pendingCancellation.status)}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-text-secondary">Requested</span>
+                    <span className="text-xs font-medium text-text-primary">
+                      {timeAgo(pendingCancellation.createdAt)}
+                    </span>
+                  </div>
+                  {pendingCancellation.payload?.cancellationCategory && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-text-secondary">Category</span>
+                      <span className="text-xs font-medium text-text-primary">
+                        {pendingCancellation.payload.cancellationCategory}
+                      </span>
+                    </div>
+                  )}
+                  {pendingCancellation.payload?.cancellationCode && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-text-secondary">Code</span>
+                      <span className="font-mono text-xs font-medium text-text-primary">
+                        {pendingCancellation.payload.cancellationCode}
+                      </span>
+                    </div>
+                  )}
+                  {pendingCancellation.payload?.explanation && (
+                    <p className="rounded-lg bg-surface-base p-2.5 text-xs text-text-secondary">
+                      {pendingCancellation.payload.explanation}
+                    </p>
+                  )}
+                  <div className="flex items-center justify-between border-t border-status-pending/20 pt-2">
+                    <span className="text-xs text-text-secondary">Refund</span>
+                    <span className="text-xs font-semibold text-status-rejected">
+                      {formatCurrency(
+                        Number(pendingCancellation.preview?.refund?.amount || 0),
+                        booking.currency,
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-text-secondary">Cancellation fee</span>
+                    <span className="text-xs font-medium text-text-primary">
+                      {formatCurrency(
+                        Number(pendingCancellation.preview?.fee || 0),
+                        booking.currency,
+                      )}
+                    </span>
+                  </div>
+                  {pendingCancellation.stopSellingApplied && (
+                    <div className="flex items-center gap-1.5 rounded-lg bg-status-pending/10 px-2.5 py-1.5 text-[11px] font-medium text-status-pending">
+                      <ShieldOff className="h-3.5 w-3.5" />
+                      Dates blocked while this request is pending
+                    </div>
+                  )}
+                  <p className="text-[11px] leading-relaxed text-text-tertiary">
+                    Nothing has been executed yet. Approving issues a full customer
+                    refund; rejecting changes nothing and re-opens blocked dates.
+                  </p>
+                  {canDecideCancellation && (
+                    <div className="flex items-center gap-2 pt-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 flex-1 gap-1.5"
+                        disabled={decidingCancellation}
+                        onClick={() => setDecisionAction("reject")}
+                      >
+                        <XCircle className="h-3.5 w-3.5" />
+                        Reject
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="h-8 flex-1 gap-1.5"
+                        disabled={decidingCancellation}
+                        onClick={() => setDecisionAction("approve")}
+                      >
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        Approve
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {hasCancellationOutcome && (
+              <div>
+                <SectionTitle>Cancellation Outcome</SectionTitle>
+                <div className="space-y-0.5 rounded-xl border border-border p-4">
+                  {booking.cancellationCode && (
+                    <DetailRow icon={<Hash className="h-3 w-3" />} label="Code">
+                      {booking.cancellationCode}
+                    </DetailRow>
+                  )}
+                  {booking.cancellationCategory && (
+                    <DetailRow icon={<Tag className="h-3 w-3" />} label="Category">
+                      {booking.cancellationCategory}
+                    </DetailRow>
+                  )}
+                  {booking.cancellationOrigin && (
+                    <DetailRow icon={<Globe className="h-3 w-3" />} label="Origin">
+                      {booking.cancellationOrigin}
+                    </DetailRow>
+                  )}
+                  {booking.countsTowardRate != null && (
+                    <DetailRow icon={<Percent className="h-3 w-3" />} label="Counts toward rate">
+                      {booking.countsTowardRate ? "Yes" : "No"}
+                    </DetailRow>
+                  )}
+                  {booking.cancellationFee != null && (
+                    <DetailRow icon={<Banknote className="h-3 w-3" />} label="Cancellation fee">
+                      {formatCurrency(Number(booking.cancellationFee), booking.currency)}
+                    </DetailRow>
+                  )}
+                  {booking.refundStatus && (
+                    <DetailRow icon={<CreditCard className="h-3 w-3" />} label="Refund status">
+                      {booking.refundStatus}
+                    </DetailRow>
+                  )}
+                  {booking.refundAmount != null && (
+                    <DetailRow icon={<Banknote className="h-3 w-3" />} label="Refund amount">
+                      {formatCurrency(Number(booking.refundAmount), booking.currency)}
+                    </DetailRow>
+                  )}
+                  {booking.cancelledAt && (
+                    <DetailRow icon={<Clock className="h-3 w-3" />} label="Cancelled at">
+                      {formatDateTime(booking.cancelledAt)}
+                    </DetailRow>
+                  )}
+                  {booking.cancellationChoiceDeadline && (
+                    <DetailRow icon={<Clock className="h-3 w-3" />} label="Choice deadline">
+                      {formatDateTime(booking.cancellationChoiceDeadline)}
+                    </DetailRow>
+                  )}
+                  {booking.customerChoice && (
+                    <DetailRow icon={<User className="h-3 w-3" />} label="Customer choice">
+                      {booking.customerChoice}
+                    </DetailRow>
+                  )}
+                </div>
+              </div>
+            )}
+
             {booking.cancellationReason && (
               <div>
                 <SectionTitle>Cancellation Reason</SectionTitle>
@@ -547,6 +785,30 @@ export function BookingDetailPanel({ booking, onClose, onConfirmPayment, onCharg
           </div>
         </div>
       </motion.div>
+
+      {decisionAction === "approve" && decisionContext && (
+        <ApproveCancellationDialog
+          open
+          request={decisionContext}
+          loading={approveCancellation.isPending}
+          onConfirm={(note) =>
+            approveCancellation.mutate({ id: decisionContext.id, note })
+          }
+          onCancel={() => setDecisionAction(null)}
+        />
+      )}
+
+      {decisionAction === "reject" && decisionContext && (
+        <RejectCancellationDialog
+          open
+          request={decisionContext}
+          loading={rejectCancellation.isPending}
+          onConfirm={(note) =>
+            rejectCancellation.mutate({ id: decisionContext.id, note })
+          }
+          onCancel={() => setDecisionAction(null)}
+        />
+      )}
     </>,
     document.body
   );

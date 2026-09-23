@@ -18,6 +18,7 @@ import {
   ClipboardCheck,
   FileWarning,
   RefreshCw,
+  CalendarX,
 } from "lucide-react";
 import { getNotifications, getUnreadCount, markAsRead, markAllAsRead } from "@/services/notificationService";
 import { onAdminNotification, onAdminSocketConnect } from "@/lib/adminSocket";
@@ -48,6 +49,14 @@ REFUND_CLAIM: (data) => data?.claimId ? { path: `/admin/payouts?tab=claims&claim
     if (data.conversationType === 'SUPPLIER_CUSTOMER') return { path: "/admin/chat/customers" };
     return { path: `/admin/chat/${data.chatType || "suppliers"}`, state: { conversationId: data.conversationId } };
   },
+  SUPPLIER_CANCELLATION_REQUEST: (data) =>
+    data?.requestId
+      ? { path: `/cancellations?request=${data.requestId}` }
+      : { path: "/cancellations" },
+  SUPPLIER_CANCELLATION_DECIDED: (data) =>
+    data?.requestId
+      ? { path: `/cancellations?request=${data.requestId}` }
+      : { path: "/cancellations" },
 };
 
 const typeConfig: Record<string, { icon: React.ReactNode; color: string }> = {
@@ -69,6 +78,8 @@ const typeConfig: Record<string, { icon: React.ReactNode; color: string }> = {
 REFUND_CLAIM: { icon: <RefreshCw className="h-3.5 w-3.5" />, color: "text-amber-600 dark:text-amber-400" },
   REFUND_NEEDS_ATTENTION: { icon: <RefreshCw className="h-3.5 w-3.5" />, color: "text-red-500 dark:text-red-400" },
   STRIPE_CUSTOMER_CREATE_FAILED: { icon: <AlertTriangle className="h-3.5 w-3.5" />, color: "text-red-500 dark:text-red-400" },
+  SUPPLIER_CANCELLATION_REQUEST: { icon: <CalendarX className="h-3.5 w-3.5" />, color: "text-amber-600 dark:text-amber-400" },
+  SUPPLIER_CANCELLATION_DECIDED: { icon: <CalendarX className="h-3.5 w-3.5" />, color: "text-green-600 dark:text-green-400" },
 };
 
 function getTypeConfig(type: string) {
